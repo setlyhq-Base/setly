@@ -139,6 +139,7 @@ app.post('/api/signup/complete', (req, res) => {
       id: Date.now().toString(),
       name: verification.draft.name,
       email: verification.draft.email,
+      password: verification.draft.password, // Store password for login
       role: verification.draft.role,
       organization: organizations.find(o => o.id === verification.draft.organizationId),
       emailVerified: true,

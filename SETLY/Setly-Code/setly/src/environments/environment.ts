@@ -1,5 +1,5 @@
 export const environment = {
-  production: true,
+  production: false,
   firebase: {
     apiKey: "your-production-api-key",
     authDomain: "your-project.firebaseapp.com",
@@ -12,5 +12,5 @@ export const environment = {
   microsoftClientId: "your-production-microsoft-client-id",
   frontendUrl: "https://your-domain.com",
   supportEmail: "support@setly.com",
-  apiUrl: 'https://your-api-domain.com/api'
+  apiUrl: 'http://localhost:3000/api'
 };

@@ -1,12 +1,13 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: "your-production-api-key",
-    authDomain: "your-project.firebaseapp.com",
-    projectId: "your-production-project",
-    storageBucket: "your-production-project.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef123456"
+    apiKey: "AIzaSyDLk2hmPHVtlBdxu0Rctfh2G5FnAIHpq64",
+    authDomain: "setly-fire.firebaseapp.com",
+    projectId: "setly-fire",
+    storageBucket: "setly-fire.firebasestorage.app",
+    messagingSenderId: "577734262579",
+    appId: "1:577734262579:web:de22f8e59f43303e1f4846",
+    measurementId: "G-NVJEGLQLR3"
   },
   facebookAppId: "your-production-facebook-app-id",
   microsoftClientId: "your-production-microsoft-client-id",

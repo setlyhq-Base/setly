@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read and write their own documents
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Verifications are managed by functions only
+    match /verifications/{userId} {
+      allow read, write: if false; // Only functions can access
+    }
+
+    // Config collection for domain allowlists (read-only for functions)
+    match /config/{document} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only functions can write
+    }
+  }
+}

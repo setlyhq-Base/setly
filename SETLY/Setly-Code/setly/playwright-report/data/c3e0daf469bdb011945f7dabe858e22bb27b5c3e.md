@@ -1,0 +1,231 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "SETLY" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e8]: SETLY
+      - generic [ref=e11]:
+        - textbox "Search for rooms" [ref=e12]:
+          - /placeholder: Search for rooms near USA universities...
+        - generic:
+          - img
+        - button "Submit search" [ref=e13] [cursor=pointer]:
+          - img [ref=e14]
+      - navigation [ref=e16]:
+        - link "Browse" [ref=e17] [cursor=pointer]:
+          - /url: /browse
+        - link "Post Room" [ref=e18] [cursor=pointer]:
+          - /url: /post-room
+        - link "Messages" [ref=e19] [cursor=pointer]:
+          - /url: /messages
+        - link "Ride" [ref=e20] [cursor=pointer]:
+          - /url: /ride
+        - link "Profile" [ref=e21] [cursor=pointer]:
+          - /url: /profile
+        - link "Settings" [ref=e22] [cursor=pointer]:
+          - /url: /settings
+        - link "Sign In" [ref=e23] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Sign Up" [ref=e24] [cursor=pointer]:
+          - /url: /sign-up
+  - main [ref=e25]:
+    - generic [ref=e27]:
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - heading "Find Your Perfect Room" [level=1] [ref=e32]
+            - paragraph [ref=e33]: Connect with students and find housing.
+          - generic [ref=e34]:
+            - button "Find your next room" [ref=e35] [cursor=pointer]
+            - button "Post a room" [ref=e36] [cursor=pointer]
+        - generic [ref=e37]:
+          - heading "Find rooms near" [level=2] [ref=e38]
+          - generic [ref=e39]:
+            - textbox "Search for universities" [ref=e40]:
+              - /placeholder: Search universities or cities...
+            - button "Search" [ref=e41] [cursor=pointer]:
+              - img [ref=e42]
+          - generic [ref=e44]:
+            - generic [ref=e45]:
+              - generic [ref=e46]: Check-in
+              - textbox "Select date" [ref=e49] [cursor=pointer]
+            - generic [ref=e50]:
+              - generic [ref=e51]: Check-out
+              - textbox "Select date" [ref=e54] [cursor=pointer]
+          - generic [ref=e55]:
+            - generic [ref=e56]: Guests
+            - button "1 guest" [ref=e59] [cursor=pointer]:
+              - generic [ref=e60]: 1 guest
+              - img [ref=e61]
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - img [ref=e65]
+              - generic [ref=e67]: Student-verified rooms only
+            - paragraph [ref=e68]: All listings are verified by current students
+          - generic [ref=e69]:
+            - button "Indian community" [ref=e70] [cursor=pointer]
+            - button "Vegetarian" [ref=e71] [cursor=pointer]
+            - button "No smoking" [ref=e72] [cursor=pointer]
+            - button "Pets ok" [ref=e73] [cursor=pointer]
+            - button "Private room" [ref=e74] [cursor=pointer]
+            - button "Furnished" [ref=e75] [cursor=pointer]
+      - generic [ref=e77]:
+        - heading "Featured Rooms" [level=2] [ref=e78]
+        - paragraph [ref=e79]: Discover amazing rooms near universities that match your lifestyle.
+      - generic [ref=e141]:
+        - heading "How it works" [level=2] [ref=e143]
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - generic [ref=e147]: "1"
+            - heading "Create your profile" [level=3] [ref=e148]
+            - paragraph [ref=e149]: Set your preferences for room type, budget, and lifestyle choices.
+          - generic [ref=e150]:
+            - generic [ref=e152]: "2"
+            - heading "Search & filter by university" [level=3] [ref=e153]
+            - paragraph [ref=e154]: Find rooms near your university with our smart filtering system.
+          - generic [ref=e155]:
+            - generic [ref=e157]: "3"
+            - heading "Connect & confirm" [level=3] [ref=e158]
+            - paragraph [ref=e159]: Message hosts directly and secure your perfect room.
+      - generic [ref=e160]:
+        - heading "What students say" [level=2] [ref=e162]
+        - generic [ref=e163]:
+          - generic [ref=e164]:
+            - generic [ref=e165]:
+              - generic [ref=e167]: A
+              - generic [ref=e168]:
+                - generic [ref=e169]: Alex Chen
+                - generic [ref=e170]: Harvard University
+            - paragraph [ref=e171]: "\"Found my perfect room within days of arriving in Cambridge. The filters made it so easy to find vegetarian-friendly housing!\""
+          - generic [ref=e172]:
+            - generic [ref=e173]:
+              - generic [ref=e175]: S
+              - generic [ref=e176]:
+                - generic [ref=e177]: Sarah Johnson
+                - generic [ref=e178]: Stanford University
+            - paragraph [ref=e179]: "\"Setly helped me find pet-friendly housing near campus. My cat and I are both very happy!\""
+          - generic [ref=e180]:
+            - generic [ref=e181]:
+              - generic [ref=e183]: M
+              - generic [ref=e184]:
+                - generic [ref=e185]: Miguel Rodriguez
+                - generic [ref=e186]: UC Berkeley
+            - paragraph [ref=e187]: "\"The furnished rooms option saved me so much time and hassle. Highly recommend for international students!\""
+      - generic [ref=e188]:
+        - heading "Frequently asked questions" [level=2] [ref=e190]
+        - generic [ref=e191]:
+          - group [ref=e192]:
+            - generic "Is Setly only for Indian community?" [ref=e193] [cursor=pointer]
+          - group [ref=e194]:
+            - generic "Do you handle leases?" [ref=e195] [cursor=pointer]
+          - group [ref=e196]:
+            - generic "Are payments safe?" [ref=e197] [cursor=pointer]
+          - group [ref=e198]:
+            - generic "Is my phone number public?" [ref=e199] [cursor=pointer]
+      - generic [ref=e201]:
+        - heading "Ready for your next move?" [level=2] [ref=e202]
+        - paragraph [ref=e203]: Join thousands of students who have found their perfect room near campus.
+        - generic [ref=e204]:
+          - button "Find your next room" [ref=e205] [cursor=pointer]
+          - button "Post a room" [ref=e206] [cursor=pointer]
+      - generic:
+        - button "Open Setly Assistant" [ref=e207] [cursor=pointer]:
+          - generic [ref=e208]:
+            - img
+        - dialog "Setly Assistant":
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                  - heading "Setly Assistant" [level=2]
+                - button "Close chat":
+                  - img
+              - generic:
+                - generic:
+                  - button "Find housing"
+                  - button "Airport pickup"
+                  - button "Documents for SSN"
+                  - button "Open a bank account"
+                  - button "Get a US SIM"
+              - generic:
+                - generic:
+                  - generic:
+                    - textbox "Ask me anything about moving to the US..."
+                    - button "Send message" [disabled]:
+                      - img
+  - contentinfo [ref=e210]:
+    - generic [ref=e211]:
+      - generic [ref=e212]:
+        - generic [ref=e213]:
+          - generic [ref=e216]: SETLY
+          - paragraph [ref=e217]: Find your next room near your university with roommates who match your lifestyle.
+        - generic [ref=e218]:
+          - heading "Company" [level=3] [ref=e219]
+          - list [ref=e220]:
+            - listitem [ref=e221]:
+              - link "About" [ref=e222] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e223]:
+              - link "Safety" [ref=e224] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e225]:
+              - link "Help" [ref=e226] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e227]:
+          - heading "Support" [level=3] [ref=e228]
+          - list [ref=e229]:
+            - listitem [ref=e230]:
+              - link "Terms" [ref=e231] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e232]:
+              - link "Privacy" [ref=e233] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e234]:
+              - link "Contact" [ref=e235] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e236]:
+          - heading "Connect" [level=3] [ref=e237]
+          - list [ref=e238]:
+            - listitem [ref=e239]:
+              - link "Facebook" [ref=e240] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e241]:
+              - link "Twitter" [ref=e242] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e243]:
+              - link "Instagram" [ref=e244] [cursor=pointer]:
+                - /url: "#"
+      - paragraph [ref=e246]: © 2025 Setly. All rights reserved.
+  - generic:
+    - button "Open Setly Assistant" [ref=e247] [cursor=pointer]:
+      - generic [ref=e248]:
+        - img
+    - dialog "Setly Assistant":
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - img
+              - heading "Setly Assistant" [level=2]
+            - button "Close chat":
+              - img
+          - generic:
+            - generic:
+              - button "Find housing"
+              - button "Airport pickup"
+              - button "Documents for SSN"
+              - button "Open a bank account"
+              - button "Get a US SIM"
+          - generic:
+            - generic:
+              - generic:
+                - textbox "Ask me anything about moving to the US..."
+                - button "Send message" [disabled]:
+                  - img
+```

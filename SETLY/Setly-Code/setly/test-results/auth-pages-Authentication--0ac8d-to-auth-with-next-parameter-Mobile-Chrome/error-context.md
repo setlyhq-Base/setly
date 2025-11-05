@@ -1,0 +1,117 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "SETLY" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: SETLY
+        - navigation [ref=e9]:
+          - link "Browse" [ref=e10] [cursor=pointer]:
+            - /url: /browse
+          - link "Post Room" [ref=e11] [cursor=pointer]:
+            - /url: /post-room
+          - link "Messages" [ref=e12] [cursor=pointer]:
+            - /url: /messages
+          - link "Ride" [ref=e13] [cursor=pointer]:
+            - /url: /ride
+          - link "Profile" [ref=e14] [cursor=pointer]:
+            - /url: /profile
+          - link "Settings" [ref=e15] [cursor=pointer]:
+            - /url: /settings
+          - link "Sign In" [ref=e16] [cursor=pointer]:
+            - /url: /sign-in
+          - link "Sign Up" [ref=e17] [cursor=pointer]:
+            - /url: /sign-up
+    - main [ref=e18]:
+      - generic [ref=e22]:
+        - generic [ref=e26]: SETLY
+        - generic [ref=e28]:
+          - button "Continue with Google" [ref=e29] [cursor=pointer]:
+            - img [ref=e30]
+            - generic [ref=e35]: Continue with Google
+          - button "Continue with Facebook" [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+            - generic [ref=e39]: Continue with Facebook
+          - button "Continue with Phone" [ref=e40] [cursor=pointer]:
+            - img [ref=e41]
+            - generic [ref=e43]: Continue with Phone
+        - paragraph [ref=e44]:
+          - text: By continuing, you agree to Setly
+          - link "Terms & Privacy" [ref=e45] [cursor=pointer]:
+            - /url: /terms
+    - contentinfo [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - generic [ref=e53]: SETLY
+            - paragraph [ref=e54]: Find your next room near your university with roommates who match your lifestyle.
+          - generic [ref=e55]:
+            - heading "Company" [level=3] [ref=e56]
+            - list [ref=e57]:
+              - listitem [ref=e58]:
+                - link "About" [ref=e59] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e60]:
+                - link "Safety" [ref=e61] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e62]:
+                - link "Help" [ref=e63] [cursor=pointer]:
+                  - /url: "#"
+          - generic [ref=e64]:
+            - heading "Support" [level=3] [ref=e65]
+            - list [ref=e66]:
+              - listitem [ref=e67]:
+                - link "Terms" [ref=e68] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e69]:
+                - link "Privacy" [ref=e70] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e71]:
+                - link "Contact" [ref=e72] [cursor=pointer]:
+                  - /url: "#"
+          - generic [ref=e73]:
+            - heading "Connect" [level=3] [ref=e74]
+            - list [ref=e75]:
+              - listitem [ref=e76]:
+                - link "Facebook" [ref=e77] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e78]:
+                - link "Twitter" [ref=e79] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e80]:
+                - link "Instagram" [ref=e81] [cursor=pointer]:
+                  - /url: "#"
+        - paragraph [ref=e83]: © 2025 Setly. All rights reserved.
+    - generic:
+      - button "Open Setly Assistant" [ref=e84] [cursor=pointer]:
+        - generic [ref=e85]:
+          - img
+      - dialog "Setly Assistant":
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - heading "Setly Assistant" [level=2]
+              - button "Close chat":
+                - img
+            - generic:
+              - generic:
+                - button "Find housing"
+                - button "Airport pickup"
+                - button "Documents for SSN"
+                - button "Open a bank account"
+                - button "Get a US SIM"
+            - generic:
+              - generic:
+                - generic:
+                  - textbox "Ask me anything about moving to the US..."
+                  - button "Send message" [disabled]:
+                    - img
+  - iframe [ref=e86]:
+    
+```

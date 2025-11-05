@@ -1,0 +1,217 @@
+import { Injectable, signal } from '@angular/core';
+import { User, VerificationCode } from '../models/user.model';
+
+export interface SignupDraft {
+  name: string;
+  role: 'student' | 'professional';
+  organizationId: string;
+  email: string;
+  password: string;
+  termsAccepted: boolean;
+}
+
+export interface VerificationState {
+  email: string;
+  code: string;
+  attempts: number;
+  maxAttempts: number;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private readonly STORAGE_KEY = 'setly_user';
+  private readonly DRAFT_KEY = 'setly_signup_draft';
+  private readonly VERIFICATION_KEY = 'setly_verification';
+
+  private _currentUser = signal<User | null>(this.loadUser());
+  private _signupDraft = signal<SignupDraft | null>(this.loadDraft());
+  private _verificationState = signal<VerificationState | null>(this.loadVerificationState());
+
+  get currentUser() {
+    return this._currentUser.asReadonly();
+  }
+
+  get signupDraft() {
+    return this._signupDraft.asReadonly();
+  }
+
+  get verificationState() {
+    return this._verificationState.asReadonly();
+  }
+
+  signIn(email: string, password: string): Promise<User> {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (email && password) {
+          const user: User = {
+            id: '1',
+            name: 'John Doe',
+            email,
+            role: 'student',
+            emailVerified: true,
+            preferences: {
+              budgetMin: 500,
+              budgetMax: 1500,
+              vegetarian: false,
+              smoking: false,
+              petsOk: true,
+              furnished: false,
+              roomType: 'private' as const,
+            }
+          };
+          this._currentUser.set(user);
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+          resolve(user);
+        } else {
+          reject(new Error('Invalid credentials'));
+        }
+      }, 1000);
+    });
+  }
+
+  initiateSignup(draft: SignupDraft): Promise<{ success: boolean; message?: string }> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        this._signupDraft.set(draft);
+        localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const verification: VerificationState = {
+          email: draft.email,
+          code,
+          attempts: 0,
+          maxAttempts: 3
+        };
+        this._verificationState.set(verification);
+        localStorage.setItem(this.VERIFICATION_KEY, JSON.stringify(verification));
+
+        console.log(`Verification code for ${draft.email}: ${code}`);
+        resolve({ success: true });
+      }, 1000);
+    });
+  }
+
+  verifyCode(inputCode: string): Promise<{ success: boolean; message?: string }> {
+    return new Promise((resolve, reject) => {
+      const state = this._verificationState();
+      if (!state) {
+        reject(new Error('No verification in progress'));
+        return;
+      }
+
+      if (state.attempts >= state.maxAttempts) {
+        reject(new Error('Too many attempts. Please request a new code.'));
+        return;
+      }
+
+      setTimeout(() => {
+        state.attempts++;
+        this._verificationState.set(state);
+        localStorage.setItem(this.VERIFICATION_KEY, JSON.stringify(state));
+
+        if (inputCode === state.code) {
+          resolve({ success: true });
+        } else if (state.attempts >= state.maxAttempts) {
+          reject(new Error('Too many failed attempts. Please request a new code.'));
+        } else {
+          reject(new Error(`Invalid code. ${state.maxAttempts - state.attempts} attempts remaining.`));
+        }
+      }, 500);
+    });
+  }
+
+  resendCode(): Promise<{ success: boolean; message?: string }> {
+    return new Promise((resolve) => {
+      const draft = this._signupDraft();
+      if (!draft) {
+        resolve({ success: false, message: 'No signup in progress' });
+        return;
+      }
+
+      setTimeout(() => {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const verification: VerificationState = {
+          email: draft.email,
+          code,
+          attempts: 0,
+          maxAttempts: 3
+        };
+        this._verificationState.set(verification);
+        localStorage.setItem(this.VERIFICATION_KEY, JSON.stringify(verification));
+
+        console.log(`New verification code for ${draft.email}: ${code}`);
+        resolve({ success: true });
+      }, 1000);
+    });
+  }
+
+  completeProfile(profileData: Partial<User>): Promise<User> {
+    return new Promise((resolve) => {
+      const draft = this._signupDraft();
+      if (!draft) {
+        throw new Error('No signup draft found');
+      }
+
+      setTimeout(() => {
+        const user: User = {
+          id: Date.now().toString(),
+          name: draft.name,
+          email: draft.email,
+          role: draft.role,
+          emailVerified: true,
+          ...profileData,
+          preferences: {
+            budgetMin: 500,
+            budgetMax: 1500,
+            vegetarian: false,
+            smoking: false,
+            petsOk: false,
+            furnished: false,
+            roomType: 'private' as const,
+            ...profileData.preferences
+          }
+        };
+
+        this._currentUser.set(user);
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+
+        // Clear draft and verification state
+        this._signupDraft.set(null);
+        this._verificationState.set(null);
+        localStorage.removeItem(this.DRAFT_KEY);
+        localStorage.removeItem(this.VERIFICATION_KEY);
+
+        resolve(user);
+      }, 1000);
+    });
+  }
+
+  signOut(): void {
+    this._currentUser.set(null);
+    localStorage.removeItem(this.STORAGE_KEY);
+  }
+
+  clearSignupState(): void {
+    this._signupDraft.set(null);
+    this._verificationState.set(null);
+    localStorage.removeItem(this.DRAFT_KEY);
+    localStorage.removeItem(this.VERIFICATION_KEY);
+  }
+
+  private loadUser(): User | null {
+    const stored = localStorage.getItem(this.STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  }
+
+  private loadDraft(): SignupDraft | null {
+    const stored = localStorage.getItem(this.DRAFT_KEY);
+    return stored ? JSON.parse(stored) : null;
+  }
+
+  private loadVerificationState(): VerificationState | null {
+    const stored = localStorage.getItem(this.VERIFICATION_KEY);
+    return stored ? JSON.parse(stored) : null;
+  }
+}

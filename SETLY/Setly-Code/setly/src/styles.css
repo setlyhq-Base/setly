@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Utility classes */
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-brand-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue;
+}
+
+.chip {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800;
+}
+
+.card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+}
+
+/* Focus outlines */
+.focus\:ring-2:focus {
+  @apply ring-2 ring-brand-blue ring-offset-2;
+}
+
+.focus\:ring-4:focus {
+  @apply ring-4 ring-brand-blue ring-offset-2;
+}
+
+/* North-Star utility */
+.northstar {
+  @apply inline-block w-2.5 h-2.5 rounded-full bg-brand-blue align-middle;
+}

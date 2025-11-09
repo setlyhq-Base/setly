@@ -1,6 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { FirebaseAuthService } from '../auth/firebase-auth.service';
-import { Firestore, doc, onSnapshot, setDoc, serverTimestamp } from '@angular/fire/firestore';
+import { Firestore, doc, onSnapshot, setDoc, serverTimestamp, getDoc } from '@angular/fire/firestore';
 import { User } from '../models/user.model';
 
 @Injectable({
@@ -32,9 +32,10 @@ export class CurrentUserService {
     private firestore: Firestore
   ) {
     // Listen to Firebase auth state
-    this.firebaseAuth.onAuthStateChanged((user) => {
+    this.firebaseAuth.onAuthStateChanged(async (user) => {
       this._firebaseUser.set(user);
       if (user) {
+        await this.ensureUserDocument(user);
         this.subscribeToProfile(user.uid);
       } else {
         this._profile.set(null);
@@ -67,6 +68,26 @@ export class CurrentUserService {
       ...profileData,
       updatedAt: serverTimestamp(),
     }, { merge: true });
+  }
+
+  private async ensureUserDocument(user: any): Promise<void> {
+    try {
+      const userDocRef = doc(this.firestore, 'users', user.uid);
+      const snapshot = await getDoc(userDocRef);
+      if (!snapshot.exists()) {
+        await setDoc(userDocRef, {
+          primaryEmail: user.email,
+          name: user.displayName || 'New User',
+          role: 'student', // default placeholder; will be updated during profile completion
+          emailVerified: user.emailVerified || false,
+          domainVerified: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+    } catch (err) {
+      console.warn('[CurrentUserService] Failed ensuring user document', err);
+    }
   }
 
   private hasCompleteProfile(profile: User | null): boolean {

@@ -115,6 +115,47 @@ Each letter in **Setly** represents progress — from the moment you start a new
 
 ---
 
+## Auth (Google) — Local Dev Guide
+
+Prereqs
+- Create or use a Firebase project (the repo currently points to `setly-fire`).
+- In Firebase Console → Authentication → Sign-in method, enable Google.
+- Add Authorized domains: `localhost` and your local IP if needed.
+
+Frontend setup
+- Ensure `src/environments/environment.development.ts` has valid `firebase` config and `featureFlags.softDisableAuth: false`.
+- Start the app:
+
+	```bash
+	cd SETLY/Setly-Code/setly
+	npm install
+	npm start
+	```
+
+Usage
+- Visit http://localhost:4200/auth/sign-in
+- Click “Continue with Google”
+- On first sign-in, a Firestore user document is auto-created; you’ll be redirected to the home page.
+
+Backend API (optional; for protected endpoints)
+- Requires Firebase ID token (added automatically by the app via interceptor).
+- Requires AWS env vars for uploads route: `AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME`.
+- Run:
+
+	```bash
+	cd SETLY/Setly-Code/backend
+	npm install
+	npm run dev
+	```
+
+Troubleshooting
+- “Popup blocked”: Allow popups for localhost in your browser.
+- “Firebase not configured”: Check `environment.development.ts` has `firebase.apiKey` etc.
+- “Invalid token” (backend): Ensure the frontend attached Authorization header (check DevTools → Network). If missing, sign out/in.
+- Playwright E2E doesn’t perform real Google OAuth. Tests check UI and guard redirects. A mocked or emulator-based flow can be added next.
+
+---
+
 ## Screenshots
 
 | Landing | Browse | Post a Room | Messages |

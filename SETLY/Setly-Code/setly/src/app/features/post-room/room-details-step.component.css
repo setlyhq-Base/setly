@@ -1,0 +1,92 @@
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-help {
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.form-error {
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.radio-card {
+  position: relative;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.radio-card:hover {
+  border-color: #3b82f6;
+  background-color: #f9fafb;
+}
+
+.radio-card.selected {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.radio-card-content {
+  text-align: center;
+}
+
+.toggle-bg {
+  position: relative;
+}
+
+.toggle-dot {
+  transition: transform 0.2s;
+}
+
+.autocomplete-dropdown {
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+  margin-top: 0.25rem;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.autocomplete-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.autocomplete-item:hover {
+  background-color: #f3f4f6;
+}

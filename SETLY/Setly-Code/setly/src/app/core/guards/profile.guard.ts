@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 import { CurrentUserService } from '../user/current-user.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -12,20 +13,25 @@ export class ProfileGuard implements CanActivate {
   ) {}
 
   canActivate(): boolean {
-    if (this.currentUser.isAuthenticated() && this.currentUser.isProfileComplete()) {
+    // Soft disable bypasses guard logic entirely
+    if (environment.featureFlags?.softDisableAuth) {
       return true;
     }
 
-    // If authenticated but profile incomplete, redirect to profile completion
-    if (this.currentUser.isAuthenticated()) {
-      this.router.navigate(['/auth/profile']);
+    const authed = this.currentUser.isAuthenticated();
+    const profileComplete = this.currentUser.isProfileComplete();
+
+    if (authed && profileComplete) {
+      return true;
+    }
+
+    if (authed && !profileComplete) {
+      this.router.navigate(['/profile/wizard'], { queryParams: { next: this.router.url } });
       return false;
     }
 
-    // If not authenticated, redirect to auth
-    this.router.navigate(['/auth'], {
-      queryParams: { next: this.router.url }
-    });
+    // Not authed
+    this.router.navigate(['/auth/sign-in'], { queryParams: { next: this.router.url } });
     return false;
   }
 }

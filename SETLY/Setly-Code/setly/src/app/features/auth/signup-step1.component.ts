@@ -11,8 +11,8 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
   template: `
     <div class="max-w-md mx-auto">
       <div class="text-center mb-8">
-        <h2 class="text-2xl font-bold text-gray-900">Create Account</h2>
-        <p class="text-gray-600 mt-2">Join Setly to find your next room</p>
+        <h2 class="text-2xl font-bold text-gray-900">Create your account</h2>
+        <p class="text-gray-600 mt-2">Join Setly to Setly - Find Your next Room</p>
       </div>
 
       <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-6">

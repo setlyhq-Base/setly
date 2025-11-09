@@ -3,6 +3,7 @@ import { FirebaseAuthService } from '../auth/firebase-auth.service';
 import { CurrentUserService } from '../user/current-user.service';
 import { User } from '../models/user.model';
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from '@angular/fire/functions';
+import { environment } from '../../../environments/environment';
 
 export interface SignupDraft {
   name: string;
@@ -39,6 +40,21 @@ export class AuthService {
       const functions = getFunctions();
       connectFunctionsEmulator(functions, 'localhost', 5001);
     }
+
+    // Listen to auth state changes and handle navigation
+    this.firebaseAuth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // Check if user has a complete profile
+        const profile = this.currentUserService.currentUser();
+        if (profile && this.currentUserService.isProfileComplete()) {
+          // Existing user with complete profile -> home
+          // Navigation handled by guards
+        } else {
+          // New user or incomplete profile -> profile setup
+          // Navigation handled by guards
+        }
+      }
+    });
   }
 
   get currentUser() {
@@ -55,11 +71,20 @@ export class AuthService {
 
   // Social Login Methods
   async signInWithGoogle(): Promise<void> {
+    // Guard against missing Firebase config
+    if (!environment?.firebase?.apiKey) {
+      console.warn('[Auth] Missing Firebase configuration; cannot perform Google sign-in');
+      return Promise.reject(new Error('Firebase not configured'));
+    }
     await this.firebaseAuth.signInWithGoogle();
   }
 
   async signInWithFacebook(): Promise<void> {
     await this.firebaseAuth.signInWithFacebook();
+  }
+
+  async signInWithMicrosoft(): Promise<void> {
+    await this.firebaseAuth.signInWithMicrosoft();
   }
 
   // Email/Password Methods
@@ -104,6 +129,18 @@ export class AuthService {
   async signOut(): Promise<void> {
     await this.firebaseAuth.signOut();
   }
+
+  // Token Access (for interceptors)
+  async getIdToken(): Promise<string | null> {
+    try {
+      return await this.firebaseAuth.getIdToken();
+    } catch (e) {
+      console.warn('[Auth] Failed to obtain ID token', e);
+      return null;
+    }
+  }
+
+  // no-op: soft disable is handled by guards only; providers remain usable
 
   // Cloud Functions for verification
   async startEmailVerification(email: string): Promise<void> {

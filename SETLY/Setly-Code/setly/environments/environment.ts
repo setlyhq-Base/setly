@@ -4,7 +4,7 @@ export const environment = {
   stripePublicKey: 'pk_test_...',
   storageBucket: 'setly-dev.appspot.com',
   assistant: {
-    openaiApiKey: process.env['OPENAI_API_KEY'] || '',
+    openaiApiKey: '',
     apiUrl: 'https://api.openai.com/v1/chat/completions'
   }
 };

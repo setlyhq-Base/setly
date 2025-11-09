@@ -1,21 +1,41 @@
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
-import { environment } from '../environments/environment.development';
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { environment } from '../environments/environment';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, ErrorHandler } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { importProvidersFrom } from '@angular/core';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 import { routes } from './app.routes';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthTokenInterceptor } from './core/interceptors/auth-token.interceptor';
+
+class GlobalErrorHandler implements ErrorHandler {
+  handleError(error: any): void {
+    console.error('Global error handler:', error);
+  }
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideHttpClient(),
+    provideAnimationsAsync(),
+    importProvidersFrom(OverlayModule),
+  provideHttpClient(withInterceptorsFromDi()),
     provideRouter(routes),
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore())
+    // Only initialize Firebase when config exists to avoid runtime errors in demo mode
+    ...(environment?.firebase?.apiKey
+      ? [
+          provideFirebaseApp(() => initializeApp(environment.firebase)),
+          provideAuth(() => getAuth()),
+          provideFirestore(() => getFirestore())
+        ]
+      : []),
+    { provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true },
+    { provide: ErrorHandler, useClass: GlobalErrorHandler }
   ]
 };

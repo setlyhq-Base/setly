@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute, Params } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject } from 'rxjs';
@@ -9,12 +9,27 @@ import { RoomStoreService } from '../../core/services/room-store.service';
 import { UniversityService, University } from '../../core/services/university.service';
 import { AuthService } from '../../core/services/auth.service';
 import { MessageService } from '../../core/services/messaging.service';
+import { AnalyticsService } from '../../core/services/analytics.service';
+import { RidesService } from '../../core/services/rides.service';
 import { Room } from '../../core/models/room.model';
 import { CurrencyCompactPipe } from '../../shared/pipes/currency-compact.pipe';
 import { SkeletonCardComponent } from '../../shared/ui/skeleton-card.component';
 import { ChatWidgetComponent } from '../../features/assistant/chat-widget.component';
-import { DatePickerComponent } from '../../shared/ui/date-picker.component';
-import { GuestSelectorComponent } from '../../shared/ui/guest-selector.component';
+
+import { SearchHeroComponent } from '../../shared/ui/search-hero/search-hero.component';
+import { RideRequestModalComponent } from '../../shared/ui/ride-request-modal.component';
+import { TestimonialCarouselComponent } from '../../shared/ui/testimonial-carousel.component';
+import { HeaderComponent } from '../../shared/ui/header.component';
+import { FooterComponent } from '../../shared/ui/footer.component';
+
+interface SearchParams {
+  query?: string;
+  city?: string;
+  roomType?: 'shared' | 'Private';
+  checkIn?: string;
+  checkOut?: string;
+  studentVerifiedOnly?: boolean;
+}
 
 @Component({
   selector: 'app-home',
@@ -23,236 +38,227 @@ import { GuestSelectorComponent } from '../../shared/ui/guest-selector.component
     CommonModule,
     RouterModule,
     FormsModule,
-    CurrencyCompactPipe,
-    SkeletonCardComponent,
     ChatWidgetComponent,
-    DatePickerComponent,
-    GuestSelectorComponent
+    SearchHeroComponent,
+    RideRequestModalComponent,
+    TestimonialCarouselComponent
   ],
   template: `
-    <div class="min-h-[calc(100vh-theme(space.24))] bg-white text-gray-900">
+    <div class="min-h-screen bg-white text-gray-900">
+      <!-- Debug marker to confirm home component renders -->
+      <div class="sr-only" data-testid="home-debug">home-component-mounted</div>
       <!-- Hero Section -->
-      <section class="container mx-auto px-4 py-16 md:py-24">
-        <div class="grid lg:grid-cols-2 gap-12 items-center">
-          <!-- Left Column -->
-          <div class="space-y-8">
-            <div>
-              <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">
-                Find Your Perfect Room
-              </h1>
-            <p class="text-gray-600 text-lg md:text-xl max-w-xl">
-              Connect with students and find housing.
-            </p>
-            </div>
+      <section class="section-premium section-gradient animate-fade-in" data-testid="hero-section">
+        <div class="container mx-auto px-4">
+          <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Left Column -->
+            <div class="space-y-8 animate-slide-up">
+              <div>
+                <h1 class="heading-premium mb-6 text-gradient">
+                  Find Your Perfect Room
+                </h1>
+                <p class="subheading-premium max-w-xl">
+                  Connect with students and find housing that matches your lifestyle.
+                </p>
+              </div>
 
-            <div class="flex flex-col sm:flex-row gap-4">
-              <button
-                (click)="navigateToBrowse()"
-                class="bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg px-5 py-2.5 transition"
-                aria-label="Find your next room">
-                Find your next room
-              </button>
-              <button
-                [routerLink]="'/post-room'"
-                class="bg-white border border-gray-300 hover:border-gray-400 text-gray-900 font-medium rounded-lg px-5 py-2.5 transition"
-                aria-label="Post a room">
-                Post a room
-              </button>
-            </div>
-          </div>
-
-          <!-- Right Column - Search Card -->
-          <div class="rounded-2xl bg-white border border-gray-200 p-5 md:p-6 w-full max-w-xl shadow-lg">
-            <h2 class="text-xl font-semibold mb-4 text-gray-900">Find rooms near</h2>
-
-            <!-- University Search -->
-            <div class="relative mb-4">
-              <input
-                type="text"
-                [(ngModel)]="query"
-                (input)="onType($event)"
-                (keydown)="onKeyDown($event)"
-                (focus)="showSuggestions = true"
-                (blur)="onBlur()"
-                placeholder="Search universities or cities..."
-                class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                aria-label="Search for universities"
-                aria-controls="uni-listbox"
-                [attr.aria-expanded]="showSuggestions"
-                autocomplete="off"
-              >
-              <button
-                (click)="navigateToBrowse()"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-                aria-label="Search">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </button>
-
-              <!-- Suggestions Dropdown -->
-              <div
-                *ngIf="showSuggestions && filteredSuggestions().length > 0"
-                id="uni-listbox"
-                role="listbox"
-                class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-              >
-                <div
-                  *ngFor="let university of filteredSuggestions(); trackBy: trackById; let i = index"
-                  (mousedown)="selectSuggestion(university)"
-                  (mouseenter)="activeIndex = i"
-                  class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-200 last:border-b-0"
-                  [attr.aria-selected]="activeIndex === i"
-                  role="option"
+              <div class="flex flex-col sm:flex-row gap-4">
+                <button
+                  (click)="navigateToBrowse()"
+                  class="btn-primary"
+                  data-testid="hero-search-button"
                 >
-                  <div class="font-medium text-gray-900">{{ university.name }}</div>
-                  <div class="text-sm text-gray-600">{{ university.city }}, {{ university.state }}</div>
-                </div>
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                  Find Rooms
+                </button>
+                <button
+                  (click)="scrollToRides()"
+                  class="btn-secondary"
+                  data-testid="hero-ride-button"
+                >
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a4 4 0 004 4h4m-4-4v4m0-4H8m8 0V7a4 4 0 00-4-4H8a4 4 0 00-4 4v8"></path>
+                  </svg>
+                  Book a Ride
+                </button>
               </div>
             </div>
 
-            <!-- Date Pickers -->
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Check-in</label>
-                <app-date-picker
-                  (dateSelected)="onCheckInSelected($event)"
-                  class="w-full">
-                </app-date-picker>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Check-out</label>
-                <app-date-picker
-                  (dateSelected)="onCheckOutSelected($event)"
-                  class="w-full">
-                </app-date-picker>
-              </div>
-            </div>
-
-            <!-- Guest Selector -->
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Guests</label>
-              <app-guest-selector
-                (guestsChanged)="onGuestsChanged($event)"
-                class="w-full">
-              </app-guest-selector>
-            </div>
-
-            <!-- Student Verification Badge -->
-            <div class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                </svg>
-                <span class="text-sm font-medium text-blue-900">Student-verified rooms only</span>
-              </div>
-              <p class="text-xs text-blue-700 mt-1">All listings are verified by current students</p>
-            </div>
-
-            <!-- Filter Chips -->
-            <div class="flex flex-wrap gap-2">
-              <button
-                *ngFor="let chip of chipKeys()"
-                (click)="toggleChip(chip.key)"
-                class="px-3 py-1.5 rounded-full text-sm border transition"
-                [class]="chip.active ? 'bg-blue-600 border-blue-500 text-white' : 'border-gray-300 text-gray-700 hover:border-gray-400'"
-                [attr.aria-pressed]="chip.active"
-                [attr.aria-label]="chip.label">
-                {{ chip.label }}
-              </button>
+            <!-- Right Column -->
+            <div class="animate-scale-in">
+              <app-search-hero
+                [initialQuery]="searchParams().query || ''"
+                [initialCity]="searchParams().city || ''"
+                [initialRoomType]="searchParams().roomType || ''"
+                [initialCheckIn]="searchParams().checkIn || null"
+                [initialCheckOut]="searchParams().checkOut || null"
+                [initialStudentVerifiedOnly]="searchParams().studentVerifiedOnly || false"
+                (searchChange)="onSearchChange($event)"
+                data-testid="search-hero"
+              ></app-search-hero>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Featured Rooms Section -->
-      <section class="container mx-auto px-4 py-16">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">Featured Rooms</h2>
-          <p class="text-gray-600 text-lg max-w-2xl mx-auto">
-            Discover amazing rooms near universities that match your lifestyle.
-          </p>
-        </div>
+      <section class="section-premium bg-white" data-testid="featured-rooms-section">
+        <div class="container mx-auto px-4">
+          <div class="text-center mb-16">
+            <h2 class="heading-premium mb-4">Featured Rooms</h2>
+            <p class="subheading-premium">Discover amazing spaces shared by students just like you</p>
+          </div>
 
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <ng-container *ngIf="loadingFeatured(); else roomsTemplate">
-            <app-skeleton-card
-              *ngFor="let i of skeletonArray">
-            </app-skeleton-card>
-          </ng-container>
-
-          <ng-template #roomsTemplate>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" *ngIf="!loadingFeatured()">
             <div
               *ngFor="let room of featuredRooms(); trackBy: trackById"
+              class="card-premium hover-lift cursor-pointer group"
               (click)="onRoomClick(room)"
-              class="rounded-2xl bg-white border border-gray-200 p-5 cursor-pointer hover:border-gray-300 hover:shadow-lg transition group"
+              [attr.data-testid]="'room-card-' + room.id"
             >
-              <div class="aspect-video rounded-lg overflow-hidden mb-4">
+              <div class="relative">
                 <img
                   [src]="room.photos[0] || '/assets/placeholder-room.jpg'"
                   [alt]="room.title"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  class="w-full h-48 object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                  width="400"
+                  height="192"
                 >
+                <div class="absolute top-4 right-4">
+                  <span class="chip bg-white/90 backdrop-blur-sm text-gray-900">
+                    $\{{room.price}}/month
+                  </span>
+                </div>
               </div>
 
-              <div class="space-y-3">
-                <div>
-                  <h3 class="font-semibold text-lg text-gray-900">{{ room.title }}</h3>
-                  <p class="text-gray-600">{{ room.city }}, {{ room.state }}</p>
-                </div>
+              <div class="p-6">
+                <h3 class="font-semibold text-lg text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  {{ room.title }}
+                </h3>
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ room.title }}</p>
 
-                <div class="flex items-center gap-2">
-                  <span class="text-2xl font-bold text-blue-600">{{ room.price | currencyCompact }}</span>
-                  <span class="text-gray-600">/month</span>
-                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                      <span class="text-white text-xs font-semibold">{{ room.hostId.charAt(0) }}</span>
+                    </div>
+                    <span class="text-sm text-gray-700">{{ room.hostId }}</span>
+                  </div>
 
-                <div class="flex flex-wrap gap-2">
-                  <span
-                    *ngIf="room.rules.vegetarian"
-                    class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                    Vegetarian
-                  </span>
-                  <span
-                    *ngIf="!room.rules.smoking"
-                    class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                    No smoking
-                  </span>
-                  <span
-                    *ngIf="room.rules.petsOk"
-                    class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
-                    Pets ok
-                  </span>
-                  <span
-                    *ngIf="room.furnished"
-                    class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">
-                    Furnished
-                  </span>
-                  <span
-                    *ngIf="room.roomType === 'private'"
-                    class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
-                    Private room
-                  </span>
+                  <button
+                    (click)="onConnectClick(room, $event)"
+                    class="btn-ghost text-blue-600 hover:text-blue-700"
+                    [attr.data-testid]="'connect-button-' + room.id"
+                  >
+                    Connect
+                  </button>
                 </div>
-
-                <button
-                  (click)="onConnectClick(room, $event)"
-                  class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg px-4 py-2 transition"
-                  aria-label="Request to connect">
-                  Request to connect
-                </button>
               </div>
             </div>
-          </ng-template>
+          </div>
+
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" *ngIf="loadingFeatured()">
+            <div *ngFor="let item of skeletonArray" class="card-premium">
+              <div class="loading-shimmer w-full h-48 rounded-t-2xl"></div>
+              <div class="p-6 space-y-3">
+                <div class="loading-shimmer h-6 w-3/4 rounded"></div>
+                <div class="loading-shimmer h-4 w-full rounded"></div>
+                <div class="loading-shimmer h-4 w-2/3 rounded"></div>
+                <div class="flex justify-between items-center">
+                  <div class="loading-shimmer h-8 w-8 rounded-full"></div>
+                  <div class="loading-shimmer h-8 w-20 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SetlyRide & Uber Cards -->
+      <section class="container mx-auto px-4 py-16" data-testid="ride-services">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold mb-4">Get Around Campus</h2>
+          <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+            Connect with peers for rides or use Uber for quick trips around your university.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <!-- SetlyRide Card -->
+          <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-lg transition-shadow">
+            <div class="text-center mb-6">
+              <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-2xl">🚗</span>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-2">SetlyRide</h3>
+              <p class="text-gray-600">Peer-to-peer rides with students near your university.</p>
+            </div>
+            <button
+              (click)="openRideModal()"
+              class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg px-6 py-3 transition"
+              data-testid="setlyride-button"
+            >
+              Request SetlyRide
+            </button>
+          </div>
+
+          <!-- Uber Card -->
+          <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-lg transition-shadow">
+            <div class="text-center mb-6">
+              <div class="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-white text-xl font-bold">U</span>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-2">Uber</h3>
+              <p class="text-gray-600">Quick rides to and from campus with Uber.</p>
+            </div>
+            <button
+              (click)="openUber()"
+              class="w-full bg-black hover:bg-gray-800 text-white font-medium rounded-lg px-6 py-3 transition"
+              data-testid="uber-button"
+            >
+              Open Uber
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Trust & Proof Section -->
+      <section class="bg-gray-50 py-16" data-testid="trust-proof">
+        <div class="container mx-auto px-4">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Trusted by Students</h2>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+              Join thousands of verified students who have found their perfect housing and transportation solutions.
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-8 text-center">
+            <div>
+              <div class="text-4xl font-bold text-blue-600 mb-2">10,000+</div>
+              <div class="text-gray-600">Students Connected</div>
+            </div>
+            <div>
+              <div class="text-4xl font-bold text-green-600 mb-2">95%</div>
+              <div class="text-gray-600">Satisfaction Rate</div>
+            </div>
+            <div>
+              <div class="text-4xl font-bold text-purple-600 mb-2">500+</div>
+              <div class="text-gray-600">Universities Served</div>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- How it Works Section -->
-      <section class="container mx-auto px-4 py-16">
+      <section class="container mx-auto px-4 py-16" data-testid="how-it-works">
         <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">How it works</h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4" id="how-it-works">How it works</h2>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-8">
+        <div class="grid md:grid-cols-4 gap-8">
           <div class="text-center">
             <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <span class="text-2xl font-bold text-white">1</span>
@@ -271,66 +277,34 @@ import { GuestSelectorComponent } from '../../shared/ui/guest-selector.component
 
           <div class="text-center">
             <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-2xl font-bold text-white">3</span>
+              <span class="text-2xl font-bold text-white">3</span>
             </div>
             <h3 class="text-xl font-semibold mb-2 text-gray-900">Connect & confirm</h3>
             <p class="text-gray-600">Message hosts directly and secure your perfect room.</p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-2xl font-bold text-white">4</span>
+            </div>
+            <h3 class="text-xl font-semibold mb-2 text-gray-900">Get around campus</h3>
+            <p class="text-gray-600">Use SetlyRide for peer-to-peer rides or Uber for quick trips.</p>
           </div>
         </div>
       </section>
 
       <!-- Testimonials Section -->
-      <section class="container mx-auto px-4 py-16">
+      <section class="container mx-auto px-4 py-16" data-testid="testimonials-section">
         <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">What students say</h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4" id="what-students-say">What students say</h2>
         </div>
-
-        <div class="grid md:grid-cols-3 gap-8">
-          <div class="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                <span class="text-white font-semibold">A</span>
-              </div>
-              <div>
-                <div class="font-semibold text-gray-900">Alex Chen</div>
-                <div class="text-gray-600 text-sm">Harvard University</div>
-              </div>
-            </div>
-            <p class="text-gray-700 italic">"Found my perfect room within days of arriving in Cambridge. The filters made it so easy to find vegetarian-friendly housing!"</p>
-          </div>
-
-          <div class="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                <span class="text-white font-semibold">S</span>
-              </div>
-              <div>
-                <div class="font-semibold text-gray-900">Sarah Johnson</div>
-                <div class="text-gray-600 text-sm">Stanford University</div>
-              </div>
-            </div>
-            <p class="text-gray-700 italic">"Setly helped me find pet-friendly housing near campus. My cat and I are both very happy!"</p>
-          </div>
-
-          <div class="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                <span class="text-white font-semibold">M</span>
-              </div>
-              <div>
-                <div class="font-semibold text-gray-900">Miguel Rodriguez</div>
-                <div class="text-gray-600 text-sm">UC Berkeley</div>
-              </div>
-            </div>
-            <p class="text-gray-700 italic">"The furnished rooms option saved me so much time and hassle. Highly recommend for international students!"</p>
-          </div>
-        </div>
+        <app-testimonial-carousel data-testid="testimonials-carousel"></app-testimonial-carousel>
       </section>
 
       <!-- FAQ Section -->
-      <section class="container mx-auto px-4 py-16">
+      <section class="container mx-auto px-4 py-16" data-testid="faq-section">
         <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">Frequently asked questions</h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4" id="faq">Frequently asked questions</h2>
         </div>
 
         <div class="max-w-3xl mx-auto space-y-4">
@@ -373,9 +347,9 @@ import { GuestSelectorComponent } from '../../shared/ui/guest-selector.component
       </section>
 
       <!-- Final CTA Section -->
-      <section class="container mx-auto px-4 py-16">
+      <section class="container mx-auto px-4 py-16" data-testid="final-cta">
         <div class="rounded-2xl bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-slate-700 p-8 md:p-12 text-center">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready for your next move?</h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4" id="ready-for-next-move">Ready for your next move?</h2>
           <p class="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">
             Join thousands of students who have found their perfect room near campus.
           </p>
@@ -383,13 +357,15 @@ import { GuestSelectorComponent } from '../../shared/ui/guest-selector.component
             <button
               (click)="navigateToBrowse()"
               class="bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg px-6 py-3 transition"
-              aria-label="Find your next room">
-              Find your next room
+              aria-label="Setly - Find Your next Room"
+              data-testid="cta-search-button">
+              Setly - Find Your next Room
             </button>
             <button
               [routerLink]="'/post-room'"
               class="bg-slate-800 border border-slate-700 hover:border-slate-500 text-slate-100 font-medium rounded-lg px-6 py-3 transition"
-              aria-label="Post a room">
+              aria-label="Post a room"
+              data-testid="cta-post-button">
               Post a room
             </button>
           </div>
@@ -397,7 +373,15 @@ import { GuestSelectorComponent } from '../../shared/ui/guest-selector.component
       </section>
 
       <!-- Chat Widget -->
-      <app-chat-widget></app-chat-widget>
+      <app-chat-widget data-testid="chat-widget"></app-chat-widget>
+
+      <!-- Ride Request Modal -->
+      <app-ride-request-modal
+        [isOpen]="rideModalOpen"
+        (rideSubmitted)="onRideSubmitted($event)"
+        (closed)="rideModalOpen.set(false)"
+        data-testid="ride-modal">
+      </app-ride-request-modal>
     </div>
   `,
   styles: [`
@@ -420,155 +404,110 @@ export class HomePage implements OnInit {
   private roomStore = inject(RoomStoreService);
   private authService = inject(AuthService);
   private messageService = inject(MessageService);
+  private route = inject(ActivatedRoute);
+  private analytics = inject(AnalyticsService);
+  private ridesService = inject(RidesService);
 
   // Signals
-  query = signal('');
-  showSuggestions = false;
-  activeIndex = -1;
   loadingFeatured = signal(true);
-
-  // New search signals
-  checkInDate = signal<Date | null>(null);
-  checkOutDate = signal<Date | null>(null);
-  guests = signal({ adults: 1, children: 0 });
-
-  // Chips state
-  chips = signal({
-    indian: false,
-    vegetarian: false,
-    noSmoking: false,
-    petsOk: false,
-    private: false,
-    furnished: false
+  searchParams = signal<SearchParams>({
+    query: '',
+    city: '',
+    roomType: undefined,
+    checkIn: undefined,
+    checkOut: undefined,
+    studentVerifiedOnly: false
   });
+  rideModalOpen = signal(false);
 
   // Computed
-  chipKeys = computed(() => [
-    { key: 'indian', label: 'Indian community', active: this.chips().indian },
-    { key: 'vegetarian', label: 'Vegetarian', active: this.chips().vegetarian },
-    { key: 'noSmoking', label: 'No smoking', active: this.chips().noSmoking },
-    { key: 'petsOk', label: 'Pets ok', active: this.chips().petsOk },
-    { key: 'private', label: 'Private room', active: this.chips().private },
-    { key: 'furnished', label: 'Furnished', active: this.chips().furnished }
-  ]);
-
-  filteredSuggestions = computed(() => {
-    const q = this.query().trim();
-    if (q.length < 2) return [];
-    return this.universityService?.search(q) || [];
+  featuredRooms = computed(() => {
+    return this.roomStore.featuredRooms() ?? [];
   });
 
-  featuredRooms = computed(() => {
-    return this.roomStore.featuredRooms();
+  searchActive = computed(() => {
+    const params = this.searchParams();
+    return !!(params.query || params.city || params.roomType || 
+             params.checkIn || params.checkOut || params.studentVerifiedOnly);
   });
 
   skeletonArray = Array(6).fill(0);
 
   ngOnInit(): void {
     // Set page title and meta
-    this.title.setTitle('Setly - Find your next room');
+    this.title.setTitle('Setly - Find Your next Room');
     this.meta.updateTag({ name: 'description', content: 'Find rooms near your university with filters that match your life.' });
 
-    // Simulate loading featured rooms
+    // Load featured rooms
     setTimeout(() => {
       this.loadingFeatured.set(false);
     }, 1000);
+
+    // Subscribe to route query params
+    this.route.queryParams.subscribe(params => {
+      this.searchParams.set({
+        query: params['q'] || '',
+        city: params['city'] || '',
+        roomType: params['roomType'] as 'shared' | 'Private' || undefined,
+        checkIn: params['checkIn'] || undefined,
+        checkOut: params['checkOut'] || undefined,
+        studentVerifiedOnly: params['studentVerified'] === 'true'
+      });
+    });
+
+    // Analytics
+    this.analytics.trackPageView('homepage');
   }
 
-  onType(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.query.set(target.value);
-    this.showSuggestions = true;
-    this.activeIndex = -1;
+  onSearchChange(params: SearchParams): void {
+    this.searchParams.set(params);
   }
 
-  onKeyDown(event: KeyboardEvent): void {
-    const suggestions = this.filteredSuggestions();
-    if (suggestions.length === 0) return;
-
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        this.activeIndex = Math.min(this.activeIndex + 1, suggestions.length - 1);
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        this.activeIndex = Math.max(this.activeIndex - 1, -1);
-        break;
-      case 'Enter':
-        event.preventDefault();
-        if (this.activeIndex >= 0) {
-          this.selectSuggestion(suggestions[this.activeIndex]);
-        } else {
-          this.navigateToBrowse();
-        }
-        break;
-      case 'Escape':
-        this.showSuggestions = false;
-        this.activeIndex = -1;
-        break;
-    }
+  openRideModal(): void {
+    this.rideModalOpen.set(true);
+    this.analytics.trackEvent('open_ride_modal', { source: 'homepage' });
   }
 
-  onBlur(): void {
-    // Delay hiding to allow click events
-    setTimeout(() => {
-      this.showSuggestions = false;
-      this.activeIndex = -1;
-    }, 200);
+  openUber(): void {
+    // Fallback destination - the app can supply more context in the future
+    const destination = this.searchParams().city || 'campus';
+    const link = this.ridesService.getUberDeepLink(destination);
+    window.open(link, '_blank');
+    this.analytics.trackRideRequest('uber', { destination });
   }
 
-  selectSuggestion(university: University): void {
-    this.query.set(university.name);
-    this.showSuggestions = false;
-    this.navigateToBrowse();
-  }
-
-  toggleChip(key: string): void {
-    this.chips.update(chips => ({
-      ...chips,
-      [key]: !chips[key as keyof typeof chips]
-    }));
+  onRideSubmitted(payload: any): void {
+    // Quick analytics and UX hook
+    this.analytics.trackRideRequest('setly', { pickup: payload.pickup, drop: payload.drop });
+    // Close modal
+    this.rideModalOpen.set(false);
   }
 
   navigateToBrowse(): void {
-    const queryParams: any = {};
+    const params = this.searchParams();
+    const queryParams: Params = {};
 
-    const q = this.query().trim();
-    if (q) queryParams.q = q;
+    if (params.query) queryParams['q'] = params.query;
+    if (params.city) queryParams['city'] = params.city;
+    if (params.roomType) queryParams['roomType'] = params.roomType;
+    if (params.checkIn) queryParams['checkIn'] = params.checkIn;
+    if (params.checkOut) queryParams['checkOut'] = params.checkOut;
+    if (params.studentVerifiedOnly) queryParams['studentVerified'] = true;
 
-    // Date parameters
-    const checkIn = this.checkInDate();
-    const checkOut = this.checkOutDate();
-    if (checkIn) queryParams.checkIn = checkIn.toISOString();
-    if (checkOut) queryParams.checkOut = checkOut.toISOString();
-
-    // Guest parameters
-    const guestCount = this.guests().adults + this.guests().children;
-    if (guestCount > 1) queryParams.guests = guestCount;
-
-    // Student verification (always true for now)
-    queryParams.studentVerified = true;
-
-    const activeChips = this.chips();
-    if (activeChips.vegetarian) queryParams.vegetarian = true;
-    if (activeChips.noSmoking) queryParams.noSmoking = true;
-    if (activeChips.petsOk) queryParams.petsOk = true;
-    if (activeChips.private) queryParams.roomType = 'private';
-    if (activeChips.furnished) queryParams.furnished = true;
-
-    // Analytics stub
-    console.log('Hero search:', queryParams);
+    // Analytics
+    this.analytics.trackSearch(params.query || '', params);
 
     this.router.navigate(['/browse'], { queryParams });
   }
 
   onRoomClick(room: Room): void {
+    this.analytics.trackRoomClick(room.id);
     this.router.navigate(['/browse'], { queryParams: { highlight: room.id } });
   }
 
   onConnectClick(room: Room, event: Event): void {
     event.stopPropagation();
+    this.analytics.trackEvent('connect_clicked', { room_id: room.id });
 
     const currentUser = this.authService.currentUser();
     if (!currentUser) {
@@ -586,33 +525,14 @@ export class HomePage implements OnInit {
     }
   }
 
-  onCheckInSelected(date: Date): void {
-    this.checkInDate.set(date);
-    // Clear check-out if it's before check-in
-    const checkOut = this.checkOutDate();
-    if (checkOut && checkOut <= date) {
-      this.checkOutDate.set(null);
+  scrollToRides(): void {
+    const element = document.querySelector('[data-testid="ride-services"]');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
     }
-  }
-
-  onCheckOutSelected(date: Date): void {
-    this.checkOutDate.set(date);
-  }
-
-  onGuestsChanged(guests: { adults: number; children: number }): void {
-    this.guests.set(guests);
   }
 
   trackById(index: number, item: any): string {
     return item.id;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.relative')) {
-      this.showSuggestions = false;
-      this.activeIndex = -1;
-    }
   }
 }

@@ -1,6 +1,7 @@
 export const environment = {
-  production: false,
+  production: true,
   firebase: {
+    // Prod Firebase config (same as dev for now; replace with prod secrets when ready)
     apiKey: "AIzaSyDLk2hmPHVtlBdxu0Rctfh2G5FnAIHpq64",
     authDomain: "setly-fire.firebaseapp.com",
     projectId: "setly-fire",
@@ -9,9 +10,18 @@ export const environment = {
     appId: "1:577734262579:web:de22f8e59f43303e1f4846",
     measurementId: "G-NVJEGLQLR3"
   },
-  facebookAppId: "your-production-facebook-app-id",
-  microsoftClientId: "your-production-microsoft-client-id",
-  frontendUrl: "https://your-domain.com",
-  supportEmail: "support@setly.com",
-  apiUrl: 'http://localhost:3000/api'
+  apiUrl: 'https://api.setly.com/v1',
+  apiBaseUrl: 'https://api.setly.com/v1',
+  analytics: {
+    gaMeasurementId: ''
+  },
+  recaptcha: {
+    // reCAPTCHA Enterprise site key (prod) – replace with production key if different
+    siteKey: '6LfLjgcsAAAAAjs6Y6rPaWmNpekSyGAUD7Qv5tT'
+  },
+  featureFlags: {
+    softDisableAuth: false,
+    mockPhoneAuth: false,
+    disableRecaptchaEnterprise: false
+  }
 };

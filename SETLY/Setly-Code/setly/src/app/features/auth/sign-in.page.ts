@@ -16,7 +16,7 @@ import { RouterLink } from '@angular/router';
             <p class="text-gray-600">Sign in to your account</p>
           </div>
 
-          <!-- Sign in form placeholder -->
+          <!-- Sign in form -->
           <form class="space-y-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
@@ -39,12 +39,16 @@ import { RouterLink } from '@angular/router';
             <button type="submit" class="btn w-full bg-brand-blue hover:bg-brand-blue/90 text-white py-3 rounded-lg font-semibold">
               Sign In
             </button>
+
+            <button type="button" class="w-full text-brand-blue hover:text-brand-blue/80 font-medium py-2">
+              Or sign in with magic link
+            </button>
           </form>
 
           <div class="mt-6 text-center">
             <p class="text-gray-600">
               Don't have an account?
-              <a routerLink="/auth/sign-up" class="text-brand-blue hover:text-brand-blue/80 font-medium">Sign up</a>
+              <a routerLink="/auth/sign-up" class="text-brand-blue hover:text-brand-blue/80 font-medium">Create account</a>
             </p>
           </div>
         </div>

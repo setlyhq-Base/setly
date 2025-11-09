@@ -1,0 +1,151 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "SETLY" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e8]: SETLY
+      - generic [ref=e11]:
+        - textbox "Search for rooms" [ref=e12]:
+          - /placeholder: Search for rooms near USA universities...
+        - generic:
+          - img
+        - button "Submit search" [ref=e13] [cursor=pointer]:
+          - img [ref=e14]
+      - navigation [ref=e16]:
+        - link "Browse" [ref=e17] [cursor=pointer]:
+          - /url: /browse
+        - link "Post Room" [ref=e18] [cursor=pointer]:
+          - /url: /post-room
+        - link "Messages" [ref=e19] [cursor=pointer]:
+          - /url: /messages
+        - link "Ride" [ref=e20] [cursor=pointer]:
+          - /url: /ride
+        - link "Profile" [ref=e21] [cursor=pointer]:
+          - /url: /profile
+        - link "Settings" [ref=e22] [cursor=pointer]:
+          - /url: /settings
+        - link "Sign In" [ref=e23] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Sign Up" [ref=e24] [cursor=pointer]:
+          - /url: /sign-up
+  - main [ref=e25]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - heading "Find verified homes & rides — where trust meets community." [level=1] [ref=e30]
+          - paragraph [ref=e31]: Create your Setly account and join a trusted network.
+        - generic [ref=e32]: “Quality listings and verified users.” – Aditi
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - heading "Create your Setly account" [level=2] [ref=e36]
+          - paragraph [ref=e37]: It only takes a minute
+        - generic [ref=e38]:
+          - button "Continue with Google" [ref=e39] [cursor=pointer]: Continue with Google
+          - button "Continue with Microsoft" [ref=e41] [cursor=pointer]: Continue with Microsoft
+          - button "Continue with Facebook" [ref=e43] [cursor=pointer]: Continue with Facebook
+          - button "Continue with Phone number" [ref=e45] [cursor=pointer]: Continue with Phone number
+        - link "Already have an account? Sign In" [ref=e48] [cursor=pointer]:
+          - /url: /auth/sign-in
+        - paragraph [ref=e49]:
+          - text: By continuing, you agree to Setly’s
+          - link "Terms" [ref=e50] [cursor=pointer]:
+            - /url: /terms
+          - text: and
+          - link "Privacy Policy" [ref=e51] [cursor=pointer]:
+            - /url: /privacy
+          - text: .
+  - contentinfo [ref=e53]:
+    - generic [ref=e54]:
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - generic [ref=e59]: SETLY
+          - paragraph [ref=e60]: Setly - Find Your next Room near your university with roommates who match your lifestyle.
+        - generic [ref=e61]:
+          - heading "Company" [level=3] [ref=e62]
+          - list [ref=e63]:
+            - listitem [ref=e64]:
+              - link "About Setly" [ref=e65] [cursor=pointer]:
+                - /url: /about
+                - text: About
+            - listitem [ref=e66]:
+              - link "Careers at Setly" [ref=e67] [cursor=pointer]:
+                - /url: /careers
+                - text: Careers
+            - listitem [ref=e68]:
+              - link "Setly blog" [ref=e69] [cursor=pointer]:
+                - /url: /blog
+                - text: Blog
+            - listitem [ref=e70]:
+              - link "Safety information" [ref=e71] [cursor=pointer]:
+                - /url: /safety
+                - text: Safety
+            - listitem [ref=e72]:
+              - link "Help center" [ref=e73] [cursor=pointer]:
+                - /url: /help
+                - text: Help
+        - generic [ref=e74]:
+          - heading "Support" [level=3] [ref=e75]
+          - list [ref=e76]:
+            - listitem [ref=e77]:
+              - link "Terms of service" [ref=e78] [cursor=pointer]:
+                - /url: /terms
+                - text: Terms
+            - listitem [ref=e79]:
+              - link "Privacy policy" [ref=e80] [cursor=pointer]:
+                - /url: /privacy
+                - text: Privacy
+            - listitem [ref=e81]:
+              - link "Contact support" [ref=e82] [cursor=pointer]:
+                - /url: mailto:support@setly.com
+                - text: Contact
+        - generic [ref=e83]:
+          - heading "Connect" [level=3] [ref=e84]
+          - list [ref=e85]:
+            - listitem [ref=e86]:
+              - link "Follow us on Facebook" [ref=e87] [cursor=pointer]:
+                - /url: https://facebook.com/setly
+                - text: Facebook
+            - listitem [ref=e88]:
+              - link "Follow us on Twitter" [ref=e89] [cursor=pointer]:
+                - /url: https://twitter.com/setly
+                - text: Twitter
+            - listitem [ref=e90]:
+              - link "Follow us on Instagram" [ref=e91] [cursor=pointer]:
+                - /url: https://instagram.com/setly
+                - text: Instagram
+            - listitem [ref=e92]:
+              - link "Follow us on LinkedIn" [ref=e93] [cursor=pointer]:
+                - /url: https://linkedin.com/company/setly
+                - text: LinkedIn
+      - paragraph [ref=e95]: © 2025 Setly. All rights reserved.
+  - generic:
+    - button "Open Setly Assistant" [ref=e96] [cursor=pointer]:
+      - generic [ref=e97]:
+        - img
+    - dialog "Setly Assistant":
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - img
+              - heading "Setly Assistant" [level=2]
+            - button "Close chat":
+              - img
+          - generic:
+            - generic:
+              - button "Find housing"
+              - button "Airport pickup"
+              - button "Documents for SSN"
+              - button "Open a bank account"
+              - button "Get a US SIM"
+          - generic:
+            - generic:
+              - generic:
+                - textbox "Ask me anything about moving to the US..."
+                - button "Send message" [disabled]:
+                  - img
+```

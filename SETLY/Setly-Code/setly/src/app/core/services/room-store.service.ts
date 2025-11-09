@@ -8,14 +8,14 @@ interface Filters {
   smoking: boolean;
   petsOk: boolean;
   furnished: boolean;
-  roomType: 'private' | 'shared' | '';
+  roomType: 'private' | 'shared' | 'Private' | '';
   city: string;
   universityId: string;
   // New Airbnb-like filters
   checkIn?: string; // ISO date string
   checkOut?: string; // ISO date string
   guests?: number;
-  studentVerified?: boolean;
+  studentVerifiedOnly?: boolean;
 }
 
 @Injectable({
@@ -40,7 +40,7 @@ export class RoomStoreService {
     checkIn: undefined,
     checkOut: undefined,
     guests: undefined,
-    studentVerified: undefined
+    studentVerifiedOnly: undefined
   });
 
   // Public readonly signals
@@ -106,8 +106,8 @@ export class RoomStoreService {
       // Guest capacity filter
       if (f.guests && room.maxGuests && f.guests > room.maxGuests) return false;
 
-      // Student verification filter (always filter for student verified rooms)
-      if (f.studentVerified !== undefined && room.studentVerified !== f.studentVerified) return false;
+      // Student verification filter
+      if (f.studentVerifiedOnly && !room.studentVerified) return false;
 
       return true;
     });
@@ -410,5 +410,25 @@ export class RoomStoreService {
 
   getRoomsByHost(hostId: string): Room[] {
     return this._rooms().filter(room => room.hostId === hostId);
+  }
+
+  saveDraft(draft: Partial<Room>): void {
+    localStorage.setItem('room-draft', JSON.stringify(draft));
+  }
+
+  loadDraft(): Partial<Room> | null {
+    const stored = localStorage.getItem('room-draft');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (error) {
+        console.error('Error loading draft:', error);
+      }
+    }
+    return null;
+  }
+
+  clearDraft(): void {
+    localStorage.removeItem('room-draft');
   }
 }

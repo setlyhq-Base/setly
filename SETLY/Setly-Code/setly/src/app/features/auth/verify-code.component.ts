@@ -11,7 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <div class="space-y-6">
       <div class="text-center">
-        <h2 class="text-2xl font-bold text-white mb-2">Verify Your Email</h2>
+        <h2 class="text-2xl font-bold text-white mb-2">Verify Your Phone</h2>
         <p class="text-gray-400">We've sent a 6-digit code to {{ email() }}</p>
       </div>
 
@@ -63,10 +63,10 @@ import { AuthService } from '../../core/services/auth.service';
 
         <button
           type="button"
-          (click)="changeEmail()"
+          (click)="changePhone()"
           class="text-gray-400 hover:text-gray-300 text-sm"
         >
-          Change email address
+          Change phone number
         </button>
       </div>
     </div>
@@ -95,9 +95,9 @@ export class VerifyCodeComponent {
       digit5: ['', [Validators.required, Validators.pattern(/[0-9]/)]]
     });
 
-    // Get email from current user or verification state
+    // Get phone number from current user or verification state
     const currentUser = this.authService.currentUser();
-    this.email.set(currentUser?.primaryEmail || '');
+    this.email.set(currentUser?.phoneNumber || '');
 
     // Start resend countdown
     this.startResendCountdown();
@@ -140,8 +140,8 @@ export class VerifyCodeComponent {
 
     try {
       await this.authService.verifyPhoneCode(code);
-      // Success - redirect to dashboard
-      this.router.navigate(['/dashboard']);
+      // Success - redirect to profile setup for new users
+      this.router.navigate(['/auth/profile']);
     } catch (error) {
       console.error('Verification error:', error);
       // Handle error - show message, clear form, etc.
@@ -159,15 +159,16 @@ export class VerifyCodeComponent {
     if (this.resendDisabled()) return;
 
     try {
-      await this.authService.startEmailVerification(this.email());
+      // For phone verification, we need to re-send the SMS
+      // This would typically require storing the phone number and re-initiating
       this.startResendCountdown();
     } catch (error) {
       console.error('Resend error:', error);
     }
   }
 
-  changeEmail() {
-    // Navigate back to email input or show modal
+  changePhone() {
+    // Navigate back to phone input or show modal
     this.router.navigate(['/auth']);
   }
 

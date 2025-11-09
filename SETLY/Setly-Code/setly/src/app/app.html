@@ -1,6 +1,11 @@
 <app-header></app-header>
-<main class="min-h-screen bg-black text-white">
+@if (!environment.firebase.apiKey) {
+  <div class="bg-yellow-50 border-b border-yellow-200 text-sm text-yellow-900 px-4 py-2" data-testid="demo-banner">
+    Auth in demo mode – add Firebase config to environment files for full sign-in.
+  </div>
+}
+<main class="min-h-screen" data-testid="main-wrapper">
   <router-outlet></router-outlet>
-</main>
+  </main>
 <app-footer></app-footer>
 <app-chat-widget></app-chat-widget>

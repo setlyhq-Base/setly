@@ -4,6 +4,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   FacebookAuthProvider,
+  OAuthProvider,
   signInWithPhoneNumber,
   RecaptchaVerifier,
   ConfirmationResult,
@@ -18,6 +19,7 @@ import {
   getIdToken,
   ActionCodeSettings
 } from '@angular/fire/auth';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -25,11 +27,34 @@ import {
 export class FirebaseAuthService {
   private recaptchaVerifier?: RecaptchaVerifier;
   private confirmationResult?: ConfirmationResult;
+  // E2E mock support
+  private mockEnabled = false;
+  private mockUser: Partial<FirebaseUser> | null = null;
+  private phoneMockEnabled = !!environment?.featureFlags?.mockPhoneAuth;
+  private phoneMockCode = '123456';
 
-  constructor(private auth: Auth) {}
+  constructor(private auth: Auth) {
+    // Check for E2E mock flag injected by Playwright before app boot
+    try {
+      const w = window as any;
+      if (w && w.__e2eMockAuth && w.__e2eMockAuth.enabled) {
+        this.mockEnabled = true;
+        this.mockUser = w.__e2eMockAuth.user || {
+          uid: 'e2e-mock-uid',
+          email: 'mock.user@setly.test',
+          displayName: 'E2E Mock User',
+          emailVerified: true
+        } as Partial<FirebaseUser>;
+      }
+    } catch {}
+  }
 
   // Social Login Methods
   async signInWithGoogle(): Promise<FirebaseUser> {
+    if (this.mockEnabled && this.mockUser) {
+      // Immediately resolve with mock user for tests
+      return this.mockUser as FirebaseUser;
+    }
     const provider = new GoogleAuthProvider();
     provider.addScope('email');
     provider.addScope('profile');
@@ -41,6 +66,14 @@ export class FirebaseAuthService {
     const provider = new FacebookAuthProvider();
     provider.addScope('email');
     provider.addScope('public_profile');
+    const result = await signInWithPopup(this.auth, provider);
+    return result.user;
+  }
+
+  async signInWithMicrosoft(): Promise<FirebaseUser> {
+    const provider = new OAuthProvider('microsoft.com');
+    provider.addScope('email');
+    provider.addScope('profile');
     const result = await signInWithPopup(this.auth, provider);
     return result.user;
   }
@@ -82,6 +115,37 @@ export class FirebaseAuthService {
 
   // Phone OTP Methods
   async initializeRecaptcha(containerId: string = 'recaptcha-container'): Promise<void> {
+    // If enterprise is configured and not disabled by feature flag, inject script once.
+    if (!environment?.featureFlags?.disableRecaptchaEnterprise && environment?.recaptcha?.siteKey && !(window as any).__recaptchaEnterpriseLoaded) {
+      const scriptId = 'recaptcha-enterprise-script';
+      if (!document.getElementById(scriptId)) {
+        const s = document.createElement('script');
+        s.id = scriptId;
+        s.src = `https://www.google.com/recaptcha/enterprise.js?render=${environment.recaptcha.siteKey}`;
+        s.async = true;
+        s.onload = () => {
+          (window as any).__recaptchaEnterpriseLoaded = true;
+          // Preload an enterprise token (optional – action label can be adjusted later)
+          try {
+            // @ts-ignore
+            grecaptcha.enterprise.ready(() => {
+              // @ts-ignore
+              grecaptcha.enterprise.execute(environment.recaptcha.siteKey, { action: 'PHONE_AUTH_INIT' })
+                .then((token: string) => {
+                  // Store for potential backend risk assessment call – not yet sent
+                  (window as any).__recaptchaLastToken = token;
+                  console.log('[reCAPTCHA] enterprise token acquired');
+                })
+                .catch((err: any) => console.warn('[reCAPTCHA] enterprise execute failed', err));
+            });
+          } catch (e) {
+            console.warn('[reCAPTCHA] enterprise ready failed', e);
+          }
+        };
+        document.head.appendChild(s);
+      }
+    }
+
     if (!this.recaptchaVerifier) {
       this.recaptchaVerifier = new RecaptchaVerifier(this.auth, containerId, {
         size: 'invisible',
@@ -96,6 +160,23 @@ export class FirebaseAuthService {
   }
 
   async signInWithPhone(phoneNumber: string): Promise<void> {
+    if (this.phoneMockEnabled) {
+      // Simulate an async send SMS
+      await new Promise(r => setTimeout(r, 300));
+      // Store a pseudo confirmationResult for verify
+      this.confirmationResult = {
+        confirm: async (code: string) => {
+          // Accept ANY 6-digit code in mock mode to reduce friction
+          if (code && code.length === 6) {
+            return { user: (this.mockUser || { uid: 'phone-mock', phoneNumber }) as FirebaseUser };
+          }
+          const err: any = new Error('Enter 6 digits');
+          err.code = 'auth/invalid-verification-code';
+          throw err;
+        }
+      } as unknown as ConfirmationResult;
+      return;
+    }
     if (!this.recaptchaVerifier) {
       throw new Error('reCAPTCHA not initialized');
     }
@@ -108,6 +189,16 @@ export class FirebaseAuthService {
   }
 
   async verifyPhoneCode(code: string): Promise<FirebaseUser> {
+    if (this.phoneMockEnabled) {
+      // Use the mocked confirmationResult path above
+      if (!this.confirmationResult) {
+        const err: any = new Error('No phone verification in progress');
+        err.code = 'auth/missing-verification';
+        throw err;
+      }
+      const result: any = await this.confirmationResult.confirm(code);
+      return result.user as FirebaseUser;
+    }
     if (!this.confirmationResult) {
       throw new Error('No phone verification in progress');
     }
@@ -118,6 +209,11 @@ export class FirebaseAuthService {
 
   // Auth State
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void): () => void {
+    if (this.mockEnabled) {
+      // Invoke immediately with mock user; return no-op unsubscribe
+      setTimeout(() => callback(this.mockUser as FirebaseUser), 0);
+      return () => {};
+    }
     return onAuthStateChanged(this.auth, callback);
   }
 
@@ -128,6 +224,12 @@ export class FirebaseAuthService {
 
   // Token
   async getIdToken(): Promise<string | null> {
+    if (this.mockEnabled) {
+      return 'e2e-mock-token';
+    }
+    if (this.phoneMockEnabled) {
+      return 'e2e-mock-phone-token';
+    }
     const user = this.auth.currentUser;
     return user ? await getIdToken(user) : null;
   }

@@ -1,16 +1,9 @@
-import { Component, EventEmitter, Output, signal, computed, inject } from '@angular/core';
+import { Component, EventEmitter, Output, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-
-interface University {
-  id: string;
-  name: string;
-  city: string;
-  state: string;
-  lat: number;
-  lng: number;
-}
+import { UniversityService, University } from '../../core/services/university.service';
+import { debounceTime, Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-search-bar',
@@ -22,12 +15,14 @@ interface University {
         [(ngModel)]="query"
         (input)="onInputChange()"
         (keyup.enter)="onSubmit()"
+        (keydown)="onKeyDown($event)"
         (focus)="showSuggestions = true"
         (blur)="hideSuggestions()"
-              placeholder="Search for rooms near USA universities..."
+        placeholder="Search for rooms near USA universities..."
         class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
         aria-label="Search for rooms"
         autocomplete="off"
+        data-testid="search-input"
       >
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,12 +42,14 @@ interface University {
       <!-- Suggestions Dropdown -->
       <div
         *ngIf="showSuggestions && filteredSuggestions().length > 0"
-        class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+        class="absolute left-0 right-0 top-full z-50 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
       >
         <div
-          *ngFor="let university of filteredSuggestions()"
+          *ngFor="let university of filteredSuggestions(); let i = index"
           (mousedown)="selectUniversity(university)"
+          [class.bg-blue-50]="i === activeIndex"
           class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+          data-testid="search-suggestion"
         >
           <div class="font-medium text-gray-900">{{ university.name }}</div>
           <div class="text-sm text-gray-600">{{ university.city }}, {{ university.state }}</div>
@@ -67,57 +64,92 @@ interface University {
     }
   `]
 })
-export class SearchBarComponent {
+export class SearchBarComponent implements OnInit, OnDestroy {
   @Output() submitQuery = new EventEmitter<string>();
 
   query = '';
   showSuggestions = false;
-  universities = signal<University[]>([]);
+  activeIndex = -1;
+  private destroy$ = new Subject<void>();
+  private inputSubject = new Subject<string>();
+
+  universityService = inject(UniversityService);
 
   filteredSuggestions = computed(() => {
     if (!this.query.trim() || this.query.length < 2) return [];
 
     const query = this.query.toLowerCase();
-    return this.universities().filter(university =>
-      university.name.toLowerCase().includes(query) ||
-      university.city.toLowerCase().includes(query) ||
-      university.state.toLowerCase().includes(query)
-    ).slice(0, 8); // Limit to 8 suggestions
+    return this.universityService.search(query);
   });
 
-  constructor(private router: Router) {
-    this.loadUniversities();
+  constructor(private router: Router) {}
+
+  ngOnInit(): void {
+    this.inputSubject.pipe(
+      debounceTime(150),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.activeIndex = -1;
+    });
+
+    // Close suggestions on route change
+    this.router.events.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.showSuggestions = false;
+      this.activeIndex = -1;
+    });
   }
 
-  private async loadUniversities(): Promise<void> {
-    try {
-      const response = await fetch('/assets/mock/universities.json');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      this.universities.set(data);
-    } catch (error) {
-      console.error('Error loading universities:', error);
-      // Fallback to empty array to prevent crashes
-      this.universities.set([]);
-    }
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   onInputChange(): void {
     this.showSuggestions = true;
+    this.inputSubject.next(this.query);
+  }
+
+  onKeyDown(event: KeyboardEvent): void {
+    const suggestions = this.filteredSuggestions();
+    if (!this.showSuggestions || suggestions.length === 0) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.activeIndex = Math.min(this.activeIndex + 1, suggestions.length - 1);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.activeIndex = Math.max(this.activeIndex - 1, -1);
+        break;
+      case 'Enter':
+        event.preventDefault();
+        if (this.activeIndex >= 0 && this.activeIndex < suggestions.length) {
+          this.selectUniversity(suggestions[this.activeIndex]);
+        } else {
+          this.onSubmit();
+        }
+        break;
+      case 'Escape':
+        event.preventDefault();
+        this.showSuggestions = false;
+        this.activeIndex = -1;
+        break;
+    }
   }
 
   hideSuggestions(): void {
     // Delay hiding to allow click events on suggestions
     setTimeout(() => {
       this.showSuggestions = false;
+      this.activeIndex = -1;
     }, 200);
   }
 
   selectUniversity(university: University): void {
     this.query = university.name;
     this.showSuggestions = false;
+    this.activeIndex = -1;
     this.onSubmit();
   }
 
@@ -125,6 +157,7 @@ export class SearchBarComponent {
     if (this.query.trim()) {
       this.submitQuery.emit(this.query.trim());
       this.showSuggestions = false;
+      this.activeIndex = -1;
       // Navigate to browse page with query params
       this.router.navigate(['/browse'], {
         queryParams: { q: this.query.trim(), studentVerified: true }

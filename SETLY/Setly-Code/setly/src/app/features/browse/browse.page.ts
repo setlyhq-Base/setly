@@ -83,8 +83,16 @@ export class BrowsePage {
 
   private handleQueryParams(): void {
     this.route.queryParams.subscribe(params => {
-      if (params['q']) {
-        this.roomStore.updateFilters({ query: params['q'] });
+      const filters: any = {};
+
+      if (params['q']) filters.city = params['q'];
+      if (params['type']) filters.roomType = params['type'];
+      if (params['ci']) filters.checkIn = params['ci'];
+      if (params['co']) filters.checkOut = params['co'];
+      if (params['sv']) filters.studentVerifiedOnly = params['sv'] === '1';
+
+      if (Object.keys(filters).length > 0) {
+        this.roomStore.updateFilters(filters);
       }
     });
   }

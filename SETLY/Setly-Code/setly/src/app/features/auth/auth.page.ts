@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SocialButtonsComponent } from './social-buttons.component';
 import { AuthService } from '../../core/services/auth.service';
+import { AUTH_FLAGS } from '../../../environments/auth.flags';
 
 @Component({
   selector: 'app-auth-page',
@@ -18,7 +19,7 @@ import { AuthService } from '../../core/services/auth.service';
               <span class="northstar"></span>
               <span class="text-3xl font-bold text-white">SETLY</span>
             </div>
-            <h1 class="text-4xl font-bold text-white mb-6">Find Your Perfect Room</h1>
+            <h1 class="text-4xl font-bold text-white mb-6">Find Your next Room</h1>
             <p class="text-xl text-indigo-100 mb-8">Connect with verified students and professionals in your area</p>
             <div class="space-y-4 text-left">
               <div class="flex items-center space-x-3">
@@ -58,9 +59,7 @@ import { AuthService } from '../../core/services/auth.service';
           <app-social-buttons
             [loading]="loading()"
             (googleClick)="onGoogleSignIn()"
-            (facebookClick)="onFacebookSignIn()"
             (phoneClick)="onPhoneSignIn()"
-            class="mb-8"
           />
 
           <!-- Terms -->
@@ -93,23 +92,16 @@ export class AuthPage {
     this.loading.set(true);
     try {
       await this.authService.signInWithGoogle();
-      // Navigation will be handled by auth state changes
+      // Navigation will be handled by auth state changes in the service
     } catch (error) {
       console.error('Google sign-in error:', error);
       this.loading.set(false);
     }
   }
 
-  async onFacebookSignIn() {
-    this.loading.set(true);
-    try {
-      await this.authService.signInWithFacebook();
-      // Navigation will be handled by auth state changes
-    } catch (error) {
-      console.error('Facebook sign-in error:', error);
-      this.loading.set(false);
-    }
-  }
+
+
+
 
   async onPhoneSignIn() {
     this.loading.set(true);
@@ -123,37 +115,5 @@ export class AuthPage {
     }
   }
 
-  async onEmailSignIn(email: string, password: string) {
-    this.loading.set(true);
-    try {
-      await this.authService.signIn(email, password);
-      // Navigation will be handled by auth state changes
-    } catch (error) {
-      console.error('Email sign-in error:', error);
-      this.loading.set(false);
-    }
-  }
 
-  async onEmailSignUp(email: string, password: string) {
-    this.loading.set(true);
-    try {
-      await this.authService.signUp(email, password);
-      // Navigation will be handled by auth state changes
-    } catch (error) {
-      console.error('Email sign-up error:', error);
-      this.loading.set(false);
-    }
-  }
-
-  async onMagicLinkSignIn(email: string) {
-    this.loading.set(true);
-    try {
-      await this.authService.sendSignInLinkToEmail(email);
-      // Show success message
-      this.loading.set(false);
-    } catch (error) {
-      console.error('Magic link error:', error);
-      this.loading.set(false);
-    }
-  }
 }

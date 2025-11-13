@@ -1,0 +1,18 @@
+[
+  {"id":"harvard","name":"Harvard University","city":"Cambridge","state":"MA","lat":42.3770,"lng":-71.1167},
+  {"id":"mit","name":"Massachusetts Institute of Technology","city":"Cambridge","state":"MA","lat":42.3601,"lng":-71.0942},
+  {"id":"stanford","name":"Stanford University","city":"Stanford","state":"CA","lat":37.4275,"lng":-122.1697},
+  {"id":"berkeley","name":"University of California, Berkeley","city":"Berkeley","state":"CA","lat":37.8719,"lng":-122.2585},
+  {"id":"ucla","name":"University of California, Los Angeles","city":"Los Angeles","state":"CA","lat":34.0689,"lng":-118.4452},
+  {"id":"uchicago","name":"University of Chicago","city":"Chicago","state":"IL","lat":41.7897,"lng":-87.5997},
+  {"id":"columbia","name":"Columbia University","city":"New York","state":"NY","lat":40.8075,"lng":-73.9626},
+  {"id":"princeton","name":"Princeton University","city":"Princeton","state":"NJ","lat":40.3430,"lng":-74.6514},
+  {"id":"yale","name":"Yale University","city":"New Haven","state":"CT","lat":41.3163,"lng":-72.9223},
+  {"id":"newhaven","name":"University of New Haven","city":"West Haven","state":"CT","lat":41.2900,"lng":-72.9617},
+  {"id":"rivier","name":"Rivier University","city":"Nashua","state":"NH","lat":42.7491,"lng":-71.4662},
+  {"id":"northeastern","name":"Northeastern University","city":"Boston","state":"MA","lat":42.3398,"lng":-71.0892},
+  {"id":"bu","name":"Boston University","city":"Boston","state":"MA","lat":42.3505,"lng":-71.1054},
+  {"id":"nyu","name":"New York University","city":"New York","state":"NY","lat":40.7291,"lng":-73.9965},
+  {"id":"utaustin","name":"University of Texas at Austin","city":"Austin","state":"TX","lat":30.2849,"lng":-97.7341},
+  {"id":"uPenn","name":"University of Pennsylvania","city":"Philadelphia","state":"PA","lat":39.9522,"lng":-75.1932}
+]

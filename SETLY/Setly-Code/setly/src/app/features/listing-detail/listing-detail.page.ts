@@ -1,194 +1,489 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, HostListener } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RoomStore } from '../../core/state/room.store';
-import { RoomCard } from '../../core/models/room-card.model';
 import { Room } from '../../core/models/room.model';
+import { ToastService } from '../../core/services/toast.service';
+import { AnalyticsService } from '../../core/services/analytics.service';
+import { RoomsService } from '../../core/services/rooms.service';
+import { NearbyService, NearbyChip } from '../../core/services/nearby.service';
+import { UsersService } from '../../core/services/users.service';
+import { AuthStore } from '../../core/state/auth.store';
+import { RoomStore } from '../../core/state/room.store';
 
 @Component({
   selector: 'app-listing-detail-page',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
-    <main class="min-h-screen bg-gray-50">
-      <div *ngIf="room(); else loading" class="max-w-4xl mx-auto px-4 py-8">
-        <!-- Gallery -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
-          <div class="aspect-video bg-gray-200 relative">
-            <img
-              [src]="room()!.photos[mainImageIndex()] || '/assets/placeholder-room.jpg'"
-              [alt]="room()!.title"
-              class="w-full h-full object-cover"
-            >
-            <div class="absolute top-3 right-3">
-              <span
-                class="px-2 py-1 text-xs font-medium rounded-full"
-                [class]="room()!.isAvailable
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-red-100 text-red-800'"
-              >
-                {{ room()!.isAvailable ? 'Available' : 'Unavailable' }}
-              </span>
-            </div>
-          </div>
-          <!-- Image Thumbnails -->
-          <div class="flex gap-2 p-4 overflow-x-auto" *ngIf="room()!.photos.length > 1">
-            <img
-              *ngFor="let photo of room()!.photos; let i = index"
-              [src]="photo"
-              [alt]="room()!.title + ' ' + (i + 1)"
-              class="w-20 h-20 object-cover rounded-lg cursor-pointer border-2 hover:border-blue-500"
-              [class.border-blue-500]="i === mainImageIndex()"
-              (click)="setMainImage(i)"
-            >
-          </div>
+  <main class="min-h-screen bg-white">
+    <!-- Not Found State -->
+    <section *ngIf="!room()" class="py-24 text-center">
+      <div class="max-w-md mx-auto px-4">
+        <div class="text-5xl mb-4">🔎</div>
+        <h1 class="text-2xl font-semibold mb-2">Listing not found</h1>
+        <p class="text-gray-600 mb-6">The listing may have been removed or the link is incorrect.</p>
+        <button class="btn-secondary mr-2" (click)="goBack()">Back to Browse</button>
+        <a routerLink="/browse" class="btn-primary px-4 py-2 rounded-lg">Browse Listings</a>
+      </div>
+    </section>
+
+    <!-- Anchor Nav -->
+    <nav *ngIf="room()" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-200 hidden md:block">
+      <ul class="max-w-7xl mx-auto px-6 flex gap-8 text-sm font-medium">
+        <li><button (click)="scrollTo('photos')" class="py-4 -mb-px border-b-2 border-transparent hover:border-gray-300 transition"
+            [class.border-blue-500]="activeAnchor()==='photos'" [class.text-blue-600]="activeAnchor()==='photos'" [class.font-semibold]="activeAnchor()==='photos'">Photos</button></li>
+        <li><button (click)="scrollTo('details')" class="py-4 -mb-px border-b-2 border-transparent hover:border-gray-300 transition"
+            [class.border-blue-500]="activeAnchor()==='details'" [class.text-blue-600]="activeAnchor()==='details'" [class.font-semibold]="activeAnchor()==='details'">Details</button></li>
+        <li><button (click)="scrollTo('amenities')" class="py-4 -mb-px border-b-2 border-transparent hover:border-gray-300 transition"
+            [class.border-blue-500]="activeAnchor()==='amenities'" [class.text-blue-600]="activeAnchor()==='amenities'" [class.font-semibold]="activeAnchor()==='amenities'">Amenities</button></li>
+    <!-- Reviews anchor removed per requirement -->
+        <li><button (click)="scrollTo('location')" class="py-4 -mb-px border-b-2 border-transparent hover:border-gray-300 transition"
+            [class.border-blue-500]="activeAnchor()==='location'" [class.text-blue-600]="activeAnchor()==='location'" [class.font-semibold]="activeAnchor()==='location'">Location</button></li>
+        <li><button (click)="scrollTo('host')" class="py-4 -mb-px border-b-2 border-transparent hover:border-gray-300 transition"
+            [class.border-blue-500]="activeAnchor()==='host'" [class.text-blue-600]="activeAnchor()==='host'" [class.font-semibold]="activeAnchor()==='host'">Host</button></li>
+        <li><button (click)="scrollTo('rules')" class="py-4 -mb-px border-b-2 border-transparent hover:border-gray-300 transition"
+            [class.border-blue-500]="activeAnchor()==='rules'" [class.text-blue-600]="activeAnchor()==='rules'" [class.font-semibold]="activeAnchor()==='rules'">Rules</button></li>
+      </ul>
+    </nav>
+
+    <!-- Collage Style Gallery -->
+    <section *ngIf="room()" id="photos" class="max-w-7xl mx-auto px-4 md:px-6 pt-6">
+      <div class="grid grid-cols-12 gap-2 md:gap-3">
+        <div class="col-span-12 md:col-span-7 rounded-2xl overflow-hidden relative group aspect-[16/10] md:aspect-[16/10] lg:aspect-[16/9] max-h-[360px] md:max-h-[420px] lg:max-h-[480px]">
+          <img [src]="room()?.photos?.[0] || currentPhoto()" class="w-full h-full object-cover" alt="Main photo" loading="lazy" />
+          <button class="absolute bottom-3 right-3 text-xs px-3 py-1.5 rounded-full bg-black/50 text-white backdrop-blur hover:bg-black/70" (click)="openGallery()">Show all photos</button>
         </div>
-
-        <!-- Header -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ room()!.title }}</h1>
-              <p class="text-gray-600 text-lg">{{ room()!.city }}, {{ room()!.state }}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-3xl font-bold text-brand-blue">$ {{ room()?.price }}/month</p>
-            </div>
-          </div>
-
-          <!-- Features chips -->
-          <div class="flex flex-wrap gap-2">
-            <span
-              *ngFor="let tag of room()!.tags"
-              class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
-            >
-              {{ tag }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Details Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- Main Content -->
-          <div class="lg:col-span-2 space-y-8">
-            <!-- Description -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-              <h2 class="text-xl font-semibold mb-4">Description</h2>
-              <p class="text-gray-700">
-                This is a great room located near campus. Perfect for students looking for a comfortable living space.
-              </p>
-            </div>
-
-            <!-- Amenities -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-              <h2 class="text-xl font-semibold mb-4">Amenities</h2>
-              <div class="grid grid-cols-2 gap-2">
-                <div *ngFor="let tag of room()!.tags" class="flex items-center">
-                  <span class="text-gray-700">{{ tag }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Map placeholder -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-              <h2 class="text-xl font-semibold mb-4">Location</h2>
-              <div class="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                <p class="text-gray-500">Map coming soon...</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sidebar -->
-          <div class="space-y-6">
-            <!-- Back Navigation -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-              <button
-                (click)="goBack()"
-                class="flex items-center text-gray-600 hover:text-gray-900 mb-4"
-              >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-                Back to browse
-              </button>
-            </div>
-
-            <!-- Contact -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-              <h3 class="text-lg font-semibold mb-4">Landlord</h3>
-              <div class="flex items-center space-x-3 mb-4">
-                <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
-                <div>
-                  <p class="font-medium">John Doe</p>
-                  <p class="text-sm text-gray-600">Verified landlord</p>
-                </div>
-              </div>
-              <button class="btn w-full bg-brand-blue hover:bg-brand-blue/90 text-white py-3 rounded-lg font-semibold">
-                Send Message
-              </button>
-            </div>
+        <div class="hidden md:grid col-span-5 grid-rows-2 gap-3">
+          <div *ngFor="let p of room()?.photos | slice:1:5; let i=index" class="rounded-2xl overflow-hidden aspect-[16/10] lg:aspect-[16/9] max-h-[200px] md:max-h-[205px] lg:max-h-[230px]">
+            <img [src]="p" class="w-full h-full object-cover" alt="Photo {{ i+2 }}" loading="lazy" />
           </div>
         </div>
       </div>
+      <div class="mt-6 flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">{{ room()?.title }}</h1>
+          <p class="text-gray-600 mt-1">
+            <ng-container *ngIf="room()?.address; else cityState">{{ room()?.address }}</ng-container>
+            <ng-template #cityState>{{ room()?.city }}, {{ room()?.state }}</ng-template>
+          </p>
+          <p class="text-xs text-gray-500 mt-1" *ngIf="room()?.distanceKm || room()?.distance">
+            <span *ngIf="room()?.distanceKm">Approx {{ room()?.distanceKm }} km from campus</span>
+            <span *ngIf="!room()?.distanceKm && room()?.distance">{{ room()?.distance }}</span>
+          </p>
+          <p class="text-xs text-gray-500" *ngIf="room()?.availabilityStart || room()?.availabilityEnd">
+            Available
+            <span *ngIf="room()?.availabilityStart">from {{ room()?.availabilityStart | date:'MMM d, y' }}</span>
+            <span *ngIf="room()?.availabilityEnd"> to {{ room()?.availabilityEnd | date:'MMM d, y' }}</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-3 text-sm">
+          <button class="btn-secondary px-3 py-2" (click)="share()">Share</button>
+          <button class="btn-secondary px-3 py-2" (click)="toggleSave()">{{ saved() ? 'Saved' : 'Save' }}</button>
+        </div>
+      </div>
+    </section>
 
-      <ng-template #loading>
-        <div class="max-w-4xl mx-auto px-4 py-8">
-          <div class="animate-pulse space-y-8">
-            <div class="aspect-video bg-gray-300 rounded-lg"></div>
-            <div class="bg-white rounded-lg p-6 space-y-4">
-              <div class="h-8 bg-gray-300 rounded w-3/4"></div>
-              <div class="h-6 bg-gray-300 rounded w-1/2"></div>
-              <div class="flex space-x-2">
-                <div class="h-6 bg-gray-300 rounded w-20"></div>
-                <div class="h-6 bg-gray-300 rounded w-24"></div>
+    <!-- Main Body Grid -->
+    <section *ngIf="room()" class="max-w-7xl mx-auto px-4 md:px-6 mt-10 mb-16" id="details">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <!-- Left column -->
+        <div class="lg:col-span-7 space-y-10">
+          <!-- About -->
+          <div>
+            <div class="flex items-center gap-2 mb-2 text-sm text-gray-700">
+              <span class="inline-block w-2 h-2 rounded-full bg-blue-500"></span> Verified Host · {{ hostName() }}
+            </div>
+            <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ aboutExpanded() ? aboutText : (aboutText.length > 180 ? (aboutText | slice:0:180) + '…' : aboutText) }}</p>
+            <button *ngIf="aboutText.length > 180" class="mt-3 text-sm font-medium underline" (click)="toggleExpandAbout()">{{ aboutExpanded() ? 'Show less' : 'Show more' }}</button>
+          </div>
+
+          <!-- Amenities & Essentials -->
+          <div id="amenities">
+            <h2 class="text-xl font-semibold mb-3">Amenities & Essentials</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Comfort -->
+              <div *ngIf="amenityGroup('comfort').length" class="rounded-xl border bg-white/60 backdrop-blur-sm p-4 hover:shadow-md transition-shadow">
+                <h3 class="text-sm font-semibold text-gray-900 mb-2">Comfort</h3>
+                <ul class="divide-y divide-gray-100/70">
+                  <li *ngFor="let a of amenityGroup('comfort')" class="flex items-center gap-2 py-2 text-sm text-gray-700">
+                    <span class="w-5 text-center" aria-hidden="true">{{ iconFor(a) || '•' }}</span>
+                    <span>{{ a }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Utilities -->
+              <div *ngIf="amenityGroup('utilities').length" class="rounded-xl border bg-white/60 backdrop-blur-sm p-4 hover:shadow-md transition-shadow">
+                <h3 class="text-sm font-semibold text-gray-900 mb-2">Utilities</h3>
+                <ul class="divide-y divide-gray-100/70">
+                  <li *ngFor="let a of amenityGroup('utilities')" class="flex items-center gap-2 py-2 text-sm text-gray-700">
+                    <span class="w-5 text-center" aria-hidden="true">{{ iconFor(a) || '•' }}</span>
+                    <span>{{ a }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Lifestyle -->
+              <div *ngIf="amenityGroup('lifestyle').length" class="rounded-xl border bg-white/60 backdrop-blur-sm p-4 hover:shadow-md transition-shadow md:col-span-2">
+                <h3 class="text-sm font-semibold text-gray-900 mb-2">Lifestyle</h3>
+                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 divide-y sm:divide-y-0 sm:divide-x divide-gray-100/70">
+                  <li class="py-2 sm:py-0 sm:px-4">
+                    <div *ngFor="let a of amenityGroup('lifestyleLeft'); let i = index" class="flex items-center gap-2 py-2 text-sm text-gray-700">
+                      <span class="w-5 text-center" aria-hidden="true">{{ iconFor(a) || '•' }}</span>
+                      <span>{{ a }}</span>
+                    </div>
+                  </li>
+                  <li class="py-2 sm:py-0 sm:px-4">
+                    <div *ngFor="let a of amenityGroup('lifestyleRight'); let i = index" class="flex items-center gap-2 py-2 text-sm text-gray-700">
+                      <span class="w-5 text-center" aria-hidden="true">{{ iconFor(a) || '•' }}</span>
+                      <span>{{ a }}</span>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Other (if any) -->
+              <div *ngIf="amenityGroup('other').length" class="rounded-xl border bg-white/60 backdrop-blur-sm p-4 hover:shadow-md transition-shadow md:col-span-2">
+                <h3 class="text-sm font-semibold text-gray-900 mb-2">Other</h3>
+                <div class="flex flex-wrap gap-2">
+                  <span *ngFor="let a of amenityGroup('other')" class="px-2 py-1 text-xs rounded-md bg-gray-50 border text-gray-700">{{ a }}</span>
+                </div>
+              </div>
+              <div class="md:col-span-2">
+                <button class="mt-2 btn-secondary text-xs" (click)="showAllAmenities.set(true)">Show all amenities</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reviews section removed -->
+
+          <!-- Location -->
+          <div id="location">
+            <h2 class="text-xl font-semibold mb-3">Neighborhood & Connectivity</h2>
+            <div class="rounded-2xl overflow-hidden border bg-gray-100 h-64">
+              <ng-container *ngIf="mapUrl; else mapFallback">
+                <iframe [src]="mapUrl" width="100%" height="100%" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" aria-label="Google map showing listing location"></iframe>
+              </ng-container>
+              <ng-template #mapFallback>
+                <div class="h-full w-full flex items-center justify-center text-gray-500">Map unavailable</div>
+              </ng-template>
+            </div>
+            <!-- Descriptive blurb -->
+            <div class="mt-4 rounded-xl border bg-white/60 backdrop-blur-sm p-4 text-sm text-gray-700">
+              {{ neighborhoodBlurb() }}
+            </div>
+            <!-- Chips for nearby spots -->
+              <div class="mt-3 flex flex-wrap gap-2 text-xs min-h-[34px]">
+                <ng-container *ngIf="!loadingNearby(); else nearbyLoading">
+                  <span *ngFor="let chip of nearbyChips()" class="inline-flex items-center gap-1 px-2 py-1 rounded-full border bg-white/70" [attr.aria-label]="chip.label">
+                    <span>{{ chip.emoji }}</span><span>{{ chip.label }}</span>
+                  </span>
+                </ng-container>
+                <ng-template #nearbyLoading>
+                  <span *ngFor="let i of [1,2,3,4]" class="inline-flex items-center gap-1 px-2 py-1 rounded-full border bg-white/50 animate-pulse">
+                    <span class="w-4 h-3 bg-gray-200 rounded"></span>
+                    <span class="w-16 h-3 bg-gray-200 rounded"></span>
+                  </span>
+                </ng-template>
+              </div>
+            <p class="mt-3 text-sm text-gray-600">
+              <ng-container *ngIf="room()?.address; else locCityState">{{ room()?.address }}</ng-container>
+              <ng-template #locCityState>{{ room()?.city }}, {{ room()?.state }}</ng-template>
+            </p>
+            <p class="text-xs text-gray-500" *ngIf="room()?.coords?.lat && room()?.coords?.lng">Coordinates: {{ room()?.coords?.lat }}, {{ room()?.coords?.lng }}</p>
+            <p class="text-xs text-gray-500" *ngIf="mapUrl">
+              <a class="underline" target="_blank" rel="noopener" [href]="mapLink()">Open in Google Maps</a>
+            </p>
+          </div>
+
+          <!-- Host -->
+          <div id="host" class="border rounded-2xl p-6 space-y-4">
+              <ng-container *ngIf="!loadingHost(); else hostLoading">
+                <div class="flex items-center gap-4">
+                  <img [src]="hostAvatar()" class="w-16 h-16 rounded-full object-cover border" alt="Host avatar" />
+                  <div>
+                    <h3 class="text-lg font-semibold">Hosted by {{ hostName() }}</h3>
+                    <p class="text-sm text-gray-600">Joined · {{ hostJoinedYear() }} · Response rate 95% · Responds within 1 hour</p>
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #hostLoading>
+                <div class="flex items-center gap-4 animate-pulse">
+                  <div class="w-16 h-16 rounded-full bg-gray-200"></div>
+                  <div class="space-y-2">
+                    <div class="h-4 w-40 bg-gray-200 rounded"></div>
+                    <div class="h-3 w-56 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </ng-template>
+            <button class="btn-secondary" (click)="openChat()">Message host</button>
+            <p class="text-xs text-gray-500">To protect your payment, always communicate and pay through Setly.</p>
+          </div>
+
+          <!-- Rules / Things to know -->
+          <div id="rules" class="space-y-6">
+            <h2 class="text-xl font-semibold">Things to know</h2>
+            <div class="grid sm:grid-cols-3 gap-8 text-sm">
+              <div>
+                <h4 class="font-semibold mb-2">House rules</h4>
+                <ul class="space-y-1 text-gray-700">
+                  <li>No parties or events</li>
+                  <li>No pets</li>
+                  <li>Smoking not allowed</li>
+                </ul>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-2">Safety & property</h4>
+                <ul class="space-y-1 text-gray-700">
+                  <li>Security camera (exterior)</li>
+                  <li>Smoke alarm</li>
+                  <li>Carbon monoxide alarm</li>
+                </ul>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-2">Cancellation</h4>
+                <p class="text-gray-700">Flexible — full refund up to 24 hours before check-in.</p>
               </div>
             </div>
           </div>
         </div>
-      </ng-template>
-    </main>
+
+        <!-- Right column booking panel -->
+        <div class="lg:col-span-5 relative">
+          <div class="sticky top-24">
+            <div class="border rounded-2xl shadow-sm p-6 space-y-4">
+              <div class="flex items-end justify-between">
+                <div>
+                  <div class="text-2xl font-semibold">&#36;{{ room()?.price }}<span class="text-sm font-normal text-gray-600"> / month</span></div>
+                </div>
+                <!-- Reviews summary removed -->
+              </div>
+              <div class="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <label class="block font-medium mb-1">Check in</label>
+                  <input type="date" class="w-full rounded-lg border px-2 py-2 text-sm" [(ngModel)]="checkIn" />
+                </div>
+                <div>
+                  <label class="block font-medium mb-1">Check out</label>
+                  <input type="date" class="w-full rounded-lg border px-2 py-2 text-sm" [(ngModel)]="checkOut" />
+                </div>
+                <div class="col-span-2">
+                  <label class="block font-medium mb-1">Guests</label>
+                  <select class="w-full rounded-lg border px-2 py-2 text-sm" [(ngModel)]="guests">
+                    <option *ngFor="let g of guestOptions" [value]="g">{{ g }} guest{{ g===1?'':'s' }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="border-t pt-4 space-y-2 text-xs text-gray-600">
+                <div class="flex justify-between"><span>Monthly price</span><span>&#36;{{ room()?.price }}</span></div>
+                <div *ngIf="nights()>0" class="flex justify-between"><span>{{ nights() }} night{{ nights()===1?'':'s' }} (prorated)</span><span>&#36;{{ proratedTotal() }}</span></div>
+                <div class="flex justify-between"><span>Service fee</span><span>&#36;{{ serviceFee() }}</span></div>
+                <div class="flex justify-between font-semibold text-gray-900"><span>Total</span><span>&#36;{{ totalCost() }}</span></div>
+              </div>
+              <button class="btn-primary w-full py-3 rounded-lg mt-3" (click)="requestToBook()">Request to Book</button>
+              <div class="text-xs text-gray-500 text-center">You won't be charged yet</div>
+            </div>
+            <div class="mt-4 text-xs text-gray-500 text-center">Report listing issue</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full Gallery Modal / Carousel -->
+    <div *ngIf="showGallery()" class="fixed inset-0 bg-black/90 z-50">
+      <div class="absolute inset-0 flex flex-col">
+        <div class="flex items-center justify-between px-4 sm:px-6 py-4">
+          <h2 class="text-white text-sm sm:text-base">Photo {{ (mainImageIndex()+1) }} / {{ room()?.photos?.length || 0 }}</h2>
+          <button (click)="closeGallery()" class="text-white/80 hover:text-white text-2xl leading-none" aria-label="Close gallery">×</button>
+        </div>
+        <div class="flex-1 relative select-none">
+          <!-- Prev arrow -->
+          <button (click)="prev()" aria-label="Previous photo" class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full items-center justify-center bg-white/10 hover:bg-white/20 text-white">‹</button>
+          <!-- Next arrow -->
+          <button (click)="next()" aria-label="Next photo" class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full items-center justify-center bg-white/10 hover:bg-white/20 text-white">›</button>
+
+          <!-- Main image area -->
+          <div class="h-full w-full flex items-center justify-center px-3 sm:px-6">
+            <img
+              [src]="currentPhoto()"
+              class="max-h-[70vh] sm:max-h-[78vh] max-w-full object-contain rounded-xl shadow-2xl"
+              [alt]="room()?.title || 'Listing photo'"
+              (pointerdown)="startDrag($event)"
+              (pointermove)="onDrag($event)"
+              (pointerup)="endDrag()"
+              (click)="next()"
+            />
+          </div>
+        </div>
+
+        <!-- Thumb rail -->
+        <div class="px-3 sm:px-6 pb-4">
+          <div class="flex gap-2 overflow-x-auto scrollbar-thin">
+            <button *ngFor="let p of room()?.photos; let i=index"
+              (click)="setMainImage(i)"
+              class="relative shrink-0 rounded-lg overflow-hidden border"
+              [class.border-white]="i===mainImageIndex()" [class.border-transparent]="i!==mainImageIndex()">
+              <img [src]="p" [alt]="'Thumbnail ' + (i+1)" class="h-16 w-24 object-cover" loading="lazy" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expanded Amenities Modal -->
+    <div *ngIf="showAllAmenities()" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-auto p-6 space-y-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold">All amenities</h3>
+          <button (click)="showAllAmenities.set(false)" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+          <div *ngFor="let a of roomAmenities()" class="flex items-center gap-2 text-gray-700">
+            <span class="w-5 text-center" aria-hidden="true">{{ iconFor(a) || '•' }}</span>
+            <span>{{ a }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Removed legacy hero and duplicate sections to avoid duplication with new Airbnb-like layout -->
+
+    <!-- Chat modal -->
+  <div *ngIf="room() && chatOpen()" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="font-semibold">Message {{ hostName() }}</div>
+          <button (click)="chatOpen.set(false)" class="text-gray-500 hover:text-gray-900">✕</button>
+        </div>
+        <textarea rows="4" class="input-premium w-full" placeholder="Write a message..."></textarea>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="btn-secondary" (click)="chatOpen.set(false)">Cancel</button>
+          <button class="btn" (click)="sendMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </main>
   `
 })
 export class ListingDetailPage {
-  private roomStore = inject(RoomStore);
+  private roomCards = inject(RoomStore);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private toast = inject(ToastService);
+  private analytics = inject(AnalyticsService);
+  private roomsService = inject(RoomsService);
+  private sanitizer = inject(DomSanitizer);
+  private usersService = inject(UsersService);
+  private authStore = inject(AuthStore);
+  private nearbyService = inject(NearbyService);
 
   room = signal<Room | null>(null);
   mainImageIndex = signal(0);
+  parallaxY = signal(0);
+  chatOpen = signal(false);
+  aboutText = 'Why you\'ll love this space: airy interiors, natural light, and a quiet neighborhood close to campus.';
+  tags = ['Modern', 'QuietNeighborhood', 'NearCampus'];
+  fading = signal(false);
+  private dragging = false;
+  private startX = 0;
+  // New UI state signals
+  saved = signal(false);
+  aboutExpanded = signal(false);
+  showAllAmenities = signal(false);
+  showGallery = signal(false);
+  activeAnchor = signal('photos');
+  checkIn: string | null = null;
+  checkOut: string | null = null;
+  guests = 1;
+  guestOptions = [1,2,3,4,5,6];
+  private MS_PER_DAY = 1000 * 60 * 60 * 24;
+  mapUrl: SafeResourceUrl | null = null;
+  hostInfo = signal<{ name: string; avatarUrl?: string; joinedYear?: number } | null>(null);
+  loadingHost = signal(true);
+  nearbyChips = signal<NearbyChip[]>([]);
+  loadingNearby = signal(true);
+  // Amenity grouping map
+  private amenityGroups: Record<'comfort'|'utilities'|'lifestyle', string[]> = {
+    comfort: ['Bed','AC','Air Conditioning','Heating','Laundry'],
+    utilities: ['Wi‑Fi','Wi-Fi','Wifi','WiFi','Electricity','Water'],
+    lifestyle: ['Gym','Study Room','Study Desk','Common Lounge','Parking']
+  };
 
   constructor() {
     const id = this.route.snapshot.params['id'];
     this.loadRoom(id);
+    setTimeout(() => this.analytics.trackEvent('room_viewed', { id }), 0);
   }
 
   private loadRoom(id: string): void {
-    // For now, use mock data since RoomStore might not have full Room objects
-    const mockRoom: Room = {
-      id,
-      title: 'Beautiful Room Near Campus',
-      city: 'College Town',
-      state: 'ST',
-      price: 800,
-      roomType: 'private',
-      bath: 'shared',
-      furnished: true,
-      photos: ['/assets/placeholder-room.jpg', '/assets/placeholder-room.jpg', '/assets/placeholder-room.jpg'],
-      rules: {
-        vegetarian: true,
-        smoking: false,
-        petsOk: true
-      },
-      hostId: 'host1',
-      createdAt: new Date().toISOString(),
-      tags: ['WiFi', 'Laundry', 'Parking'],
-      image: '/assets/placeholder-room.jpg',
-      isAvailable: true,
-      address: '123 University Ave, College Town, ST 12345',
-      amenities: ['WiFi', 'Laundry', 'Parking'],
-      features: ['WiFi', 'Laundry', 'Parking'],
-      distance: '0.5 km from campus'
-    };
-    this.room.set(mockRoom);
+    // 1) Try to load from RoomsService (full Room objects persisted by create())
+    const maybe = this.roomsService.getRoomById(id);
+    maybe.subscribe(found => {
+      if (found) {
+        // Ensure photos array is present for gallery
+        const withPhotos: Room = {
+          ...found,
+          photos: found.photos && found.photos.length ? found.photos : (found.image ? [found.image] : ['/assets/placeholder-room.jpg'])
+        };
+  this.room.set(withPhotos);
+  this.mapUrl = this.buildMapUrl(withPhotos);
+  this.loadHost(withPhotos.hostId);
+  this.loadNearby(withPhotos);
+        return;
+      }
+
+      // 2) Fallback: map from RoomCard in RoomStore (Browse) if present
+      const cards = this.roomCards.rooms();
+      const card = cards.find(c => c.id === id);
+      if (card) {
+        const mapped: Room = {
+          id: card.id,
+          title: card.title,
+          price: card.price,
+          city: card.address.split(',')[1]?.trim() || '—',
+          state: card.address.split(',')[2]?.trim() || '',
+          roomType: 'private',
+          bath: 'shared',
+          furnished: true,
+          rules: { vegetarian: false, smoking: false, petsOk: false },
+          photos: card.image ? [card.image] : ['/assets/placeholder-room.jpg'],
+          hostId: 'host1',
+          createdAt: new Date().toISOString(),
+          image: card.image,
+          isAvailable: card.isAvailable,
+          address: card.address,
+          features: card.features,
+          amenities: Array.isArray(card.features) ? card.features : undefined,
+          distance: card.distance
+        };
+  this.room.set(mapped);
+  this.mapUrl = this.buildMapUrl(mapped);
+  this.loadHost(mapped.hostId);
+  this.loadNearby(mapped);
+        return;
+      }
+
+      // 3) Not found — show a lightweight message and provide a back option
+      this.toast.error('Listing not found');
+      this.room.set(null);
+    });
+  }
+
+  private buildMapUrl(r: Room): SafeResourceUrl | null {
+    try {
+      if (r?.coords?.lat && r?.coords?.lng) {
+        const q = `${r.coords.lat},${r.coords.lng}`;
+        const url = `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=15&output=embed`;
+        return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      }
+      const label = r?.address || [r?.city, r?.state].filter(Boolean).join(', ');
+      if (!label) return null;
+      const url = `https://www.google.com/maps?q=${encodeURIComponent(label)}&z=14&output=embed`;
+      return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    } catch {
+      return null;
+    }
   }
 
   goBack(): void {
@@ -196,6 +491,183 @@ export class ListingDetailPage {
   }
 
   setMainImage(index: number): void {
-    this.mainImageIndex.set(index);
+    this.fading.set(true);
+    window.setTimeout(() => {
+      this.mainImageIndex.set(index);
+      // Preload next image
+      const r = this.room();
+      const nextIdx = r?.photos?.length ? (index + 1) % r.photos.length : -1;
+      if (nextIdx >= 0) { const img = new Image(); img.src = r!.photos[nextIdx]; }
+      window.setTimeout(() => this.fading.set(false), 180);
+    }, 120);
+  }
+
+  currentPhoto(): string {
+    const r = this.room();
+    return r?.photos?.[this.mainImageIndex()] || r?.image || '/assets/placeholder-room.jpg';
+  }
+
+  prev() { const r = this.room(); if (!r?.photos?.length) return; const i = this.mainImageIndex(); this.setMainImage((i - 1 + r.photos.length) % r.photos.length); this.analytics.trackEvent('gallery_interacted', { action: 'prev' }); }
+  next() { const r = this.room(); if (!r?.photos?.length) return; const i = this.mainImageIndex(); this.setMainImage((i + 1) % r.photos.length); this.analytics.trackEvent('gallery_interacted', { action: 'next' }); }
+
+  private loadHost(hostId: string | undefined) {
+    if (!hostId) { this.hostInfo.set(null); return; }
+    // Always fetch host profile from backend to display the actual host's name
+    this.loadingHost.set(true);
+    this.usersService.getUserById(hostId).subscribe({
+      next: (profile) => {
+        if (profile) this.hostInfo.set(profile);
+        else this.hostInfo.set({ name: 'Host', avatarUrl: '/assets/placeholder-avatar.jpg' });
+        this.loadingHost.set(false);
+      },
+      error: () => { this.hostInfo.set({ name: 'Host', avatarUrl: '/assets/placeholder-avatar.jpg' }); this.loadingHost.set(false); }
+    });
+  }
+  private loadNearby(r: Room) {
+    this.loadingNearby.set(true);
+    this.nearbyService.getChips({ city: r.city, state: r.state, lat: r.coords?.lat, lng: r.coords?.lng }).subscribe({
+      next: chips => { this.nearbyChips.set(chips); this.loadingNearby.set(false); },
+      error: () => { this.nearbyChips.set([]); this.loadingNearby.set(false); }
+    });
+  }
+  hostName() { return this.hostInfo()?.name || 'Host'; }
+  hostAvatar() { return this.hostInfo()?.avatarUrl || '/assets/placeholder-avatar.jpg'; }
+  hostJoinedYear() { return this.hostInfo()?.joinedYear || new Date().getFullYear(); }
+  openChat() { this.chatOpen.set(true); this.analytics.trackEvent('host_contact_clicked', {}); }
+  sendMessage() { this.toast.success('Message sent'); this.chatOpen.set(false); }
+  requestToBook() { this.toast.success('Booking requested'); this.analytics.trackEvent('booking_initiated', {}); }
+  share() { try { const url = window.location.href; navigator?.clipboard?.writeText(url); this.toast.success('Link copied'); } catch { this.toast.error('Share not supported'); } }
+  toggleSave() { this.saved.set(!this.saved()); }
+  visibleAmenities() { const all = this.room()?.amenities || []; return this.showAllAmenities() ? all : all.slice(0, 9); }
+  hasMoreAmenities() { const all = this.room()?.amenities || []; return !this.showAllAmenities() && all.length > 9; }
+  roomAmenities(): string[] {
+    const r = this.room();
+    if (!r) return [];
+    if (Array.isArray(r.amenities) && r.amenities.length) return r.amenities;
+    // Fallback derivation
+    const derived: string[] = [];
+    if (r.furnished) derived.push('Furnished');
+    if (r.rules?.smoking === false) derived.push('No Smoking');
+    if (r.rules?.petsOk) derived.push('Pets Allowed');
+    if (r.roomType === 'private') derived.push('Private Room');
+    return derived.length ? derived : ['No amenities listed'];
+  }
+  private amenityIconMap: Record<string,string> = {
+    // Cleaner icon set
+    'Electricity':'⚡', 'Power':'⚡',
+    'Wi‑Fi':'🌐','Wi-Fi':'🌐','Wifi':'🌐','WiFi':'🌐',
+    'Water':'💧',
+    'Laundry':'🧺',
+    'Study Desk':'🪑','Study Room':'📚',
+    'Parking':'🅿️',
+    'Air Conditioning':'❄️','AC':'❄️','Cooling':'❄️',
+    'Heating':'🔥',
+    'Bed':'🛏️',
+    'Gym':'🏋️',
+    'Common Lounge':'🛋️',
+    // Existing
+    'Kitchen':'🍳','Furnished':'🛋️','Private Bath':'🚿','Pets Allowed':'🐾','No Smoking':'🚭','Private Room':'🔒'
+  };
+  iconFor(a: string): string | undefined { return this.amenityIconMap[a] || this.amenityIconMap[a.trim()] || undefined; }
+  amenityGroup(kind: 'comfort'|'utilities'|'lifestyle'|'lifestyleLeft'|'lifestyleRight'|'other'): string[] {
+    const all = (this.room()?.amenities || []).slice();
+    // Normalize duplicates
+    const norm = (s: string) => s.trim();
+    const inGroup = (list: string[]) => all.filter(a => list.includes(norm(a)));
+    const comfort = Array.from(new Set(inGroup(this.amenityGroups.comfort)));
+    const utilities = Array.from(new Set(inGroup(this.amenityGroups.utilities)));
+    const lifeAll = Array.from(new Set(inGroup(this.amenityGroups.lifestyle)));
+    const lifestyleLeft = lifeAll.filter((_, i) => i % 2 === 0);
+    const lifestyleRight = lifeAll.filter((_, i) => i % 2 === 1);
+    const known = new Set([...comfort, ...utilities, ...lifeAll]);
+    const other = all.filter(a => !known.has(a));
+    switch (kind) {
+      case 'comfort': return comfort;
+      case 'utilities': return utilities;
+      case 'lifestyle': return lifeAll;
+      case 'lifestyleLeft': return lifestyleLeft;
+      case 'lifestyleRight': return lifestyleRight;
+      case 'other': return other;
+    }
+  }
+  neighborhoodBlurb(): string {
+    const r = this.room();
+    const city = r?.city || 'the area';
+    const near = r?.distanceKm ? `Approx ${r.distanceKm} km from campus.` : 'Close to campus and daily essentials.';
+    return `Located in ${city}’s student-friendly neighborhood. ${near} Safe, well-lit streets with great cafés, gyms, and transit nearby.`;
+  }
+  toggleExpandAbout() { this.aboutExpanded.set(!this.aboutExpanded()); }
+  openGallery() { this.showGallery.set(true); }
+  closeGallery() { this.showGallery.set(false); }
+  nights(): number {
+    if (!this.checkIn || !this.checkOut) return 0;
+    const start = new Date(this.checkIn).getTime();
+    const end = new Date(this.checkOut).getTime();
+    if (isNaN(start) || isNaN(end) || end <= start) return 0;
+    return Math.ceil((end - start) / this.MS_PER_DAY);
+  }
+  proratedTotal(): number {
+    const price = this.room()?.price || 0;
+    const nights = this.nights();
+    if (!price || !nights) return 0;
+    // Approximate month = 30 nights for prorate
+    return Math.round((price / 30) * nights);
+  }
+  serviceFee(): number {
+    const base = this.proratedTotal() || (this.room()?.price || 0);
+    return Math.round(base * 0.05); // 5% service
+  }
+  totalCost(): number {
+    const nights = this.nights();
+    if (nights > 0) return this.proratedTotal() + this.serviceFee();
+    return (this.room()?.price || 0) + this.serviceFee();
+  }
+  // Reviews removed per requirement
+  scrollTo(id: string) { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+  @HostListener('window:scroll', [])
+  onScroll() {
+    const y = window.scrollY || 0;
+    this.parallaxY.set(Math.min(30, y * 0.06));
+    // Active anchor detection
+    const sections = ['photos','details','amenities','reviews','location','host','rules'];
+    let current = 'photos';
+    for (const id of sections) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      const top = el.offsetTop;
+      if (y + 140 >= top) { // 140 accounts for sticky nav height & margin
+        current = id;
+      }
+    }
+    if (this.activeAnchor() !== current) this.activeAnchor.set(current);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKey(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      if (this.showGallery()) this.showGallery.set(false);
+      if (this.showAllAmenities()) this.showAllAmenities.set(false);
+      if (this.chatOpen()) this.chatOpen.set(false);
+    } else if (this.showGallery() && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      if (e.key === 'ArrowLeft') this.prev();
+      if (e.key === 'ArrowRight') this.next();
+      e.preventDefault();
+    }
+  }
+
+  startDrag(ev: PointerEvent) { this.dragging = true; this.startX = ev.clientX; }
+  onDrag(ev: PointerEvent) { if (!this.dragging) return; const dx = ev.clientX - this.startX; if (Math.abs(dx) > 36) { this.dragging = false; dx > 0 ? this.prev() : this.next(); } }
+  endDrag() { this.dragging = false; }
+
+  openAssistant() { window.dispatchEvent(new CustomEvent('assistant:open')); }
+  mapLink(): string {
+    const r = this.room();
+    if (!r) return 'https://www.google.com/maps';
+    if (r.coords?.lat && r.coords?.lng) {
+      return `https://www.google.com/maps/search/?api=1&query=${r.coords.lat},${r.coords.lng}`;
+    }
+    const label = r.address || [r.city, r.state].filter(Boolean).join(', ');
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label)}`;
   }
 }

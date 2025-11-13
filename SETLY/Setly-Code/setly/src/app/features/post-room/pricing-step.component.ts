@@ -104,7 +104,7 @@ import { PostRoomStore } from './post-room.store';
       </div>
 
       <!-- Summary -->
-      <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
+      <div class="bg-white rounded-xl p-6 border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">📋 Ready to Publish</h3>
         <p class="text-gray-700 mb-4">
           Your room listing will be published and visible to students searching for housing.
@@ -133,12 +133,8 @@ import { PostRoomStore } from './post-room.store';
     .chip-checkbox {
       @apply relative inline-flex items-center cursor-pointer;
     }
-    .chip-checkbox input:checked + .chip-checkbox-label {
-      @apply bg-blue-600 text-white border-blue-600;
-    }
-    .chip-checkbox-label {
-      @apply px-4 py-2 rounded-full border-2 border-gray-300 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-blue-400;
-    }
+    .chip-checkbox input:checked + .chip-checkbox-label { @apply bg-blue-500 text-white border-blue-500; }
+    .chip-checkbox-label { @apply px-4 py-2 rounded-full border-2 border-gray-300 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-blue-500; }
   `]
 })
 export class PricingStepComponent {

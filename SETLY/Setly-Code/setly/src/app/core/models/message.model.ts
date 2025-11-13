@@ -4,6 +4,8 @@ export interface Message {
   content: string;
   timestamp: Date;
   sources?: Source[];
+  // Optional interactive chips to make replies game-like / engaging
+  chips?: AssistantChip[];
 }
 
 export interface Source {
@@ -26,4 +28,18 @@ export interface ChatMessage {
   senderId: string;
   text: string;
   sentAt: string;
+}
+
+export interface AssistantChip {
+  key: string;
+  label: string;
+  icon?: string; // Optional emoji/icon prefix
+}
+
+export interface AssistantThread {
+  id: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+  messages: Message[];
 }

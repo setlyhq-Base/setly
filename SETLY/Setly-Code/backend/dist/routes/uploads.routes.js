@@ -8,4 +8,6 @@ const uploads_controller_1 = require("../controllers/uploads.controller");
 const router = express_1.default.Router();
 // POST /api/uploads/sign - Get presigned POST URL for S3 upload
 router.post('/sign', uploads_controller_1.UploadsController.getSignedUploadUrl);
+// Generic presign (avatars, room media)
+router.post('/presign', uploads_controller_1.UploadsController.presignAvatar);
 exports.default = router;

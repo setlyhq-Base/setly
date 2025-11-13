@@ -286,12 +286,7 @@ export class SearchHeroComponent implements OnInit {
   selectSuggestion(suggestion: { id: string; name: string; type: 'university' | 'city' }) {
     this.searchQuery.set(suggestion.name);
     this.showSuggestions.set(false);
-    
-    if (suggestion.type === 'university') {
-      this.roomStore.setFilters({ universityId: suggestion.id });
-    } else {
-      this.roomStore.setFilters({ city: suggestion.name });
-    }
+    // No longer setting per-store filters here; unified text search used on browse page.
   }
 
   setRoomType(type: 'shared' | 'Private') {
@@ -353,9 +348,7 @@ export class SearchHeroComponent implements OnInit {
     };
 
     // Navigate with query params
-    this.router.navigate(['/'], {
-      queryParams,
-      queryParamsHandling: 'merge'
-    });
+    // Navigate directly to browse page with unified query params for filtering
+    this.router.navigate(['/browse'], { queryParams });
   }
 }

@@ -15,6 +15,14 @@ export const environment = {
   analytics: {
     gaMeasurementId: ''
   },
+  assistant: {
+    // Direct to backend in dev (backend has permissive CORS)
+    // Services will append /chat if missing
+    apiUrl: 'http://localhost:3000/api/assistant',
+    enabled: true,
+    playbooks: ['housing','airport','sim','bank','ssn'],
+    maxHistory: 30
+  },
   recaptcha: {
     // reCAPTCHA Enterprise site key (web) – used for phone auth hardening & future abuse signals
     siteKey: '6LfLjgcsAAAAAjs6Y6rPaWmNpekSyGAUD7Qv5tT'
@@ -23,5 +31,6 @@ export const environment = {
     softDisableAuth: false,
     mockPhoneAuth: true,
     disableRecaptchaEnterprise: true
-  }
+  },
+  universityApiBase: 'https://universities.hipolabs.com'
 };

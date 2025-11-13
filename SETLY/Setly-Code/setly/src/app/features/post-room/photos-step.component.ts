@@ -11,7 +11,7 @@ import { ToastService } from '../../core/services/toast.service';
     <div class="space-y-6">
       <div class="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg" data-testid="pr-photos-dropzone">
         <label class="cursor-pointer">
-          <input type="file" multiple accept="image/*" (change)="onFileSelect($event)" class="hidden" />
+          <input type="file" multiple accept="image/*,.heic,.heif" (change)="onFileSelect($event)" class="hidden" />
           <div class="text-gray-600">
             <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -48,11 +48,19 @@ export class PhotosStepComponent {
   store = inject(PostRoomStore);
   private toast = inject(ToastService);
 
-  onFileSelect(event: Event): void {
+  async onFileSelect(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
 
-    Array.from(input.files).forEach(file => {
+    // Lazy import converter to keep bundle small
+    const { ensureDisplayableImage } = await import('../../core/utils/heic');
+
+    const files = Array.from(input.files);
+    for (const original of files) {
+      const isImage = original.type.startsWith('image/') || /\.(jpe?g|png|webp|heic|heif)$/i.test(original.name);
+      if (!isImage) continue; // skip unsupported
+
+      const file = await ensureDisplayableImage(original);
       const reader = new FileReader();
       reader.onload = (e) => {
         this.store.addPhoto({
@@ -64,7 +72,7 @@ export class PhotosStepComponent {
         });
       };
       reader.readAsDataURL(file);
-    });
+    }
 
     this.toast.success('Photos added');
   }

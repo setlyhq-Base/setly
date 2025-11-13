@@ -1,18 +1,23 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { UserStore } from '../../../core/state/user.store';
+import { ProfileStore } from '../../../core/state/profile.store';
+import { AuthStore } from '../../../core/state/auth.store';
 import { PhoneOtpModalComponent } from '../components/phone-otp.modal';
+import { ProfileQuickCaptureModalComponent } from '../../../shared/ui/profile-quick-capture.modal';
+import { AuthSyncService } from '../../../core/services/auth-sync.service';
 import { AnalyticsService } from '../../../core/services/analytics.service';
 
 @Component({
   selector: 'app-sign-in-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, PhoneOtpModalComponent],
+  imports: [CommonModule, RouterLink, PhoneOtpModalComponent, ProfileQuickCaptureModalComponent],
   template: `
     <div class="min-h-screen flex flex-col lg:flex-row" data-testid="auth-layout">
       <!-- Brand Panel -->
-      <div class="hidden lg:flex lg:w-[45%] flex-col justify-between p-10 bg-gradient-to-br from-indigo-600 via-indigo-500/70 to-white">
+      <div class="hidden lg:flex lg:w-[45%] flex-col justify-between p-10 bg-blue-500">
         <div>
           <h1 class="text-4xl font-bold text-white max-w-md mb-6" data-testid="brand-headline">
             Find verified homes & rides — where trust meets community.
@@ -71,12 +76,20 @@ import { AnalyticsService } from '../../../core/services/analytics.service';
             (success)="onPhoneSuccess()"
             (failure)="onPhoneFailure($event)"
           />
+
+          <!-- Quick Capture Modal: only when name missing after auth -->
+          <app-profile-quick-capture-modal
+            *ngIf="quickCaptureOpen()"
+            [email]="prefilledEmail() || authStore.user().email || userStore.user()?.primaryEmail"
+            (saved)="onQuickSaved()"
+            (cancelled)="onQuickCancelled()"
+          />
         </div>
       </div>
     </div>
   `,
   styles: [`
-    .provider-btn { @apply w-full h-12 rounded-xl font-medium flex items-center justify-center gap-3 relative transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60; }
+  .provider-btn { @apply w-full h-12 rounded-xl font-medium flex items-center justify-center gap-3 relative transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60; }
     .provider-icon { @apply inline-block w-5 h-5; }
   /* Use root-relative paths so Angular resolves from /src/assets */
   .provider-icon.google { background: url('/assets/google.svg') center/contain no-repeat; }
@@ -90,6 +103,8 @@ export class SignInPage {
   loading = signal(false);
   loadingProvider = signal<string | null>(null);
   phoneModalOpen = signal(false);
+  quickCaptureOpen = signal(false);
+  prefilledEmail = signal<string | undefined>(undefined);
   toastMessage = signal('');
   toastType = signal<'error' | 'success' | ''>('');
   testimonial = signal('“Great matches and super fast!” – Beta User');
@@ -100,9 +115,12 @@ export class SignInPage {
     '“The phone verification feels safe.” – David'
   ];
 
-  constructor(private auth: AuthService, private router: Router, private analytics: AnalyticsService) {
+  private sync = inject(AuthSyncService);
+  constructor(private auth: AuthService, private router: Router, private analytics: AnalyticsService, public userStore: UserStore, private profileStore: ProfileStore, private route: ActivatedRoute, public authStore: AuthStore) {
     this.rotateTestimonials();
     this.analytics.fire('auth_viewed', { page: 'sign-in' });
+    // Ensure sync is initialized so profile is hydrated post-login
+    this.sync.init();
   }
 
   provider(name: 'google' | 'microsoft' | 'facebook'): void {
@@ -115,10 +133,45 @@ export class SignInPage {
       facebook: () => this.auth.signInWithFacebook()
     }[name];
     action()
-      .then(() => {
+      .then(async () => {
         this.toast('Signed in', 'success');
         this.analytics.fire('auth_success', { provider: name, isNew: false });
-        this.router.navigate(['/']);
+        // Wait briefly for AuthSyncService to hydrate the profile
+        // Wait for profile hydration and legacy user store (double source) to reduce false 'new user' detection
+        const profile = await this.waitForProfile(2500);
+        // After profile attempt, ensure userStore has attempted a refresh in case auth-sync ran before store subscription
+        if (!this.userStore.user()) {
+          try { await this.userStore.refresh(); } catch {}
+        }
+        const next = this.route.snapshot.queryParamMap.get('next');
+        // Prefer email from AuthStore (hydrated immediately by AuthSyncService). Fallback to UserStore if available.
+        const email = this.authStore.user().email || (this.userStore.user() as any)?.primaryEmail;
+        // Determine if we need quick capture:
+        // - First-time login flagged by backend (isNew)
+        // - Missing name across likely sources
+        // - Missing basic profile context (location and university)
+        // - Very low completion (<30)
+        const nameSources = [
+          (profile?.displayName || '').trim(),
+          (this.userStore.user()?.name || '').trim(),
+          (this.authStore.user().displayName || '').trim(),
+        ];
+        const hasName = nameSources.some(n => !!n);
+        const missingBasics = !profile || (!((profile.location || '').trim()) && !((profile.university || '').trim()));
+        const lowCompletion = (this.profileStore.completion() as any) < 30; // computed signal -> number
+        const forceNew = !!this.authStore.user().isNew;
+        const needsQuickCapture = forceNew || !hasName || missingBasics || lowCompletion;
+        if (needsQuickCapture) {
+          // Show inline quick capture and defer navigation
+          this.prefilledEmail.set(email || undefined);
+          this.quickCaptureOpen.set(true);
+        } else {
+          // Friendly welcome toast
+          const shownName = (profile?.displayName || this.userStore.user()?.name || this.authStore.user().displayName || 'there');
+          const first = (shownName).split(' ')[0];
+          window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', message: `Welcome back, ${first}!` } }));
+          if (next) this.router.navigateByUrl(next); else this.router.navigate(['/']);
+        }
       })
       .catch(err => {
         console.error(err);
@@ -167,5 +220,27 @@ export class SignInPage {
       'default': 'Sign in failed. Please try again.'
     };
     return map[code] || map['default'];
+  }
+
+  private async waitForProfile(timeoutMs = 2000) {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const p = this.profileStore.profile();
+      if (p) return p;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    return this.profileStore.profile();
+  }
+
+  onQuickSaved() {
+    this.quickCaptureOpen.set(false);
+    const next = this.route.snapshot.queryParamMap.get('next');
+    if (next) this.router.navigateByUrl(next); else this.router.navigate(['/']);
+  }
+
+  onQuickCancelled() {
+    this.quickCaptureOpen.set(false);
+    const next = this.route.snapshot.queryParamMap.get('next');
+    if (next) this.router.navigateByUrl(next); else this.router.navigate(['/']);
   }
 }

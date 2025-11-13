@@ -16,6 +16,9 @@ export interface PostRoomDraft {
   // Step 1: Details
   title: string;
   description: string;
+  address?: string;
+  lat?: number;
+  lon?: number;
   city: string;
   state: string;
   nearUniversityId: string;
@@ -27,8 +30,10 @@ export interface PostRoomDraft {
     smoking: boolean;
     petsOk: boolean;
   };
-  distanceKm: number;
+  // store miles for UI, convert to km on publish
+  distanceMiles: number;
   availableFrom: string;
+  availableTo?: string;
 
   // Step 2: Photos
   photos: RoomPhoto[];
@@ -65,8 +70,9 @@ export class PostRoomStore {
     const d = this._draft();
     return !!(
       d.title.length >= 10 &&
-      d.description.length >= 300 &&
+      d.description.length >= 30 &&
       d.description.length <= 1200 &&
+      d.address && d.address.trim().length > 0 &&
       d.city &&
       d.state &&
       d.nearUniversityId &&
@@ -105,6 +111,9 @@ export class PostRoomStore {
     return {
       title: '',
       description: '',
+      address: '',
+      lat: undefined,
+      lon: undefined,
       city: '',
       state: '',
       nearUniversityId: '',
@@ -116,8 +125,9 @@ export class PostRoomStore {
         smoking: false,
         petsOk: false
       },
-      distanceKm: 0,
+      distanceMiles: 0,
       availableFrom: today,
+      availableTo: '',
       photos: [],
       price: {
         monthly: 0,
@@ -177,10 +187,11 @@ export class PostRoomStore {
       // Serialize photos (exclude File objects)
       const serializable = {
         ...draft,
+        // Avoid storing large base64 previews in localStorage (quota issues). Keep cover preview only (truncated) for quick reload UX.
         photos: draft.photos.map(p => ({
           key: p.key,
           url: p.url,
-          preview: p.preview,
+          preview: p.isCover && typeof p.preview === 'string' ? p.preview.slice(0, 200) : undefined,
           isCover: p.isCover,
           alt: p.alt
         }))

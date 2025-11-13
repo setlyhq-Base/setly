@@ -7,7 +7,7 @@ import { ToastService } from '../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="fixed top-4 right-4 z-50 space-y-2" role="status" aria-live="polite">
+    <div class="fixed bottom-4 left-4 z-50 space-y-2" role="status" aria-live="polite">
       @for (toast of toastService.toasts(); track toast.id) {
         <div
           [attr.data-testid]="'toast-' + toast.type"
@@ -58,8 +58,8 @@ import { ToastService } from '../../core/services/toast.service';
   `,
   styles: [`
     .toast-item {
-      min-width: 320px;
-      max-width: 420px;
+      min-width: 280px;
+      max-width: 380px;
       padding: 1rem;
       border-radius: 0.5rem;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -86,20 +86,11 @@ import { ToastService } from '../../core/services/toast.service';
       color: white;
     }
 
-    @keyframes slide-in {
-      from {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
+    @keyframes slide-up {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
-
-    .animate-slide-in {
-      animation: slide-in 0.3s ease-out;
-    }
+    .animate-slide-in { animation: slide-up 0.25s ease-out; }
   `]
 })
 export class ToastContainerComponent {

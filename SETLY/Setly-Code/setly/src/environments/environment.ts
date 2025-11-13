@@ -15,6 +15,12 @@ export const environment = {
   analytics: {
     gaMeasurementId: ''
   },
+  assistant: {
+    apiUrl: 'https://api.setly.com/v1/assistant/chat',
+    enabled: true,
+    playbooks: ['housing','airport','sim','bank','ssn'],
+    maxHistory: 30
+  },
   recaptcha: {
     // reCAPTCHA Enterprise site key (prod) – replace with production key if different
     siteKey: '6LfLjgcsAAAAAjs6Y6rPaWmNpekSyGAUD7Qv5tT'
@@ -23,5 +29,6 @@ export const environment = {
     softDisableAuth: false,
     mockPhoneAuth: false,
     disableRecaptchaEnterprise: false
-  }
+  },
+  universityApiBase: 'https://universities.hipolabs.com'
 };

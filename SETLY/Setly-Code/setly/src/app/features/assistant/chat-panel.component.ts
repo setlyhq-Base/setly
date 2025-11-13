@@ -19,16 +19,31 @@ import { Message } from '../../core/models/message.model';
           <app-north-star-icon></app-north-star-icon>
           <h2 class="font-semibold">Setly Assistant</h2>
         </div>
-        <button
-          data-testid="close-chat"
-          (click)="close.emit()"
-          class="text-white hover:text-gray-200 transition-colors"
-          aria-label="Close chat"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
+        <div class="flex items-center space-x-2">
+          <button
+            data-testid="clear-chat"
+            (click)="onClearChat()"
+            class="text-white hover:text-gray-200 transition-colors"
+            aria-label="Clear chat"
+            title="Clear chat"
+            type="button"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m-1 14a2 2 0 01-2 2H9a2 2 0 01-2-2V8h10v12z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button
+            data-testid="close-chat"
+            (click)="close.emit()"
+            class="text-white hover:text-gray-200 transition-colors"
+            aria-label="Close chat"
+            type="button"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Quick Starts -->
@@ -48,7 +63,8 @@ import { Message } from '../../core/models/message.model';
       <!-- Messages -->
       <app-message-list
         [messages]="messages"
-        class="flex-1"
+        [chipHandler]="onChipClick.bind(this)"
+        class="flex-1 min-h-0"
       ></app-message-list>
 
       <!-- Input -->
@@ -70,6 +86,8 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   constructor(private assistantService: AssistantService) {}
 
   ngOnInit() {
+    // Ensure a friendly welcome appears once per session
+    this.assistantService.seedWelcomeMessage();
     this.subscription = this.assistantService.messages$.subscribe(messages => {
       this.messages = messages;
     });
@@ -92,18 +110,44 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
       content: message,
       timestamp: new Date()
     };
-    this.assistantService.addMessage(userMessage);
+  this.assistantService.addMessage(userMessage);
+  // Gamify tick per user message
+  this.assistantService.gamifyTick();
 
     // Mock streaming response
-    this.assistantService.query(message).subscribe(result => {
+    this.assistantService.query(message, this.messages).subscribe(result => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: result.response,
+        chips: result.chips,
         timestamp: new Date(),
         sources: result.sources
       };
       this.assistantService.addMessage(assistantMessage);
     });
+  }
+
+  onChipClick(chip: { key: string; label: string }) {
+    if (chip.key === 'start-over') {
+      this.onClearChat();
+      this.assistantService.seedWelcomeMessage();
+      return;
+    }
+    if (chip.key === 'next-steps') {
+      this.onSendMessage('What are my next steps?');
+      return;
+    }
+    if (chip.key === 'resources') {
+      this.onSendMessage('Share helpful resources for my topic.');
+      return;
+    }
+  }
+
+  onClearChat() {
+    this.assistantService.clearMessages();
+    this.messages = [];
+    // Optionally show a fresh welcome again
+    setTimeout(() => this.assistantService.seedWelcomeMessage(), 0);
   }
 }

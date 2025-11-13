@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, BehaviorSubject, map } from 'rxjs';
-import { Message, Source } from '../models/message.model';
+import { Message, Source, AssistantChip } from '../models/message.model';
 import { FAQS } from '../../../assets/data/faqs';
 import { environment } from '../../../../environments/environment';
 
@@ -15,15 +15,54 @@ export class AssistantService {
 
   private messagesSubject = new BehaviorSubject<Message[]>([]);
   public messages$ = this.messagesSubject.asObservable();
+  private welcomeSeeded = false;
 
   constructor(private http: HttpClient) {}
 
-  // Real OpenAI API call
-  query(message: string, history: Message[] = []): Observable<{ response: string; sources: Source[] }> {
+  // Gamification state
+  private xp = 0;
+  private level = 1;
+  private readonly XP_PER_MESSAGE = 8;
+  private readonly LEVEL_STEP = 60; // xp per level
+
+  private loadGamify() {
+    try {
+      const raw = localStorage.getItem('assistantGamify');
+      if (raw) {
+        const data = JSON.parse(raw);
+        this.xp = data.xp || 0;
+        this.level = data.level || 1;
+      }
+    } catch {}
+  }
+  private saveGamify() {
+    try { localStorage.setItem('assistantGamify', JSON.stringify({ xp: this.xp, level: this.level })); } catch {}
+  }
+
+  gamifyTick() {
+    this.loadGamify();
+    const prevLevel = this.level;
+    this.xp += this.XP_PER_MESSAGE;
+    this.level = Math.floor(this.xp / this.LEVEL_STEP) + 1;
+    this.saveGamify();
+    if (this.level > prevLevel) {
+      // Inject a level-up system message
+      const lvlMsg: Message = {
+        id: 'levelup-' + Date.now(),
+        role: 'system',
+        timestamp: new Date(),
+        content: `🎉 Level Up! You reached Level ${this.level}. Keep exploring for more tips.`
+      };
+      this.addMessage(lvlMsg);
+    }
+  }
+
+  // Real OpenAI API call with post-transform & chips
+  query(message: string, history: Message[] = []): Observable<{ response: string; sources: Source[]; chips: AssistantChip[] }> {
     // Rate limiting
     const clientId = 'default'; // In real app, use IP or user ID
     if (!this.checkRateLimit(clientId)) {
-      return of({ response: 'Rate limit exceeded. Please try again later.', sources: [] });
+      return of({ response: 'Rate limit exceeded. Please try again later.', sources: [], chips: [{ key: 'start-over', label: 'Start over', icon: '🔄' }] });
     }
 
     // Find relevant FAQ sources
@@ -62,11 +101,19 @@ export class AssistantService {
       }
     }
 
-    return this.http.post<any>(environment.assistant.apiUrl, body, { headers }).pipe(
-      map(response => ({
-        response: response.choices[0].message.content,
-        sources: sources
-      }))
+    // Normalize API URL to the chat endpoint; allow providing either base /assistant or full /assistant/chat
+    const base = (environment.assistant.apiUrl || '/api/assistant').trim();
+    const url = base.endsWith('/chat') ? base : base.replace(/\/$/, '') + '/chat';
+
+    return this.http.post<any>(url, body, { headers }).pipe(
+      map(response => {
+        let raw = response?.choices?.[0]?.message?.content
+          || response?.message
+          || 'Assistant unavailable right now. Please try again shortly.';
+        const shortened = this.transformContent(raw, message);
+        const chips = this.generateChips(message);
+        return { response: shortened, sources, chips };
+      })
     );
   }
 
@@ -141,5 +188,79 @@ You can generate images for room listings when users ask for photos or images. U
 
   clearMessages() {
     this.messagesSubject.next([]);
+    this.welcomeSeeded = false;
+  }
+
+  seedWelcomeMessage() {
+    if (this.welcomeSeeded) return;
+    const welcome: Message = {
+      id: 'welcome-' + Date.now(),
+      role: 'assistant',
+      timestamp: new Date(),
+      content: `👋 Welcome to Setly! Quick start:
+• Housing help
+• Airport pickup
+• Documents (SSN / bank / SIM)
+• First week checklist
+
+Type what you need or press a chip below. Earn XP as you explore!`
+    };
+    this.addMessage(welcome);
+    this.welcomeSeeded = true;
+  }
+
+  private transformContent(raw: string, userInput: string): string {
+    // Keep it short & bulletized: take first 3 sentences
+    const sentences = raw
+      .replace(/\n+/g, ' ')
+      .split(/(?<=[\.\!\?])\s+/)
+      .filter(s => s.trim().length > 0)
+      .slice(0, 3);
+    const bullets = sentences.map(s => '• ' + s.trim());
+    // Domain emoji prefix
+    const emoji = this.pickEmoji(userInput);
+    this.loadGamify();
+    const progress = `XP ${this.xp} | L${this.level}`;
+    return `${emoji} ${bullets.join('\n')}\n${progress}`;
+  }
+
+  private pickEmoji(input: string): string {
+    const lower = input.toLowerCase();
+    if (/housing|room|rent|apartment/.test(lower)) return '🏠';
+    if (/airport|pickup|flight|arrive/.test(lower)) return '✈️';
+    if (/bank|account|card/.test(lower)) return '🏦';
+    if (/sim|phone|mobile|plan/.test(lower)) return '📶';
+    if (/ssn|document|paperwork|id/.test(lower)) return '🗂️';
+    if (/ride|car|uber|lyft|transport/.test(lower)) return '🚗';
+    return '🌟';
+  }
+
+  private generateChips(input: string): AssistantChip[] {
+    const chips: AssistantChip[] = [];
+    const lower = input.toLowerCase();
+    const push = (key: string, label: string, icon?: string) => chips.push({ key, label, icon });
+    if (/housing|room|rent|apartment/.test(lower)) {
+      push('filters', 'Refine housing', '🏠');
+      push('budget', 'Set budget', '💰');
+    }
+    if (/airport|pickup|flight|arrive/.test(lower)) {
+      push('arrival-checklist', 'Arrival checklist', '🛬');
+      push('ride-options', 'Ride options', '🚗');
+    }
+    if (/bank|account|card/.test(lower)) {
+      push('bank-docs', 'Needed documents', '📄');
+    }
+    if (/sim|phone|mobile|plan/.test(lower)) {
+      push('carrier-compare', 'Compare carriers', '📶');
+    }
+    if (/ssn|document|paperwork|id/.test(lower)) {
+      push('ssn-steps', 'SSN steps', '🗂️');
+    }
+    if (chips.length === 0) {
+      push('next-steps', 'Next steps', '➡️');
+      push('resources', 'Resources', '📚');
+    }
+    push('start-over', 'Start over', '🔄');
+    return chips;
   }
 }

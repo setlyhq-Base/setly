@@ -5,6 +5,6 @@ export const environment = {
   storageBucket: 'setly-dev.appspot.com',
   assistant: {
     openaiApiKey: '',
-    apiUrl: 'https://api.openai.com/v1/chat/completions'
+    apiUrl: 'http://localhost:3000/api/assistant/chat'
   }
 };

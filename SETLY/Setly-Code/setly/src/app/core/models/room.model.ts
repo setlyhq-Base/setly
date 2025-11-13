@@ -2,6 +2,7 @@ export interface Room {
   id: string;
   title: string;
   price: number;            // monthly USD
+  deposit?: number;         // refundable security deposit USD
   city: string;
   state?: string;
   coords?: { lat: number; lng: number };
@@ -27,4 +28,7 @@ export interface Room {
   maxGuests?: number;
   studentVerified?: boolean;
   minStayDays?: number;
+  // Photos with optional caption (future enhancement)
+  photoMeta?: { url: string; caption?: string }[];
+  videos?: { url: string; thumbnail?: string; durationSec?: number }[];
 }

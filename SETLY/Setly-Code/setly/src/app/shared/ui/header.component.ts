@@ -1,18 +1,22 @@
-import { Component } from '@angular/core';
+import { Component, HostBinding, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserStore } from '../../core/state/user.store';
+import { AuthStore } from '../../core/state/auth.store';
+import { AuthService } from '../../core/services/auth.service';
 import { RiderStoreService } from '../../core/services/rider-store.service';
 import { SearchBarComponent } from './search-bar.component';
+import { ToastService } from '../../core/services/toast.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-header',
   imports: [CommonModule, RouterLink, RouterLinkActive, SearchBarComponent],
   template: `
-    <header class="bg-white border-b border-gray-200 px-4 py-3">
+  <header class="app-header sticky top-0 z-50 px-4 py-3" [class.header-dark]="useDark">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <!-- Logo -->
-        <a routerLink="/" class="flex items-center space-x-2 text-gray-900 font-bold text-xl">
+  <a routerLink="/" class="flex items-center space-x-2 font-bold text-xl text-gray-900">
           <span class="northstar"></span>
           <span>SETLY</span>
         </a>
@@ -23,47 +27,116 @@ import { SearchBarComponent } from './search-bar.component';
         </div>
 
         <!-- Navigation -->
-        <nav class="flex items-center space-x-6">
-          <a routerLink="/browse" routerLinkActive="text-brand-blue" class="text-gray-700 hover:text-gray-900 transition-colors">
-            Browse
-          </a>
-          <a routerLink="/post-room" routerLinkActive="text-brand-blue" class="text-gray-700 hover:text-gray-900 transition-colors">
-            Post Room
-          </a>
-          <a routerLink="/messages" routerLinkActive="text-brand-blue" class="text-gray-700 hover:text-gray-900 transition-colors">
-            Messages
-          </a>
-          <a routerLink="/ride" routerLinkActive="text-brand-blue" class="text-gray-700 hover:text-gray-900 transition-colors">
-            Ride
-          </a>
-          <a routerLink="/profile" routerLinkActive="text-brand-blue" class="text-gray-700 hover:text-gray-900 transition-colors">
-            Profile
-          </a>
-          <a routerLink="/settings" routerLinkActive="text-brand-blue" class="text-gray-700 hover:text-gray-900 transition-colors">
-            Settings
-          </a>
-          <span *ngIf="userStore.isAuthed()" data-testid="rider-quick-toggle" class="text-sm text-gray-600">
-            Rider: {{ riderStore.enabled() ? 'On' : 'Off' }}
-          </span>
-          <a *ngIf="!userStore.isAuthed()" routerLink="/sign-in" class="btn">
-            Sign In
-          </a>
-          <a *ngIf="!userStore.isAuthed()" routerLink="/sign-up" class="btn">
-            Sign Up
-          </a>
-        </nav>
+        <div class="flex items-center space-x-6" *ngIf="authStore.user().isAuthenticated; else loggedOut">
+          <a routerLink="/connect" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Connect</a>
+          <a routerLink="/browse" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Browse</a>
+          <a routerLink="/open-room" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Post Room</a>
+          <a routerLink="/messages" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Messages</a>
+          <a routerLink="/ride" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Ride</a>
+          <span data-testid="rider-quick-toggle" class="text-sm text-gray-600">Rider: {{ riderStore.enabled() ? 'On' : 'Off' }}</span>
+          <!-- Avatar dropdown -->
+          <div class="relative profile-menu-wrapper">
+            <button (click)="toggleMenu($event)" class="flex items-center gap-2 focus:outline-none" aria-haspopup="true" [attr.aria-expanded]="menuOpen" aria-label="Open profile menu">
+              <span class="relative inline-block">
+                <img [src]="authStore.user().avatarUrl || userStore.user()?.photoUrl" alt="Profile avatar" class="w-9 h-9 rounded-full object-cover border cursor-pointer" (mouseenter)="openMenu()"/>
+                <span class="absolute -bottom-0.5 -right-0.5 block w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white" aria-hidden="true"></span>
+              </span>
+              <svg class="w-4 h-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.243 4.5a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clip-rule="evenodd"/></svg>
+            </button>
+            <div *ngIf="menuOpen" class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50" role="menu" (mouseenter)="cancelClose()" (mouseleave)="scheduleClose()">
+              <a routerLink="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg" role="menuitem">Profile</a>
+              <button (click)="signOut()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg" role="menuitem">Sign Out</button>
+            </div>
+          </div>
+        </div>
+        <ng-template #loggedOut>
+          <nav class="flex items-center space-x-6">
+            <a routerLink="/connect" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Connect</a>
+            <a routerLink="/browse" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Browse</a>
+            <a routerLink="/open-room" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Post Room</a>
+            <a routerLink="/messages" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Messages</a>
+            <a routerLink="/ride" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Ride</a>
+            <a routerLink="/profile" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Profile</a>
+            <button (click)="goToSignIn()" class="btn-secondary">Sign In</button>
+          </nav>
+        </ng-template>
       </div>
     </header>
   `,
   styles: [`
     .northstar {
-      @apply inline-block w-2.5 h-2.5 rounded-full bg-brand-blue align-middle;
+      @apply inline-block w-2.5 h-2.5 rounded-full align-middle;
+      background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
     }
   `]
 })
 export class HeaderComponent {
+  @HostBinding('class.scrolled') scrolled = false;
+  menuOpen = false;
+  private closeTimeout: any;
+  useDark = false;
   constructor(
     public userStore: UserStore,
-    public riderStore: RiderStoreService
-  ) {}
+    public riderStore: RiderStoreService,
+    private authService: AuthService,
+    public authStore: AuthStore,
+    private toast: ToastService,
+    private router: Router
+  ) {
+    // Bridge legacy window 'toast' events to central ToastService (for AuthSync, etc.)
+    window.addEventListener('toast', (e: any) => {
+      const detail = e.detail;
+      if (detail?.message) {
+        const type = detail.type || 'info';
+        this.toast.show(detail.message, type);
+      }
+    });
+    // Simple heuristic: enable dark header on profile pages for premium feel
+    const path = window.location.pathname;
+    if (/\/profile/.test(path)) this.useDark = true;
+  }
+
+  @HostListener('window:scroll')
+  onScroll() {
+    // Apply scrolled class when page is offset from top
+    this.scrolled = window.scrollY > 0;
+  }
+
+  async signOut() {
+    this.menuOpen = false;
+    this.router.navigate(['/auth/sign-out']);
+  }
+
+  goToSignIn() {
+    const next = location.pathname + location.search + location.hash;
+    this.router.navigate(['/auth/sign-in'], { queryParams: { next } });
+  }
+
+  toggleMenu(ev: Event) {
+    ev.stopPropagation();
+    this.menuOpen = !this.menuOpen;
+    if (this.menuOpen) this.bindOutside();
+  }
+  openMenu() {
+    if (!this.menuOpen) {
+      this.menuOpen = true;
+      this.bindOutside();
+    }
+  }
+  scheduleClose() {
+    this.closeTimeout = setTimeout(() => this.menuOpen = false, 150);
+  }
+  cancelClose() {
+    if (this.closeTimeout) clearTimeout(this.closeTimeout);
+  }
+  private bindOutside() {
+    const handler = (e: any) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.profile-menu-wrapper')) {
+        this.menuOpen = false;
+        window.removeEventListener('click', handler, true);
+      }
+    };
+    setTimeout(() => window.addEventListener('click', handler, true), 0);
+  }
 }

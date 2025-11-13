@@ -2,6 +2,10 @@ export interface User {
   id: string;
   name: string;
   photoUrl?: string;
+  /** Optional cover/banner image URL */
+  coverImageUrl?: string;
+  /** Short headline / tagline displayed under name */
+  headline?: string;
   primaryEmail: string;
   emailVerified: boolean;
   role: 'student' | 'professional';
@@ -30,6 +34,16 @@ export interface User {
     furnished?: boolean; roomType?: 'private' | 'shared';
   };
   favorites?: string[]; // room ids
+  profileVisibility?: {
+    about?: boolean;
+    travelHistory?: boolean;
+    reviews?: boolean;
+    interests?: boolean;
+    connections?: boolean;
+    verification?: boolean;
+  };
+  /** Unified socials storage (subset may come from backend). */
+  socials?: { linkedin?: string; instagram?: string; website?: string; whatsapp?: string };
 }
 
 export interface Organization {

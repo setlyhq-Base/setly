@@ -1,0 +1,17 @@
+[
+  {"id":"google","name":"Google","city":"Mountain View","state":"CA","country":"USA"},
+  {"id":"microsoft","name":"Microsoft","city":"Redmond","state":"WA","country":"USA"},
+  {"id":"apple","name":"Apple","city":"Cupertino","state":"CA","country":"USA"},
+  {"id":"amazon","name":"Amazon","city":"Seattle","state":"WA","country":"USA"},
+  {"id":"meta","name":"Meta","city":"Menlo Park","state":"CA","country":"USA"},
+  {"id":"netflix","name":"Netflix","city":"Los Gatos","state":"CA","country":"USA"},
+  {"id":"tesla","name":"Tesla","city":"Austin","state":"TX","country":"USA"},
+  {"id":"uber","name":"Uber","city":"San Francisco","state":"CA","country":"USA"},
+  {"id":"airbnb","name":"Airbnb","city":"San Francisco","state":"CA","country":"USA"},
+  {"id":"stripe","name":"Stripe","city":"San Francisco","state":"CA","country":"USA"},
+  {"id":"adobe","name":"Adobe","city":"San Jose","state":"CA","country":"USA"},
+  {"id":"salesforce","name":"Salesforce","city":"San Francisco","state":"CA","country":"USA"},
+  {"id":"oracle","name":"Oracle","city":"Austin","state":"TX","country":"USA"},
+  {"id":"ibm","name":"IBM","city":"Armonk","state":"NY","country":"USA"},
+  {"id":"intel","name":"Intel","city":"Santa Clara","state":"CA","country":"USA"}
+]

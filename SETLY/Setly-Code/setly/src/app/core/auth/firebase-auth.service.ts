@@ -224,12 +224,9 @@ export class FirebaseAuthService {
 
   // Token
   async getIdToken(): Promise<string | null> {
-    if (this.mockEnabled) {
-      return 'e2e-mock-token';
-    }
-    if (this.phoneMockEnabled) {
-      return 'e2e-mock-phone-token';
-    }
+    // Only return a mock token in full E2E mock mode; do NOT use phone mock here
+    // so that real Firebase tokens are sent to the backend for verification.
+    if (this.mockEnabled) return 'e2e-mock-token';
     const user = this.auth.currentUser;
     return user ? await getIdToken(user) : null;
   }

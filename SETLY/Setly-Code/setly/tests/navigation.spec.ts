@@ -19,8 +19,8 @@ test.describe('Navigation', () => {
     await page.goto('/');
     const postRoomLink = page.locator('a', { hasText: 'Post Room' });
     await postRoomLink.click();
-    await expect(page).toHaveURL('/post-room');
-    await expect(page.locator('text=Post Your Room')).toBeVisible();
+    await expect(page).toHaveURL('/open-room');
+    await expect(page.locator('text=Open a Room')).toBeVisible();
   });
 
   test('should navigate to messages page', async ({ page }) => {
@@ -49,10 +49,12 @@ test.describe('Navigation', () => {
 
   test('should navigate to sign up page', async ({ page }) => {
     await page.goto('/');
+    // Header no longer has Sign Up; use Sign In page link to reach Sign Up
+    await page.locator('a', { hasText: 'Sign In' }).click();
     const signUpLink = page.locator('a', { hasText: 'Sign Up' });
     await signUpLink.click();
-    await expect(page).toHaveURL('/sign-up');
-    await expect(page.locator('text=Create Account')).toBeVisible();
+    await expect(page).toHaveURL('/auth/sign-up');
+    await expect(page.locator('text=Create Account').or(page.locator('[data-testid="auth-title"]', { hasText: 'Create account' }))).toBeVisible();
   });
 
   test('should have working logo/home link', async ({ page }) => {

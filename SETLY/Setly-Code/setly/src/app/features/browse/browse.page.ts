@@ -85,7 +85,10 @@ export class BrowsePage {
     this.route.queryParams.subscribe(params => {
       const filters: any = {};
 
-      if (params['q']) filters.city = params['q'];
+      // Map ?q= to enhanced multi-field query instead of unused city filter
+      if (params['q']) filters.query = params['q'];
+      if (params['ci']) filters.checkIn = params['ci'];
+      if (params['co']) filters.checkOut = params['co'];
       if (params['type']) filters.roomType = params['type'];
       if (params['ci']) filters.checkIn = params['ci'];
       if (params['co']) filters.checkOut = params['co'];

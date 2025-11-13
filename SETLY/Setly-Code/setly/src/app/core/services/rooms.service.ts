@@ -1,13 +1,16 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { RoomStoreService } from './room-store.service';
 import { Room } from '../models/room.model';
 import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoomsService {
   private roomStore = inject(RoomStoreService);
+  private http = inject(HttpClient);
 
   getFeaturedRooms(): Observable<Room[]> {
     return of(this.roomStore.featuredRooms());
@@ -51,16 +54,48 @@ export class RoomsService {
   }
 
   getRoomById(id: string): Observable<Room | undefined> {
-    return of(this.roomStore.getRoomById(id));
+    // Try backend first
+    return this.http.get<any>(`/api/rooms/${id}`).pipe(
+      map(dto => this.mapToRoom(dto)),
+      catchError(() => of(this.roomStore.getRoomById(id)))
+    );
   }
 
   create(room: Omit<Room, 'id' | 'createdAt'>): Observable<Room> {
-    const newRoom: Room = {
-      ...room,
-      id: Date.now().toString(), // Simple ID generation
-      createdAt: new Date().toISOString()
-    };
-    this.roomStore.addRoom(newRoom);
-    return of(newRoom);
+    return this.http.post<any>('/api/rooms', room).pipe(
+      map(created => this.mapToRoom(created)),
+      map((mapped: Room) => { this.roomStore.addRoom(mapped); return mapped; }),
+      catchError((err) => {
+        // Fallback to local creation if backend not available
+        const newRoom: Room = { ...room, id: Date.now().toString(), createdAt: new Date().toISOString() } as Room;
+        this.roomStore.addRoom(newRoom);
+        return of(newRoom) as unknown as Observable<Room>;
+      })
+    );
+  }
+
+  private mapToRoom(dto: any): Room {
+    if (!dto) return dto;
+    return {
+      id: dto.id,
+      title: dto.title,
+      price: Number(dto.price) || 0,
+      deposit: dto.deposit,
+      city: dto.city,
+      state: dto.state,
+      coords: typeof dto.lat === 'number' && typeof dto.lon === 'number' ? { lat: dto.lat, lng: dto.lon } : dto.coords,
+      universityId: dto.universityId,
+      distanceKm: dto.distanceKm,
+      roomType: dto.roomType,
+      bath: dto.bath || 'shared',
+      furnished: !!dto.furnished,
+      rules: dto.rules || { vegetarian: false, smoking: false, petsOk: false },
+      photos: Array.isArray(dto.photos) ? dto.photos : [],
+      hostId: dto.ownerId || dto.hostId || 'unknown',
+      createdAt: dto.createdAt || new Date().toISOString(),
+      image: Array.isArray(dto.photos) && dto.photos.length ? dto.photos[0] : dto.image,
+      amenities: dto.amenities,
+      videos: Array.isArray(dto.videos) ? dto.videos.map((u: string) => ({ url: u })) : undefined
+    } as Room;
   }
 }

@@ -1,0 +1,131 @@
+/* Global theme tokens for Connect */
+:root {
+	--bg-header: #0B0B0F;
+	--bg-page: #FFFFFF;
+	--text: #111827;
+	--text-muted: #6B7280;
+	--brand: #5A4FF3;
+	--ring: #A5B4FC;
+	--card: #FFFFFF;
+	--card-border: rgba(17, 24, 39, 0.08);
+	--font-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+	--glow-color: #5A4FF3;
+	--header-height: 64px; /* keep sticky elements aligned with app header */
+}
+
+/* Page background gradient for subtle depth */
+html, body {
+	background: linear-gradient(to bottom, #FFFFFF 0%, #FAFAFF 100%);
+	color: var(--text);
+	font-family: var(--font-sans);
+}
+
+/* Sticky header visual treatment (blur on scroll) */
+.app-header {
+	background: rgba(255, 255, 255, 0.85);
+	border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	transition: backdrop-filter 200ms ease, -webkit-backdrop-filter 200ms ease, background-color 200ms ease, border-color 200ms ease;
+}
+.app-header.scrolled {
+	background: rgba(255, 255, 255, 0.72);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	border-bottom-color: rgba(17, 24, 39, 0.08);
+}
+
+/* Utility classes used by Connect */
+.card-white {
+	background: var(--card);
+	border: 1px solid var(--card-border);
+	border-radius: 0.75rem; /* xl */
+}
+
+.hover-lift {
+	transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.hover-lift:hover {
+	transform: translateY(-2px);
+	box-shadow:
+	  0 8px 22px rgba(17, 24, 39, 0.10),
+	  0 0 0 1px var(--card-border),
+	  0 0 0 3px rgba(90, 79, 243, 0.12);
+  cursor: pointer;
+}
+
+/* Hover glow utility for primary interactive elements */
+.hover-glow { position: relative; transition: box-shadow 160ms ease, transform 160ms ease; }
+.hover-glow:hover { box-shadow: 0 0 0 2px var(--glow-color), 0 4px 12px rgba(0,0,0,0.06); transform: translateY(-2px); }
+
+.focus-ring {
+	outline: none;
+	box-shadow: 0 0 0 3px var(--ring);
+}
+
+.btn-brand {
+	background: var(--brand);
+	color: #fff;
+}
+.btn-brand:hover {
+	filter: brightness(1.05);
+}
+
+/* Secondary buttons */
+.btn-outline { border: 1px solid var(--card-border); background: #fff; color: var(--text); }
+.btn-outline:hover { background: #F8F9FF; border-color: rgba(90,79,243,0.35); }
+.btn-soft { background: rgba(90,79,243,0.08); color: #2E2A8A; }
+.btn-soft:hover { background: rgba(90,79,243,0.12); }
+
+/* Chips */
+.chip { border: 1px solid var(--card-border); padding: 0.25rem 0.5rem; border-radius: 9999px; background: #fff; }
+.chip:hover { background: #F9FAFB; }
+.chip-selected { background: rgba(90,79,243,0.08); border-color: rgba(90,79,243,0.35); color: #2E2A8A; }
+
+/* Badges */
+.badge-verified { background: #ECFDF5; color: #166534; border: 1px solid #A7F3D0; border-radius: 9999px; padding: 0.125rem 0.375rem; font-size: 11px; }
+
+.fade-slide-enter {
+	opacity: 0;
+	transform: translateY(6px);
+}
+.fade-slide-enter-active {
+	transition: opacity 200ms ease, transform 200ms ease;
+	opacity: 1;
+	transform: translateY(0);
+}
+
+/* Enhanced stagger animation for new feed batches */
+.fade-slide-enter { opacity: 0; transform: translateY(12px); }
+.fade-slide-enter-active { animation: fadeSlide 420ms cubic-bezier(.25,.6,.25,1) forwards; }
+@keyframes fadeSlide { to { opacity:1; transform: translateY(0); } }
+
+/* Filters apply flash */
+.filters-apply { animation: filtersFlash 220ms ease-out; }
+@keyframes filtersFlash { 0% { box-shadow: 0 0 0 0 rgba(90,79,243,0.0);} 50% { box-shadow: 0 0 0 4px rgba(90,79,243,0.15);} 100% { box-shadow: 0 0 0 0 rgba(90,79,243,0.0);} }
+
+/* Image skeleton */
+.img-skeleton {
+	background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%);
+	background-size: 400% 100%;
+	animation: shimmer 1.2s ease-in-out infinite;
+}
+@keyframes shimmer {
+	0% { background-position: 100% 0; }
+	100% { background-position: -100% 0; }
+}
+
+/* Generic shimmer skeleton utility */
+.skeleton {
+	position: relative;
+	overflow: hidden;
+	background-color: #f3f4f6;
+}
+.skeleton::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	transform: translateX(-100%);
+	background: linear-gradient(90deg, transparent, rgba(229, 231, 235, 0.9), transparent);
+	animation: shimmer 1.2s ease-in-out infinite;
+}

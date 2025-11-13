@@ -7,6 +7,7 @@ import { PhotosStepComponent } from './photos-step.component';
 import { PricingStepComponent } from './pricing-step.component';
 import { PostRoomStore } from './post-room.store';
 import { RoomsService } from '../../core/services/rooms.service';
+import { RoomStore } from '../../core/state/room.store';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { CurrentUserService } from '../../core/user/current-user.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -26,12 +27,12 @@ import { ToastContainerComponent } from '../../shared/ui/toast-container.compone
   template: `
     <app-toast-container></app-toast-container>
     <!-- Hero Section -->
-    <section class="section-premium section-gradient animate-fade-in">
+  <section class="section-premium bg-white animate-fade-in">
       <div class="container mx-auto px-4">
         <div class="text-center">
-          <h1 class="heading-premium mb-6 text-gradient">Post Your Room</h1>
+          <h1 class="heading-premium mb-6 text-blue-500">Post Your Room</h1>
           <p class="subheading-premium max-w-2xl mx-auto">
-            Share your space with students and earn extra income. Join thousands of hosts who trust Setly.
+            join a trusted community of Setly hosts.
           </p>
         </div>
       </div>
@@ -46,8 +47,8 @@ import { ToastContainerComponent } from '../../shared/ui/toast-container.compone
             <div class="flex items-center justify-center space-x-4">
               <div class="flex items-center">
                 <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                  [class]="store.currentStep() >= 1 ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-300 text-gray-600'"
+                  class="w-10 h-10 rounded-full flex items-center justify-center font-semibold"
+                  [class]="store.currentStep() >= 1 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'"
                   [attr.aria-current]="store.currentStep() === 1 ? 'step' : null"
                 >
                   1
@@ -61,12 +62,12 @@ import { ToastContainerComponent } from '../../shared/ui/toast-container.compone
               </div>
               <div
                 class="w-16 h-0.5"
-                [class]="store.currentStep() >= 2 ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-300'"
+                [class]="store.currentStep() >= 2 ? 'bg-blue-500' : 'bg-gray-300'"
               ></div>
               <div class="flex items-center">
                 <div
                   class="w-10 h-10 rounded-full flex items-center justify-center font-semibold"
-                  [class]="store.currentStep() >= 2 ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-gray-300 text-gray-600'"
+                  [class]="store.currentStep() >= 2 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'"
                   [attr.aria-current]="store.currentStep() === 2 ? 'step' : null"
                 >
                   2
@@ -80,12 +81,12 @@ import { ToastContainerComponent } from '../../shared/ui/toast-container.compone
               </div>
               <div
                 class="w-16 h-0.5"
-                [class]="store.currentStep() >= 3 ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-300'"
+                [class]="store.currentStep() >= 3 ? 'bg-blue-500' : 'bg-gray-300'"
               ></div>
               <div class="flex items-center">
                 <div
                   class="w-10 h-10 rounded-full flex items-center justify-center font-semibold"
-                  [class]="store.currentStep() >= 3 ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-gray-300 text-gray-600'"
+                  [class]="store.currentStep() >= 3 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'"
                   [attr.aria-current]="store.currentStep() === 3 ? 'step' : null"
                 >
                   3
@@ -166,6 +167,7 @@ export class PostRoomPage {
   private currentUserService = inject(CurrentUserService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private roomCardStore = inject(RoomStore);
 
   canProceedToNext(): boolean {
     const step = this.store.currentStep();
@@ -193,9 +195,19 @@ export class PostRoomPage {
       }
 
       const draft = this.store.draft();
+      // Preserve actual image previews (base64) or URLs so listing detail can render them.
+      // Previously we only stored the photo.key which made the gallery blank.
+      const publishedPhotos = draft.photos
+        .filter(p => (p.preview || p.url) && !p.error)
+        .map(p => p.preview || p.url || p.key);
+      const coverPhoto = draft.photos.find(p => p.isCover);
+
       const roomData: any = {
         title: draft.title,
         description: draft.description,
+        address: (draft as any).address,
+        lat: typeof (draft as any).lat === 'number' ? (draft as any).lat : undefined,
+        lon: typeof (draft as any).lon === 'number' ? (draft as any).lon : undefined,
         price: draft.price.monthly,
         city: draft.city,
         state: draft.state,
@@ -204,30 +216,51 @@ export class PostRoomPage {
         bath: draft.bath,
         furnished: draft.furnished,
         rules: draft.rules,
-        distanceKm: draft.distanceKm,
-        photos: draft.photos.filter(p => p.key && !p.error).map(p => p.key),
+        distanceKm: (draft as any).distanceMiles ? Math.round(((draft as any).distanceMiles * 1.60934) * 10) / 10 : undefined,
+        photos: publishedPhotos,
+        image: coverPhoto ? (coverPhoto.preview || coverPhoto.url || coverPhoto.key) : publishedPhotos[0],
         hostId: currentUser.uid,
         createdAt: new Date().toISOString(),
         availabilityStart: draft.availableFrom,
+        availabilityEnd: (draft as any).availableTo,
         amenities: draft.price.utilitiesIncluded
       };
 
-      await this.roomsService.create(roomData).toPromise();
-      
-      this.store.clearDraft();
-      this.analytics.trackEvent('postRoom_published', {
-        listingId: 'generated-id',
-        city: draft.city,
-        universityId: draft.nearUniversityId,
-        price: draft.price.monthly
-      });
-      
-      this.toast.success('Your room is live!');
-      
-      // Navigate to listing or browse
-      setTimeout(() => {
-        this.router.navigate(['/browse']);
-      }, 1500);
+      const created = await this.roomsService.create(roomData).toPromise();
+      if (created) {
+        // Map to RoomCard for Browse visibility
+        const features: string[] = [];
+        if (created.roomType === 'private') features.push('Private room');
+        if (created.furnished) features.push('Furnished');
+        if (created.rules?.petsOk) features.push('Pets ok');
+        if (!created.rules?.smoking) features.push('No smoking');
+        if (created.rules?.vegetarian) features.push('Vegetarian');
+        const card = {
+          id: created.id,
+          title: created.title,
+          price: created.price,
+          image: created.image || created.photos?.[0] || '/assets/placeholder-room.jpg',
+          address: [created.city, created.state].filter(Boolean).join(', '),
+          distance: created.distanceKm ? `${created.distanceKm} km` : '',
+          features,
+          isAvailable: true,
+        };
+        this.roomCardStore.addRoom(card);
+
+        this.store.clearDraft();
+        this.analytics.trackEvent('postRoom_published', {
+          listingId: created.id,
+          city: draft.city,
+          universityId: draft.nearUniversityId,
+          price: draft.price.monthly
+        });
+        this.toast.success('Your room is live! Redirecting…');
+        setTimeout(() => {
+          this.router.navigate(['/listing', created.id]);
+        }, 900);
+      } else {
+        this.toast.error('Failed to create listing');
+      }
     } catch (error) {
       console.error('Failed to publish room:', error);
       this.toast.error('Failed to publish listing. Please try again.');

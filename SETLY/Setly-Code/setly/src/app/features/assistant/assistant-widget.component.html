@@ -1,0 +1,93 @@
+<button
+  data-testid="assistant-launcher"
+  (click)="open()"
+  class="fixed bottom-4 right-4 w-14 h-14 rounded-full shadow-lg bg-gradient-to-br from-[#6A70FF] to-[#8A5BFF] text-white flex items-center justify-center focus:outline-none focus:ring-4 focus:ring-indigo-300 z-50 transition transform hover:scale-105"
+  [class.hidden]="isOpen"
+  aria-label="Open Setly Assistant"
+>
+  <span class="text-2xl">⭐</span>
+  <span *ngIf="hasNewTips" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 border-2 border-white"></span>
+</button>
+
+<div *ngIf="isOpen" class="fixed right-4 bottom-4 z-[60] sm:right-5 sm:bottom-5" [class.w-screen]="isMobile()" [class.max-w-[420px]]="!isMobile()" [class.w-[clamp(380px,38vw,420px)]]="!isMobile()">
+  <section data-testid="assistant-modal" class="rounded-2xl shadow-2xl bg-white/90 backdrop-blur-xl border border-gray-200 overflow-hidden animate-scale-fade relative pointer-events-auto" role="dialog" aria-modal="true" aria-label="Setly Assistant" [ngStyle]="{ height: panelHeight() }">
+    <!-- Header -->
+    <header class="sticky top-0 z-10 flex items-center justify-between px-4 h-[56px] sm:h-[60px] bg-gradient-to-r from-[#6A70FF] to-[#8A5BFF] text-white">
+      <div class="flex items-center gap-2 font-medium">
+        <span class="text-lg">⭐</span>
+        <div class="flex flex-col leading-tight">
+          <span>Setly Assistant <span class="align-super text-[10px] bg-white/20 px-1 rounded">beta</span></span>
+          <span class="text-xs opacity-90" aria-live="polite">{{ subtitles[subtitleIndex] }}</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="p-1 rounded hover:bg-white/10" (click)="toggleThreads()" aria-label="Conversations" title="Conversations">☰</button>
+        <button class="p-1 rounded hover:bg-white/10" (click)="$event.stopPropagation()" aria-label="Help">?</button>
+        <button class="p-1 rounded hover:bg-white/10" (click)="minimize()" aria-label="Minimize">—</button>
+        <button class="p-1 rounded hover:bg-white/10" (click)="close()" aria-label="Close">×</button>
+      </div>
+    </header>
+
+    <!-- Threads Drawer -->
+    <div *ngIf="showThreads()" class="absolute top-[56px] right-0 left-0 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm z-10">
+      <div class="flex items-center justify-between px-4 py-2">
+        <div class="text-sm font-medium text-gray-800">Conversations</div>
+        <button class="text-xs px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700" (click)="onNewThread()">New chat</button>
+      </div>
+      <div class="max-h-48 overflow-auto divide-y divide-gray-100">
+        <button *ngFor="let t of threads()" (click)="onSwitchThread(t.id)" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full" [class.bg-indigo-600]="t.id === currentThreadId()" [class.bg-gray-300]="t.id !== currentThreadId()"></span>
+          <span class="text-sm text-gray-800 truncate">{{t.title || 'Untitled'}}</span>
+          <span class="ml-auto text-[10px] text-gray-500">{{t.updatedAt | date:'short'}}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Playbooks (home state) -->
+    <div *ngIf="items().length === 0" class="p-4 space-y-4">
+      <div class="flex gap-3 overflow-x-auto pb-1" data-testid="assistant-playbooks">
+        <div *ngFor="let pb of playbooks()" class="shrink-0 w-40 rounded-xl bg-white shadow-sm border border-gray-200 p-3 flex flex-col justify-between">
+          <div>
+            <div class="text-xl mb-1">{{pb.icon}}</div>
+            <div class="font-medium text-gray-900 text-sm">{{pb.title}}</div>
+            <div class="text-xs text-gray-500 line-clamp-2">{{pb.benefit}}</div>
+          </div>
+          <button class="mt-3 text-xs font-medium px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700" (click)="onStartPlaybook(pb.key)" [attr.data-testid]="'assistant-playbook-' + pb.key">Start</button>
+        </div>
+      </div>
+      <div class="text-[11px] text-gray-500 px-1" data-testid="assistant-tip-strip">Pro tip: verified .edu email unlocks peer rooms & rides</div>
+    </div>
+
+    <!-- Conversation messages with virtual scroll -->
+    <cdk-virtual-scroll-viewport itemSize="82" class="px-4 py-4 space-y-4 overflow-y-auto" data-testid="assistant-messages" aria-live="polite" [style.height]="listHeight()">
+      <div *cdkVirtualFor="let m of items()" class="space-y-2">
+        <div *ngIf="m.type === 'user'" class="flex justify-end">
+          <div class="relative max-w-[75%] bg-gray-100 text-gray-900 rounded-2xl px-4 py-2 text-sm shadow bubble user">{{m.content}}</div>
+        </div>
+        <div *ngIf="m.type === 'bot'" class="flex justify-start">
+          <div class="relative max-w-[75%] bg-gradient-to-r from-[#6A70FF] to-[#8A5BFF] text-white rounded-2xl px-4 py-2 text-sm shadow whitespace-pre-line bubble bot">
+            {{m.content}}
+            <div class="absolute -bottom-5 right-2 flex gap-1" *ngIf="m.type==='bot' && m.content && m.content.length > 0">
+              <button (click)="svc.sendFeedback(m.id,'up')" class="w-6 h-6 text-xs rounded-full bg-white/20 hover:bg-white/30" aria-label="Feedback up">👍</button>
+              <button (click)="svc.sendFeedback(m.id,'down')" class="w-6 h-6 text-xs rounded-full bg-white/20 hover:bg-white/30" aria-label="Feedback down">👎</button>
+            </div>
+          </div>
+        </div>
+        <app-room-preview-card *ngIf="m.type === 'room-card'" [title]="m.card.title" [price]="m.card.price" [distanceKm]="m.card.distanceKm" [photoUrl]="m.card.photoUrl" [listingId]="m.card.listingId"></app-room-preview-card>
+        <app-ride-cta *ngIf="m.type === 'ride-cta'" [pickup]="m.card.pickup" [dropoff]="m.card.dropoff"></app-ride-cta>
+        <div *ngIf="m.chips?.length" class="flex flex-wrap gap-2 pt-1" data-testid="assistant-quick-replies">
+          <button *ngFor="let c of m.chips" (click)="onChip(c.key)" class="px-3 py-1.5 rounded-full bg-white/70 backdrop-blur text-xs text-gray-800 border border-gray-200 hover:bg-white shadow-sm" [attr.data-testid]="'assistant-chip-' + c.key">{{c.label}}</button>
+        </div>
+      </div>
+    </cdk-virtual-scroll-viewport>
+
+  <!-- Jump to latest pill -->
+  <button *ngIf="showJumpChip()" (click)="viewport?.scrollToIndex(1e9); showJumpChip.set(false)" class="absolute bottom-20 right-4 rounded-full bg-white shadow px-3 py-1 text-xs border border-gray-200">Jump to latest ↓</button>
+
+    <!-- Footer Input / Composer -->
+    <form (submit)="send(); $event.preventDefault();" class="sticky bottom-0 border-t border-gray-200 bg-white/70 backdrop-blur p-3 flex gap-2 pb-[env(safe-area-inset-bottom)]">
+      <input type="text" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Ask anything about moving to the US…" [ngModel]="input()" (ngModelChange)="input.set($event)" name="assistantInput" data-testid="assistant-input"/>
+      <button type="submit" class="rounded-lg bg-indigo-600 text-white px-4 text-sm font-medium hover:bg-indigo-700 disabled:opacity-40" [disabled]="!input()" data-testid="assistant-send">Send</button>
+    </form>
+  </section>
+</div>

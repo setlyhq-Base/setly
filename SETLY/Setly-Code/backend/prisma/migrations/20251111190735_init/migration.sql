@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Room" ADD COLUMN "lat" REAL;
+ALTER TABLE "Room" ADD COLUMN "lon" REAL;

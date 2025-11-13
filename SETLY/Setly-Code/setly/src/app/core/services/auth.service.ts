@@ -44,15 +44,13 @@ export class AuthService {
     // Listen to auth state changes and handle navigation
     this.firebaseAuth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Check if user has a complete profile
+        // Profile completeness logic remains for legacy wizard flows
         const profile = this.currentUserService.currentUser();
-        if (profile && this.currentUserService.isProfileComplete()) {
-          // Existing user with complete profile -> home
-          // Navigation handled by guards
-        } else {
-          // New user or incomplete profile -> profile setup
-          // Navigation handled by guards
+        if (!profile) {
+          // Firestore profile ensured by CurrentUserService
         }
+        // Backend user synchronization (lazy) can be triggered from sign-in page.
+        // If we later inject UserStore here we could auto-refresh: kept minimal to avoid circular deps.
       }
     });
   }

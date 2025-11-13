@@ -11,6 +11,8 @@ export interface RoomFilters {
   petsOk: boolean;
   privateRoom: boolean;
   furnished: boolean;
+  checkIn?: string;  // ISO date (YYYY-MM-DD or full)
+  checkOut?: string; // ISO date
 }
 
 @Injectable({
@@ -28,7 +30,9 @@ export class RoomStore {
     noSmoking: false,
     petsOk: false,
     privateRoom: false,
-    furnished: false
+    furnished: false,
+    checkIn: undefined,
+    checkOut: undefined
   });
 
   filteredRooms = computed(() => {
@@ -38,10 +42,16 @@ export class RoomStore {
     return rooms.filter(room => {
       // Query filter: match title or address
       if (filters.query) {
-        const query = filters.query.toLowerCase();
-        const matchesQuery = room.title.toLowerCase().includes(query) ||
-                           room.address.toLowerCase().includes(query);
-        if (!matchesQuery) return false;
+        const q = filters.query.toLowerCase().trim();
+        // Build a searchable haystack across multiple fields
+        const haystack = [
+          room.title,
+          room.address,
+          room.city,
+          room.universityName,
+          room.hostName
+        ].filter(Boolean).join(' ').toLowerCase();
+        if (!haystack.includes(q)) return false;
       }
 
       // Price filter
@@ -55,6 +65,16 @@ export class RoomStore {
       if (filters.petsOk && !room.features.includes('Pets ok')) return false;
       if (filters.privateRoom && !room.features.includes('Private room')) return false;
       if (filters.furnished && !room.features.includes('Furnished')) return false;
+
+      // Date availability filter (only apply if both provided)
+      if (filters.checkIn && filters.checkOut) {
+        const ci = new Date(filters.checkIn);
+        const co = new Date(filters.checkOut);
+        const start = room.availabilityStart ? new Date(room.availabilityStart) : null;
+        const end = room.availabilityEnd ? new Date(room.availabilityEnd) : null;
+        if (start && ci < start) return false;
+        if (end && co > end) return false;
+      }
 
       return true;
     });
@@ -114,7 +134,9 @@ export class RoomStore {
       noSmoking: false,
       petsOk: false,
       privateRoom: false,
-      furnished: false
+      furnished: false,
+      checkIn: undefined,
+      checkOut: undefined
     });
   }
 }

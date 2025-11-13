@@ -7,7 +7,16 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "nodemon --watch src --exec ts-node src/server.ts",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "verify:media": "node scripts/verify-media-flow.js",
+    "test:room": "node scripts/test-room-validation.js",
+    "test:rooms-list": "node scripts/test-rooms-list.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:deploy": "prisma migrate deploy",
+    "seed:rooms": "node scripts/seed-db.js",
+    "verify:db": "node scripts/verify-db.js"
+    , "verify:address": "node scripts/verify-address-persistence.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.927.0",
@@ -18,13 +27,16 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "firebase-admin": "^13.6.0",
-    "openai": "^4.20.1",
+  "openai": "^4.20.1",
+  "node-fetch": "^3.3.2",
     "typescript": "^5.9.3",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "@prisma/client": "^5.20.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "nodemon": "^3.0.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "prisma": "^5.20.0"
   }
 }

@@ -1,0 +1,46 @@
+/* Page-level styles specific to Connect. Most styles are Tailwind utility classes; keep this minimal. */
+
+:host {
+  display: block;
+}
+
+.focus-ring {
+  outline: none;
+}
+
+.btn-brand {
+  background-color: #4F46E5;
+  color: #fff;
+  border-color: transparent;
+}
+
+.btn-brand:hover {
+  background-color: #4338CA;
+}
+
+.card-white {
+  background: #fff;
+  border: 1px solid #F1F5F9;
+  border-radius: 0.75rem;
+}
+
+.chip {
+  border: 1px solid #E5E7EB;
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+}
+
+.chip-selected {
+  background: #EEF2FF;
+  border-color: #C7D2FE;
+  color: #4F46E5;
+}
+
+.hover-lift {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}

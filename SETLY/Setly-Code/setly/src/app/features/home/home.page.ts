@@ -14,13 +14,12 @@ import { RidesService } from '../../core/services/rides.service';
 import { Room } from '../../core/models/room.model';
 import { CurrencyCompactPipe } from '../../shared/pipes/currency-compact.pipe';
 import { SkeletonCardComponent } from '../../shared/ui/skeleton-card.component';
-import { ChatWidgetComponent } from '../../features/assistant/chat-widget.component';
 
 import { SearchHeroComponent } from '../../shared/ui/search-hero/search-hero.component';
 import { RideRequestModalComponent } from '../../shared/ui/ride-request-modal.component';
 import { TestimonialCarouselComponent } from '../../shared/ui/testimonial-carousel.component';
 import { HeaderComponent } from '../../shared/ui/header.component';
-import { FooterComponent } from '../../shared/ui/footer.component';
+import { ProfileNudgeBannerComponent } from '../../shared/ui/profile-nudge-banner.component';
 
 interface SearchParams {
   query?: string;
@@ -38,77 +37,115 @@ interface SearchParams {
     CommonModule,
     RouterModule,
     FormsModule,
-    ChatWidgetComponent,
     SearchHeroComponent,
     RideRequestModalComponent,
-    TestimonialCarouselComponent
+    TestimonialCarouselComponent,
+    ProfileNudgeBannerComponent
   ],
   template: `
     <div class="min-h-screen bg-white text-gray-900">
       <!-- Debug marker to confirm home component renders -->
       <div class="sr-only" data-testid="home-debug">home-component-mounted</div>
-      <!-- Hero Section -->
-      <section class="section-premium section-gradient animate-fade-in" data-testid="hero-section">
-        <div class="container mx-auto px-4">
-          <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <!-- Profile completion nudge banner -->
+      <section class="container mx-auto px-4 pt-4">
+        <app-profile-nudge-banner></app-profile-nudge-banner>
+      </section>
+      <!-- Premium Hero Section -->
+      <section class="relative isolate overflow-hidden" data-testid="hero-section">
+        <!-- Ambient gradient background and decorative orbs -->
+        <div class="absolute inset-0 -z-10 bg-gradient-to-br from-white via-indigo-50 to-purple-50"></div>
+        <div class="absolute top-[-6rem] left-1/2 -translate-x-1/2 w-[60rem] h-[60rem] rounded-full bg-gradient-to-tr from-indigo-200/50 via-indigo-100/10 to-transparent blur-3xl"></div>
+        <div class="absolute bottom-[-4rem] right-[-2rem] w-[40rem] h-[40rem] rounded-full bg-gradient-to-tl from-purple-200/40 via-purple-100/10 to-transparent blur-3xl"></div>
+        <div class="container mx-auto px-4 pt-24 pb-32">
+          <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
             <!-- Left Column -->
-            <div class="space-y-8 animate-slide-up">
-              <div>
-                <h1 class="heading-premium mb-6 text-gradient">
-                  Find Your Perfect Room
+            <div class="flex-1 w-full space-y-10">
+              <div class="space-y-6">
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-black/5 text-xs font-medium text-gray-700 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse"></span>
+                  Trusted student housing & rides
+                </span>
+                <h1 class="text-[2.75rem] md:text-[3.75rem] leading-[1.05] font-semibold tracking-tight text-gray-900">
+                  Your next move.
                 </h1>
-                <p class="subheading-premium max-w-xl">
-                  Connect with students and find housing that matches your lifestyle.
+                <p class="text-lg md:text-xl text-gray-600 max-w-xl font-medium">
+                  Find trusted homes and rides near your university — connect, live, and move with confidence.
                 </p>
               </div>
-
               <div class="flex flex-col sm:flex-row gap-4">
-                <button
-                  (click)="navigateToBrowse()"
-                  class="btn-primary"
-                  data-testid="hero-search-button"
-                >
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                  </svg>
-                  Find Rooms
+                <button (click)="navigateToBrowse()" class="group relative inline-flex items-center justify-center rounded-xl px-7 py-4 text-sm font-semibold text-white overflow-hidden" data-testid="hero-search-button">
+                  <span class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 transition-transform group-hover:scale-105"></span>
+                  <span class="relative flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Explore Rooms
+                  </span>
                 </button>
-                <button
-                  (click)="scrollToRides()"
-                  class="btn-secondary"
-                  data-testid="hero-ride-button"
-                >
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a4 4 0 004 4h4m-4-4v4m0-4H8m8 0V7a4 4 0 00-4-4H8a4 4 0 00-4 4v8"></path>
+                <button (click)="scrollToRides()" class="inline-flex items-center justify-center rounded-xl px-7 py-4 text-sm font-semibold text-gray-700 bg-white border border-gray-200 shadow-sm hover:shadow-md backdrop-blur-sm hover:bg-gray-50 transition" data-testid="hero-ride-button">
+                  <svg class="w-5 h-5 mr-2 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="5" y="10" width="14" height="6" rx="2"/>
+                    <path d="M7 10l2-3h6l2 3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="8" cy="17" r="2"/>
+                    <circle cx="16" cy="17" r="2"/>
                   </svg>
                   Book a Ride
                 </button>
               </div>
+              <!-- Metrics row -->
+              <div class="grid grid-cols-3 gap-6 pt-4">
+                <div class="space-y-1">
+                  <div class="text-xl font-semibold text-gray-900">10k+</div>
+                  <div class="text-xs text-gray-500">Students</div>
+                </div>
+                <div class="space-y-1">
+                  <div class="text-xl font-semibold text-gray-900">500+</div>
+                  <div class="text-xs text-gray-500">Universities</div>
+                </div>
+                <div class="space-y-1">
+                  <div class="text-xl font-semibold text-gray-900">95%</div>
+                  <div class="text-xs text-gray-500">Satisfaction</div>
+                </div>
+              </div>
             </div>
-
-            <!-- Right Column -->
-            <div class="animate-scale-in">
-              <app-search-hero
-                [initialQuery]="searchParams().query || ''"
-                [initialCity]="searchParams().city || ''"
-                [initialRoomType]="searchParams().roomType || ''"
-                [initialCheckIn]="searchParams().checkIn || null"
-                [initialCheckOut]="searchParams().checkOut || null"
-                [initialStudentVerifiedOnly]="searchParams().studentVerifiedOnly || false"
-                (searchChange)="onSearchChange($event)"
-                data-testid="search-hero"
-              ></app-search-hero>
+            <!-- Right Column (Search) -->
+            <div class="flex-1 w-full max-w-xl mx-auto">
+              <div class="relative group">
+                <div class="absolute -inset-2 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-60 group-hover:opacity-80 transition"></div>
+                <div class="relative rounded-3xl border border-white/40 bg-white/80 backdrop-blur-xl shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 transition overflow-hidden">
+                  <app-search-hero
+                    [initialQuery]="searchParams().query || ''"
+                    [initialCity]="searchParams().city || ''"
+                    [initialRoomType]="searchParams().roomType || ''"
+                    [initialCheckIn]="searchParams().checkIn || null"
+                    [initialCheckOut]="searchParams().checkOut || null"
+                    [initialStudentVerifiedOnly]="searchParams().studentVerifiedOnly || false"
+                    (searchChange)="onSearchChange($event)"
+                    data-testid="search-hero"
+                  ></app-search-hero>
+                </div>
+              </div>
+              <!-- Sub‑note -->
+              <p class="mt-6 text-sm text-gray-500 text-center">Verified profiles • Fast messaging • Secure platform</p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Featured Rooms Section -->
-      <section class="section-premium bg-white" data-testid="featured-rooms-section">
+      <!-- Featured Rooms Section (Refined) -->
+      <section class="py-24 bg-white" data-testid="featured-rooms-section">
         <div class="container mx-auto px-4">
-          <div class="text-center mb-16">
-            <h2 class="heading-premium mb-4">Featured Rooms</h2>
-            <p class="subheading-premium">Discover amazing spaces shared by students just like you</p>
+          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-16">
+            <div class="space-y-4">
+              <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">Featured Rooms</h2>
+              <p class="text-gray-600 max-w-md">Curated spaces with quality, comfort and the right vibe – refreshed daily.</p>
+            </div>
+            <div>
+              <button (click)="navigateToBrowse()" class="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium rounded-xl bg-gray-900 text-white hover:bg-black transition">
+                Browse all
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+              </button>
+            </div>
           </div>
 
           <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" *ngIf="!loadingFeatured()">
@@ -128,14 +165,14 @@ interface SearchParams {
                   height="192"
                 >
                 <div class="absolute top-4 right-4">
-                  <span class="chip bg-white/90 backdrop-blur-sm text-gray-900">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm">
                     $\{{room.price}}/month
                   </span>
                 </div>
               </div>
 
               <div class="p-6">
-                <h3 class="font-semibold text-lg text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <h3 class="font-medium text-lg text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
                   {{ room.title }}
                 </h3>
                 <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ room.title }}</p>
@@ -148,11 +185,8 @@ interface SearchParams {
                     <span class="text-sm text-gray-700">{{ room.hostId }}</span>
                   </div>
 
-                  <button
-                    (click)="onConnectClick(room, $event)"
-                    class="btn-ghost text-blue-600 hover:text-blue-700"
-                    [attr.data-testid]="'connect-button-' + room.id"
-                  >
+                  <button (click)="onConnectClick(room, $event)" class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition" [attr.data-testid]="'connect-button-' + room.id">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8a6 6 0 01-12 0"/></svg>
                     Connect
                   </button>
                 </div>
@@ -180,9 +214,9 @@ interface SearchParams {
       <!-- SetlyRide & Uber Cards -->
       <section class="container mx-auto px-4 py-16" data-testid="ride-services">
         <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">Get Around Campus</h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4">SetlyRide</h2>
           <p class="text-gray-600 text-lg max-w-2xl mx-auto">
-            Connect with peers for rides or use Uber for quick trips around your university.
+            Trusted Setly rides near you.
           </p>
         </div>
 
@@ -190,11 +224,16 @@ interface SearchParams {
           <!-- SetlyRide Card -->
           <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-lg transition-shadow">
             <div class="text-center mb-6">
-              <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span class="text-2xl">🚗</span>
+              <div class="w-16 h-16 bg-white border border-gray-200 text-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <rect x="5" y="10" width="14" height="6" rx="2"/>
+                  <path d="M7 10l2-3h6l2 3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="8" cy="17" r="2"/>
+                  <circle cx="16" cy="17" r="2"/>
+                </svg>
               </div>
               <h3 class="text-xl font-semibold text-gray-900 mb-2">SetlyRide</h3>
-              <p class="text-gray-600">Peer-to-peer rides with students near your university.</p>
+              <p class="text-gray-600">Carpool with a Setly near you.</p>
             </div>
             <button
               (click)="openRideModal()"
@@ -212,7 +251,7 @@ interface SearchParams {
                 <span class="text-white text-xl font-bold">U</span>
               </div>
               <h3 class="text-xl font-semibold text-gray-900 mb-2">Uber</h3>
-              <p class="text-gray-600">Quick rides to and from campus with Uber.</p>
+              <p class="text-gray-600">Quick ride with Uber.</p>
             </div>
             <button
               (click)="openUber()"
@@ -224,157 +263,6 @@ interface SearchParams {
           </div>
         </div>
       </section>
-
-      <!-- Trust & Proof Section -->
-      <section class="bg-gray-50 py-16" data-testid="trust-proof">
-        <div class="container mx-auto px-4">
-          <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-bold mb-4">Trusted by Students</h2>
-            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
-              Join thousands of verified students who have found their perfect housing and transportation solutions.
-            </p>
-          </div>
-
-          <div class="grid md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div class="text-4xl font-bold text-blue-600 mb-2">10,000+</div>
-              <div class="text-gray-600">Students Connected</div>
-            </div>
-            <div>
-              <div class="text-4xl font-bold text-green-600 mb-2">95%</div>
-              <div class="text-gray-600">Satisfaction Rate</div>
-            </div>
-            <div>
-              <div class="text-4xl font-bold text-purple-600 mb-2">500+</div>
-              <div class="text-gray-600">Universities Served</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- How it Works Section -->
-      <section class="container mx-auto px-4 py-16" data-testid="how-it-works">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4" id="how-it-works">How it works</h2>
-        </div>
-
-        <div class="grid md:grid-cols-4 gap-8">
-          <div class="text-center">
-            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span class="text-2xl font-bold text-white">1</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-2 text-gray-900">Create your profile</h3>
-            <p class="text-gray-600">Set your preferences for room type, budget, and lifestyle choices.</p>
-          </div>
-
-          <div class="text-center">
-            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span class="text-2xl font-bold text-white">2</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-2 text-gray-900">Search & filter by university</h3>
-            <p class="text-gray-600">Find rooms near your university with our smart filtering system.</p>
-          </div>
-
-          <div class="text-center">
-            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span class="text-2xl font-bold text-white">3</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-2 text-gray-900">Connect & confirm</h3>
-            <p class="text-gray-600">Message hosts directly and secure your perfect room.</p>
-          </div>
-
-          <div class="text-center">
-            <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span class="text-2xl font-bold text-white">4</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-2 text-gray-900">Get around campus</h3>
-            <p class="text-gray-600">Use SetlyRide for peer-to-peer rides or Uber for quick trips.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Testimonials Section -->
-      <section class="container mx-auto px-4 py-16" data-testid="testimonials-section">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4" id="what-students-say">What students say</h2>
-        </div>
-        <app-testimonial-carousel data-testid="testimonials-carousel"></app-testimonial-carousel>
-      </section>
-
-      <!-- FAQ Section -->
-      <section class="container mx-auto px-4 py-16" data-testid="faq-section">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4" id="faq">Frequently asked questions</h2>
-        </div>
-
-        <div class="max-w-3xl mx-auto space-y-4">
-          <details class="rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <summary class="px-6 py-4 cursor-pointer font-semibold text-gray-900 hover:bg-gray-50 transition">
-              Is Setly only for Indian community?
-            </summary>
-            <div class="px-6 pb-4 text-gray-700">
-              No, Setly is for all students! While we have filters for Indian community preferences, our platform welcomes students from all backgrounds and cultures.
-            </div>
-          </details>
-
-          <details class="rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <summary class="px-6 py-4 cursor-pointer font-semibold text-gray-900 hover:bg-gray-50 transition">
-              Do you handle leases?
-            </summary>
-            <div class="px-6 pb-4 text-gray-700">
-              Not yet. Currently, Setly helps you connect with hosts. Lease agreements are handled directly between you and the host. We're working on lease management features for the future.
-            </div>
-          </details>
-
-          <details class="rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <summary class="px-6 py-4 cursor-pointer font-semibold text-gray-900 hover:bg-gray-50 transition">
-              Are payments safe?
-            </summary>
-            <div class="px-6 pb-4 text-gray-700">
-              We're integrating Stripe for secure payments (coming soon in beta). For now, we recommend using secure payment methods and documenting all agreements.
-            </div>
-          </details>
-
-          <details class="rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <summary class="px-6 py-4 cursor-pointer font-semibold text-gray-900 hover:bg-gray-50 transition">
-              Is my phone number public?
-            </summary>
-            <div class="px-6 pb-4 text-gray-700">
-              No, your contact information remains private until you mutually agree to connect with a host. We only facilitate the initial connection through our messaging system.
-            </div>
-          </details>
-        </div>
-      </section>
-
-      <!-- Final CTA Section -->
-      <section class="container mx-auto px-4 py-16" data-testid="final-cta">
-        <div class="rounded-2xl bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-slate-700 p-8 md:p-12 text-center">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4" id="ready-for-next-move">Ready for your next move?</h2>
-          <p class="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">
-            Join thousands of students who have found their perfect room near campus.
-          </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              (click)="navigateToBrowse()"
-              class="bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg px-6 py-3 transition"
-              aria-label="Setly - Find Your next Room"
-              data-testid="cta-search-button">
-              Setly - Find Your next Room
-            </button>
-            <button
-              [routerLink]="'/post-room'"
-              class="bg-slate-800 border border-slate-700 hover:border-slate-500 text-slate-100 font-medium rounded-lg px-6 py-3 transition"
-              aria-label="Post a room"
-              data-testid="cta-post-button">
-              Post a room
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Chat Widget -->
-      <app-chat-widget data-testid="chat-widget"></app-chat-widget>
-
       <!-- Ride Request Modal -->
       <app-ride-request-modal
         [isOpen]="rideModalOpen"

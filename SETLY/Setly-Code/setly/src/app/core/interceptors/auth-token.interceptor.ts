@@ -10,8 +10,13 @@ export class AuthTokenInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Only attach token for our API calls
-    const isApiCall = /\/api\//.test(req.url);
+    const isApiCall = req.url.startsWith('/api/') || /\/api\//.test(req.url);
     if (!isApiCall) {
+      return next.handle(req);
+    }
+
+    // If the request already has an Authorization header, respect it (caller provided a token)
+    if (req.headers.has('Authorization')) {
       return next.handle(req);
     }
 

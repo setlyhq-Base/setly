@@ -1,0 +1,57 @@
+// Prisma schema for Setly backend using SQLite
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Room {
+  id           String    @id @default(uuid())
+  ownerId      String
+  title        String
+  description  String
+  address      String?
+  lat          Float?
+  lon          Float?
+  city         String
+  state        String
+  price        Int
+  deposit      Int?
+  roomType     String
+  bath         String
+  furnished    Boolean   @default(false)
+  vegetarian   Boolean?
+  smoking      Boolean?
+  petsOk       Boolean?
+  distanceKm   Float?
+  photos       Photo[]
+  videos       Video[]
+  amenities    Amenity[]
+  universityId String?
+  createdAt    DateTime @default(now())
+}
+
+model Photo {
+  id     String @id @default(uuid())
+  url    String
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId String
+}
+
+model Video {
+  id     String @id @default(uuid())
+  url    String
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId String
+}
+
+model Amenity {
+  id     String @id @default(uuid())
+  name   String
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId String
+}

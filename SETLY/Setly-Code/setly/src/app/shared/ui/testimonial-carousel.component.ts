@@ -77,21 +77,21 @@ export class TestimonialCarouselComponent {
       name: 'Sarah Johnson',
       text: 'Setly made finding the perfect room so easy! The filters for lifestyle preferences were exactly what I needed.',
       role: 'UCLA Student',
-      avatar: '/assets/avatars/sarah.jpg'
+  avatar: '/assets/avatars/sarah.svg'
     },
     {
       id: '2',
       name: 'Mike Chen',
       text: 'The SetlyRide feature saved me during move-in week. Found a ride to campus in minutes!',
       role: 'UC Berkeley Student',
-      avatar: '/assets/avatars/mike.jpg'
+  avatar: '/assets/avatars/mike.svg'
     },
     {
       id: '3',
       name: 'Priya Patel',
       text: 'Love how Setly connects you with roommates who share your values. Found my perfect match!',
       role: 'NYU Student',
-      avatar: '/assets/avatars/priya.jpg'
+  avatar: '/assets/avatars/priya.svg'
     }
   ]);
 

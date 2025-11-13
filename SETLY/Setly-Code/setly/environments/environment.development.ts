@@ -4,6 +4,7 @@ export const environment = {
   stripePublicKey: 'pk_test_...',
   storageBucket: 'setly-dev.appspot.com',
   assistant: {
+    // Allow using base; runtime will append /chat if missing
     apiUrl: 'http://localhost:3000/api/assistant'
   },
   firebase: {

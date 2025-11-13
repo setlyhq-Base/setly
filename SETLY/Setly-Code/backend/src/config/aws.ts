@@ -13,8 +13,17 @@ export const AWS_ENABLED = allPresent;
 export const AWS_CONFIG = {
   region: process.env.AWS_REGION || 'us-east-1',
   bucketName: process.env.AWS_S3_BUCKET || 'disabled-bucket',
-  maxFileSize: 8 * 1024 * 1024, // 8MB
-  allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp'] as const
+  // Allow larger uploads to support short room videos
+  maxFileSize: 50 * 1024 * 1024, // 50MB
+  allowedContentTypes: [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+    'video/mp4',
+    'video/webm'
+  ] as const
 };
 
 export const s3Client = AWS_ENABLED

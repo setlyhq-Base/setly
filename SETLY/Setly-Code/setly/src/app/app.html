@@ -8,4 +8,8 @@
   <router-outlet></router-outlet>
   </main>
 <app-footer></app-footer>
-<app-chat-widget></app-chat-widget>
+@if (environment.assistant.enabled) {
+  <app-assistant-widget data-testid="assistant-widget"></app-assistant-widget>
+}
+<!-- Global Toasts -->
+<app-toast-container></app-toast-container>

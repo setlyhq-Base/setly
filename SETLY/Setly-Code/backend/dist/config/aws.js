@@ -1,32 +1,34 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AWS_CONFIG = exports.s3Client = void 0;
+exports.s3Client = exports.AWS_CONFIG = exports.AWS_ENABLED = void 0;
 const client_s3_1 = require("@aws-sdk/client-s3");
 const dotenv_1 = require("dotenv");
 (0, dotenv_1.config)();
-// Load required environment variables
-const requiredEnvVars = [
-    'AWS_REGION',
-    'AWS_S3_BUCKET',
-    'AWS_ACCESS_KEY_ID',
-    'AWS_SECRET_ACCESS_KEY'
-];
-requiredEnvVars.forEach(varName => {
-    if (!process.env[varName]) {
-        throw new Error(`Missing required environment variable: ${varName}`);
-    }
-});
-// Create S3 client
-exports.s3Client = new client_s3_1.S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    }
-});
+// Optional AWS integration: if any required var missing, we disable uploads gracefully.
+const requiredEnvVars = ['AWS_REGION', 'AWS_S3_BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'];
+const allPresent = requiredEnvVars.every(v => !!process.env[v]);
+exports.AWS_ENABLED = allPresent;
 exports.AWS_CONFIG = {
-    region: process.env.AWS_REGION,
-    bucketName: process.env.AWS_S3_BUCKET,
-    maxFileSize: 8 * 1024 * 1024, // 8MB
-    allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp']
+    region: process.env.AWS_REGION || 'us-east-1',
+    bucketName: process.env.AWS_S3_BUCKET || 'disabled-bucket',
+    // Allow larger uploads to support short room videos
+    maxFileSize: 50 * 1024 * 1024, // 50MB
+    allowedContentTypes: [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/heic',
+        'image/heif',
+        'video/mp4',
+        'video/webm'
+    ]
 };
+exports.s3Client = exports.AWS_ENABLED
+    ? new client_s3_1.S3Client({
+        region: exports.AWS_CONFIG.region,
+        credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        }
+    })
+    : null;

@@ -1,13 +1,21 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadsController = void 0;
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const uuid_1 = require("uuid");
 const aws_1 = require("../config/aws");
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const EXPIRY_SECONDS = 60; // Link expires in 1 minute
 class UploadsController {
     static async getSignedUploadUrl(req, res) {
         try {
+            if (!aws_1.AWS_ENABLED) {
+                return res.status(503).json({ error: 'Uploads disabled (AWS not configured)' });
+            }
             // Check if user is authenticated
             if (!req.user) {
                 return res.status(401).json({ error: 'Not authenticated' });
@@ -20,7 +28,7 @@ class UploadsController {
             // Validate content type
             if (!aws_1.AWS_CONFIG.allowedContentTypes.includes(contentType)) {
                 return res.status(400).json({
-                    error: 'Invalid content type. Allowed types: jpeg, png, webp'
+                    error: 'Invalid content type. Allowed types: jpeg, png, webp, heic/heif'
                 });
             }
             // Validate file size
@@ -58,6 +66,83 @@ class UploadsController {
         catch (error) {
             console.error('Error generating presigned URL:', error);
             res.status(500).json({ error: 'Failed to generate upload URL' });
+        }
+    }
+    // POST /api/uploads/presign { type: 'avatar'|'room-photo'|'room-video'|'room-video-thumb', ext: 'jpg|png|webp|mp4|webm' }
+    static async presignAvatar(req, res) {
+        try {
+            // Provide dev fallback when AWS not configured: store file locally
+            const devMode = !aws_1.AWS_ENABLED;
+            if (!req.user)
+                return res.status(401).json({ error: 'Not authenticated' });
+            const { type, ext } = req.body || {};
+            if (!type || !ext)
+                return res.status(400).json({ error: 'Missing type or ext' });
+            const normalizedExt = String(ext || '').toLowerCase();
+            const isImage = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(normalizedExt);
+            const isVideo = ['mp4', 'webm'].includes(normalizedExt);
+            const contentType = isImage
+                ? `image/${normalizedExt === 'jpg' ? 'jpeg' : normalizedExt}`
+                : (isVideo ? `video/${normalizedExt}` : `application/octet-stream`);
+            if (!aws_1.AWS_CONFIG.allowedContentTypes.includes(contentType)) {
+                return res.status(400).json({ error: 'Invalid extension or content type' });
+            }
+            // Compute object key based on type
+            let key;
+            if (type === 'avatar') {
+                key = `users/${req.user.uid}/avatar.${normalizedExt}`;
+            }
+            else if (type === 'room-photo') {
+                key = `rooms/${req.user.uid}/${(0, uuid_1.v4)()}.${normalizedExt}`;
+            }
+            else if (type === 'room-video') {
+                key = `rooms/${req.user.uid}/videos/${(0, uuid_1.v4)()}.${normalizedExt}`;
+            }
+            else if (type === 'room-video-thumb') {
+                key = `rooms/${req.user.uid}/thumbs/${(0, uuid_1.v4)()}.${normalizedExt}`;
+            }
+            else {
+                return res.status(400).json({ error: 'Unsupported type' });
+            }
+            if (devMode) {
+                // Local storage stub: we don't presign, just tell client to PUT to a local endpoint
+                const localDir = path_1.default.join(process.cwd(), 'local-uploads');
+                if (!fs_1.default.existsSync(localDir))
+                    fs_1.default.mkdirSync(localDir, { recursive: true });
+                const fileName = key.split('/').slice(-1)[0];
+                const publicUrl = `/uploads/local/${req.user.uid}/${fileName}?t=${Date.now()}`;
+                // Return a simplified fields object so caller can reuse logic (will detect absence of AWS fields)
+                return res.json({
+                    url: publicUrl,
+                    fields: {},
+                    key,
+                    contentType,
+                    publicUrl,
+                    expiresAt: Date.now() + EXPIRY_SECONDS * 1000,
+                    local: true
+                });
+            }
+            const presignedPost = await (0, s3_presigned_post_1.createPresignedPost)(aws_1.s3Client, {
+                Bucket: aws_1.AWS_CONFIG.bucketName,
+                Key: key,
+                Conditions: [
+                    ['content-length-range', 0, aws_1.AWS_CONFIG.maxFileSize],
+                    ['eq', '$Content-Type', contentType],
+                    // Public-read so images/videos are directly viewable
+                    ['eq', '$x-amz-acl', 'public-read']
+                ],
+                Fields: {
+                    'Content-Type': contentType,
+                    'x-amz-acl': 'public-read'
+                },
+                Expires: EXPIRY_SECONDS
+            });
+            const publicUrl = `https://${aws_1.AWS_CONFIG.bucketName}.s3.${aws_1.AWS_CONFIG.region}.amazonaws.com/${key}`;
+            return res.json({ url: presignedPost.url, fields: presignedPost.fields, key, contentType, publicUrl, expiresAt: Date.now() + EXPIRY_SECONDS * 1000 });
+        }
+        catch (error) {
+            console.error('Error presigning avatar:', error);
+            res.status(500).json({ error: 'Failed to presign upload' });
         }
     }
 }

@@ -4,11 +4,13 @@ import { CommonModule } from '@angular/common';
 import { UniversityService, University } from '../../core/services/university.service';
 import { PostRoomStore } from './post-room.store';
 import { US_STATES } from '../../shared/constants/us-states';
+import { AddressAutocompleteComponent } from '../../shared/ui/address-autocomplete.component';
+import { LocationAutocompleteComponent } from '../../shared/ui/location-autocomplete.component';
 
 @Component({
   selector: 'app-room-details-step',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, AddressAutocompleteComponent, LocationAutocompleteComponent],
   templateUrl: './room-details-step.component.html',
   styleUrls: ['./room-details-step.component.css']
 })
@@ -18,6 +20,7 @@ export class RoomDetailsStepComponent {
 
   title = '';
   description = '';
+  address = '';
   city = '';
   state = '';
   universityQuery = '';
@@ -26,7 +29,11 @@ export class RoomDetailsStepComponent {
   furnished = false;
   rules = { vegetarian: false, smoking: false, petsOk: false };
   distanceKm = 0;
+  distanceMiles = 0;
   availableFrom = '';
+  availableTo = '';
+  lat: number | undefined;
+  lon: number | undefined;
 
   showUniSuggestions = false;
   selectedUniversity = signal<University | null>(null);
@@ -41,6 +48,7 @@ export class RoomDetailsStepComponent {
   roomTypeError = signal('');
   bathError = signal('');
   availableFromError = signal('');
+  addressError = signal('');
 
   usStates = US_STATES;
 
@@ -51,12 +59,23 @@ export class RoomDetailsStepComponent {
       this.description = draft.description;
       this.city = draft.city;
       this.state = draft.state;
+  this.address = (draft as any).address || '';
       this.roomType = draft.roomType;
       this.bath = draft.bath;
       this.furnished = draft.furnished;
       this.rules = { ...draft.rules };
-      this.distanceKm = draft.distanceKm;
-      this.availableFrom = draft.availableFrom;
+      const d: any = draft as any;
+      // Prefer stored miles; if legacy distanceKm exists use it to derive miles
+      const legacyKm = (d.distanceKm !== undefined ? d.distanceKm : undefined);
+      this.distanceMiles = typeof d.distanceMiles === 'number'
+        ? d.distanceMiles
+        : (typeof legacyKm === 'number' ? Math.round((legacyKm / 1.60934) * 10) / 10 : 0);
+  this.availableFrom = draft.availableFrom;
+  this.availableTo = (draft as any).availableTo || '';
+  this.lat = typeof (d.lat) === 'number' ? d.lat : undefined;
+  this.lon = typeof (d.lon) === 'number' ? d.lon : undefined;
+  // Keep address error in sync if user clears it elsewhere
+  this.addressError.set(this.address && this.address.trim() ? '' : 'Address is required');
 
       if (draft.nearUniversityId) {
         const uni = this.universityService.getById(draft.nearUniversityId);
@@ -74,6 +93,8 @@ export class RoomDetailsStepComponent {
   }
 
   onDescriptionChange(value: string): void {
+    // Avoid huge base64 strings exploding localStorage quota in autosave
+    // Keep the string as-is in memory, but the store will serialize more conservatively.
     this.validateDescription();
     this.store.updateDraft({ description: value });
   }
@@ -86,6 +107,23 @@ export class RoomDetailsStepComponent {
   onStateChange(value: string): void {
     this.validateState();
     this.store.updateDraft({ state: value });
+  }
+
+  // If user later picks a city via dedicated autocomplete component (future), attach lat/lon too
+  onLocationPicked(loc: { city: string; state: string; country?: string; lat?: number; lon?: number }) {
+    this.city = loc.city;
+    this.state = loc.state;
+    this.store.updateDraft({ city: this.city, state: this.state, lat: loc.lat, lon: loc.lon });
+  }
+
+  onAddressPicked(addr: { address: string; city?: string; state?: string; postcode?: string; lat?: number; lon?: number }) {
+    this.address = addr.address;
+    this.lat = typeof addr.lat === 'number' ? addr.lat : this.lat;
+    this.lon = typeof addr.lon === 'number' ? addr.lon : this.lon;
+    this.store.updateDraft({ address: this.address, lat: this.lat, lon: this.lon });
+    this.addressError.set(this.address && this.address.trim() ? '' : 'Address is required');
+    if (addr.city) { this.city = addr.city; this.store.updateDraft({ city: this.city }); }
+    if (addr.state) { this.state = addr.state; this.store.updateDraft({ state: this.state }); }
   }
 
   onUniversitySearch(query: string): void {
@@ -129,12 +167,24 @@ export class RoomDetailsStepComponent {
   }
 
   onDistanceChange(value: number): void {
-    this.store.updateDraft({ distanceKm: value });
+    // Deprecated; keep for safety if template calls it
+    this.distanceMiles = value / 1.60934;
+    this.store.updateDraft({ distanceMiles: this.distanceMiles } as any);
+  }
+
+  onDistanceMilesChange(value: number): void {
+    this.distanceMiles = value;
+    this.store.updateDraft({ distanceMiles: value } as any);
   }
 
   onAvailableFromChange(value: string): void {
     this.validateAvailableFrom();
     this.store.updateDraft({ availableFrom: value });
+  }
+
+  onAvailableToChange(value: string): void {
+    this.availableTo = value;
+    this.store.updateDraft({ availableTo: value } as any);
   }
 
   private validateTitle(): void {
@@ -150,8 +200,8 @@ export class RoomDetailsStepComponent {
   private validateDescription(): void {
     if (!this.description) {
       this.descriptionError.set('Description is required');
-    } else if (this.description.length < 300) {
-      this.descriptionError.set('Description must be at least 300 characters');
+    } else if (this.description.length < 30) {
+      this.descriptionError.set('Description must be at least 30 characters');
     } else if (this.description.length > 1200) {
       this.descriptionError.set('Description must not exceed 1200 characters');
     } else {
@@ -187,5 +237,10 @@ export class RoomDetailsStepComponent {
     } else {
       this.availableFromError.set('');
     }
+  }
+
+  // Optional explicit validator if needed later
+  private validateAddress(): void {
+    this.addressError.set(this.address && this.address.trim() ? '' : 'Address is required');
   }
 }

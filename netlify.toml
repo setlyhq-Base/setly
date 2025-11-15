@@ -1,7 +1,7 @@
 [build]
   base = "SETLY/Setly-Code/setly"
   command = "npm ci --legacy-peer-deps && npm run build"
-  publish = "dist/setly"
+  publish = "dist/setly/browser"
 
 [build.environment]
   NODE_VERSION = "22"

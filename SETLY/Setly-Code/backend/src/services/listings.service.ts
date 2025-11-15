@@ -1,5 +1,5 @@
 import prisma from '../db/prisma';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export interface ListingRecord {
   id: string;
@@ -53,7 +53,7 @@ function ensureMemorySeed(count = 12) {
   const photos = ROOM_IMAGES;
   for (let i=0;i<count;i++) {
     const place = pick(cities);
-    const id = uuidv4();
+  const id = randomUUID();
     memoryRooms.push({
       id,
       ownerId: 'host'+(i+1),
@@ -86,11 +86,50 @@ function ensureMemorySeed(count = 12) {
 }
 
 export class ListingsService {
+  static async list(params?: { ownerId?: string }): Promise<ListingRecord[]> {
+    const { ownerId } = params || {};
+    try {
+      const where: any = {};
+      if (ownerId) where.ownerId = ownerId;
+      const all = await prisma.room.findMany({ where, orderBy: { createdAt: 'desc' }, include: { photos: true, videos: true, amenities: true } });
+      return all.map((found: any) => ({
+        id: found.id,
+        ownerId: found.ownerId,
+        title: found.title,
+        description: found.description,
+        address: (found as any).address || undefined,
+        lat: (found as any).lat ?? undefined,
+        lon: (found as any).lon ?? undefined,
+        city: found.city,
+        state: found.state,
+        price: found.price,
+        deposit: (found as any).deposit ?? undefined,
+        roomType: found.roomType as 'private' | 'shared',
+        bath: found.bath,
+        furnished: found.furnished,
+        rules: {
+          vegetarian: (found as any).vegetarian ?? undefined,
+          smoking: (found as any).smoking ?? undefined,
+          petsOk: (found as any).petsOk ?? undefined
+        },
+        distanceKm: (found as any).distanceKm ?? undefined,
+        photos: (found.photos as any[]).map((p: any) => p.url),
+        videos: (found.videos as any[]).map((v: any) => v.url),
+        amenities: (found.amenities as any[]).map((a: any) => a.name),
+        universityId: (found as any).universityId ?? undefined,
+        createdAt: (found as any).createdAt.toISOString()
+      }));
+    } catch {
+      ensureMemorySeed();
+      const all = [...memoryRooms];
+      return ownerId ? all.filter(r => r.ownerId === ownerId) : all;
+    }
+  }
   static async create(data: Omit<ListingRecord, 'id' | 'createdAt'>): Promise<ListingRecord> {
     try {
       const created = await prisma.room.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           ownerId: data.ownerId,
           title: data.title,
           description: data.description,
@@ -147,7 +186,7 @@ export class ListingsService {
       ensureMemorySeed();
       const rec: ListingRecord = {
         ...data,
-        id: uuidv4(),
+  id: randomUUID(),
         createdAt: new Date().toISOString()
       };
       memoryRooms.push(rec);
@@ -192,39 +231,5 @@ export class ListingsService {
     }
   }
 
-  static async list(): Promise<ListingRecord[]> {
-    try {
-      const all = await prisma.room.findMany({ orderBy: { createdAt: 'desc' }, include: { photos: true, videos: true, amenities: true } });
-      return all.map((found: any) => ({
-        id: found.id,
-        ownerId: found.ownerId,
-        title: found.title,
-        description: found.description,
-        address: (found as any).address || undefined,
-        lat: (found as any).lat ?? undefined,
-        lon: (found as any).lon ?? undefined,
-        city: found.city,
-        state: found.state,
-        price: found.price,
-        deposit: (found as any).deposit ?? undefined,
-        roomType: found.roomType as 'private' | 'shared',
-        bath: found.bath,
-        furnished: found.furnished,
-        rules: {
-          vegetarian: (found as any).vegetarian ?? undefined,
-          smoking: (found as any).smoking ?? undefined,
-          petsOk: (found as any).petsOk ?? undefined
-        },
-        distanceKm: (found as any).distanceKm ?? undefined,
-        photos: (found.photos as any[]).map((p: any) => p.url),
-        videos: (found.videos as any[]).map((v: any) => v.url),
-        amenities: (found.amenities as any[]).map((a: any) => a.name),
-        universityId: (found as any).universityId ?? undefined,
-        createdAt: (found as any).createdAt.toISOString()
-      }));
-    } catch {
-      ensureMemorySeed();
-      return [...memoryRooms];
-    }
-  }
+  
 }

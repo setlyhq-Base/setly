@@ -34,6 +34,7 @@ export class RoomDetailsStepComponent {
   availableTo = '';
   lat: number | undefined;
   lon: number | undefined;
+  showRules = signal<boolean>(false);
 
   showUniSuggestions = false;
   selectedUniversity = signal<University | null>(null);
@@ -86,6 +87,9 @@ export class RoomDetailsStepComponent {
       }
     }, { allowSignalWrites: true });
   }
+
+  toggleRules() { this.showRules.update(v => !v); }
+  selectedRulesCount(): number { return Object.values(this.rules).filter(Boolean).length; }
 
   onTitleChange(value: string): void {
     this.validateTitle();

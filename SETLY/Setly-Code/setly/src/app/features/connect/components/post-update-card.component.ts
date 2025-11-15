@@ -11,7 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <article class="card-white hover-lift overflow-hidden" role="article" [attr.aria-label]="post.headline">
+  <article class="card-white hover-lift overflow-hidden unified-feed-card" role="article" [attr.aria-label]="post.headline">
       <div class="p-4">
         <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">Setly Update</div>
         <h3 class="text-lg font-medium text-gray-900">{{post.headline}}</h3>

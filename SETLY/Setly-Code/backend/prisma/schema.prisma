@@ -55,3 +55,48 @@ model Amenity {
   room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
   roomId String
 }
+
+model User {
+  id                String   @id @default(uuid())
+  name              String
+  email             String   @unique
+  phone             String?
+  phoneVerified     Boolean  @default(false)
+  emailVerified     Boolean  @default(false)
+  role              String   @default("student")
+  university        String?
+  program           String?
+  startDate         String?
+  endDate           String?
+  graduated         Boolean  @default(false)
+  gradYear          Int?
+  company           String?
+  title             String?
+  domainVerified    Boolean  @default(false)
+  domainType        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+// Simple direct messages storage
+model Message {
+  id          String   @id @default(cuid())
+  fromUserId  String
+  toUserId    String
+  text        String
+  market      String?
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+
+  @@index([fromUserId, toUserId, createdAt])
+  @@index([toUserId, fromUserId, createdAt])
+}

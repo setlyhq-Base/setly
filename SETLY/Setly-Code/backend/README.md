@@ -34,8 +34,58 @@ npm run dev
 
 If AWS is not configured, uploads use the local fallback under `local-uploads/` and are served at `/uploads/local/...`.
 
+### Dev tips: Firebase/Firestore fallbacks and logs
+
+- If you don't have Firebase credentials locally, the Admin SDK is disabled and the API will fall back to:
+	- Auth user directory (minimal) for `/api/users`
+	- In-memory presence for `/api/presence/*`
+	- Stubbed user objects for `GET/PUT /api/users/me`
+- To explicitly disable Firebase Admin even when env vars are set (useful to silence NOT_FOUND errors in dev), set:
+
+```
+FIREBASE_DISABLE=1
+```
+
+- Presence can be forced to use in-memory only (no Firestore reads/writes) by setting:
+
+```
+PRESENCE_FORCE_MEMORY=1
+```
+
+- Logging is level-controlled via `LOG_LEVEL` (`debug` | `info` | `warn` | `error`). Default is `debug` in dev, `info` in prod. Repetitive warnings like Firestore NOT_FOUND are rate-limited.
+
 ## Health
 - `GET /healthz` → `{ ok: true }`
+
+## Profile snapshots to S3
+When users update their profile via `PUT /api/users/me`, the backend stores the profile in Firestore and, if AWS is enabled, also uploads a JSON snapshot to S3 at `profiles/<authUid>.json`.
+
+- Bucket: `AWS_S3_BUCKET`
+- Region: `AWS_REGION`
+- Public access: set `S3_PUBLIC_READ=1` to make the object publicly readable (ACL: `public-read`).
+- Purpose: external consumption, analytics, or CDN caching of user profiles independent of Firestore.
+
+This S3 write is best-effort; failures are logged and do not block the API response.
+
+### Making `profiles/` publicly readable (bucket policy)
+New S3 buckets often have ACLs disabled. If ACLs are disabled or you prefer a policy-based approach, add a bucket policy like below to allow public GET for the `profiles/` prefix:
+
+```
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "PublicReadProfilesPrefix",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::YOUR_BUCKET_NAME/profiles/*"
+		}
+	]
+}
+```
+
+Replace `YOUR_BUCKET_NAME` with your bucket. Ensure Block Public Access settings allow public policies for this bucket if you intend objects to be public.
 
 ## Media uploads
 - `POST /api/uploads/presign`

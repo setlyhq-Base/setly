@@ -138,7 +138,7 @@ export class SignInPage {
         this.analytics.fire('auth_success', { provider: name, isNew: false });
         // Wait briefly for AuthSyncService to hydrate the profile
         // Wait for profile hydration and legacy user store (double source) to reduce false 'new user' detection
-        const profile = await this.waitForProfile(2500);
+  const profile = await this.waitForProfile(800);
         // After profile attempt, ensure userStore has attempted a refresh in case auth-sync ran before store subscription
         if (!this.userStore.user()) {
           try { await this.userStore.refresh(); } catch {}
@@ -160,7 +160,15 @@ export class SignInPage {
         const missingBasics = !profile || (!((profile.location || '').trim()) && !((profile.university || '').trim()));
         const lowCompletion = (this.profileStore.completion() as any) < 30; // computed signal -> number
         const forceNew = !!this.authStore.user().isNew;
-        const needsQuickCapture = forceNew || !hasName || missingBasics || lowCompletion;
+        // Suppress quick capture briefly after a successful save to avoid re-prompting due to slow backend
+        const SUPPRESS_MS = 24 * 60 * 60 * 1000; // 24h
+        let suppressed = false;
+        try {
+          const uid = this.authStore.user().userId || 'me';
+          const ts = parseInt(localStorage.getItem(`qc.completed.${uid}`) || '0', 10);
+          suppressed = !!ts && (Date.now() - ts) < SUPPRESS_MS;
+        } catch {}
+        const needsQuickCapture = (forceNew || !hasName || missingBasics || lowCompletion) && !suppressed;
         if (needsQuickCapture) {
           // Show inline quick capture and defer navigation
           this.prefilledEmail.set(email || undefined);
@@ -222,7 +230,7 @@ export class SignInPage {
     return map[code] || map['default'];
   }
 
-  private async waitForProfile(timeoutMs = 2000) {
+  private async waitForProfile(timeoutMs = 800) {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
       const p = this.profileStore.profile();

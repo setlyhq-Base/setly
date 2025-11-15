@@ -4,8 +4,9 @@ import { ListingsService } from '../services/listings.service';
 type AuthedRequest = Request & { user?: { uid: string } };
 
 export class RoomsController {
-  static async list(_req: AuthedRequest, res: Response) {
-    const items = await ListingsService.list();
+  static async list(req: AuthedRequest, res: Response) {
+    const ownerId = typeof req.query.ownerId === 'string' ? req.query.ownerId : undefined;
+    const items = await ListingsService.list({ ownerId });
     res.json({ items });
   }
   static async get(req: AuthedRequest, res: Response) {

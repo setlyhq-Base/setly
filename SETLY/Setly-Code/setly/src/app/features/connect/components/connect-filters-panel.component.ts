@@ -10,184 +10,137 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-  <div class="card-white p-4 space-y-6 shadow-lg hover-lift transition-shadow duration-300 filters-panel" [class.filters-apply]="flash" style="border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,0.04);">
-    <!-- Saved Filters Section -->
-    <div class="saved-filters-block mb-1 p-1 rounded-xl" style="background:#f6f4ff;">
-      <div class="flex items-center gap-2 mb-0">
-        <svg width="16" height="16" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5zm0 2h14v14H5V5zm7 2a1 1 0 0 1 1 1v2h2a1 1 0 1 1 0 2h-2v2a1 1 0 1 1-2 0v-2H9a1 1 0 1 1 0-2h2V8a1 1 0 0 1 1-1z" fill="currentColor"/></svg>
-        <h3 class="section-title text-sm">Saved filters</h3>
+  <div class="card-white p-3 space-y-4 shadow-lg hover-lift transition-shadow duration-300 filters-panel" [class.filters-apply]="flash" style="border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+  <div class="space-y-4">
+    <!-- Trending Topics (hover to expand) -->
+    <div class="filter-section" (mouseenter)="hoveredSection.set('trending')" (mouseleave)="hoveredSection.set(null)">
+      <div class="section-title flex items-center gap-2 cursor-pointer hover-title">
+        <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><path d="M10 3L7 21M17 3l-3 18M4 9h16M3 15h16" stroke="#727272" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Trending Topics
       </div>
-      <div class="flex flex-wrap gap-1 mb-0">
-        <button type="button" class="chip saved-chip text-xs px-2 py-1" *ngFor="let saved of savedFilters.slice(0,2)" (click)="applySavedFilter(saved)">{{saved.name}}</button>
+      <div *ngIf="hoveredSection() === 'trending'" class="flex flex-wrap gap-2 mt-2 transition-all duration-300">
+        <button type="button" class="chip" (click)="applyTopic('Housing')" data-hover="Show Housing options">#Housing</button>
+        <button type="button" class="chip" (click)="applyTopic('StudyAbroad')" data-hover="Show StudyAbroad options">#StudyAbroad</button>
+        <button type="button" class="chip" (click)="applyTopic('SetlyRide')" data-hover="Show SetlyRide options">#SetlyRide</button>
       </div>
-      <a href="#" class="view-all-link text-[10px] text-indigo-700 font-medium hover:underline mb-0 inline-block">View all ({{savedFilters.length}})</a>
     </div>
-  <div class="flex items-center justify-between mb-0 mt-0 filters-header-row">
-    <div class="flex items-center gap-2">
-      <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" fill="currentColor"/></svg>
-      <h3 class="section-title text-sm">Filters <span *ngIf="activeCount() > 0">({{activeCount()}})</span></h3>
-      <button type="button" class="chip verified-pill ml-2 text-xs px-2 py-1" [class.chip-selected]="verifiedOnly" (click)="toggleVerified()" aria-pressed="{{verifiedOnly}}">
-        <svg width="12" height="12" style="color:#635bff; margin-right:2px;" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#635bff" stroke-width="2" fill="none"/></svg>
-        Verified only
-      </button>
+  <hr class="divider my-2">
+    <!-- Search (hover to expand) -->
+    <div class="filter-section" (mouseenter)="hoveredSection.set('search')" (mouseleave)="hoveredSection.set(null)">
+      <div class="section-title flex items-center gap-2 cursor-pointer hover-title">
+        <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#727272" stroke-width="1.2"/><path d="M21 21l-3.8-3.8" stroke="#727272" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Search
+      </div>
+      <div *ngIf="hoveredSection() === 'search'" class="mt-2 transition-all duration-300">
+        <input [(ngModel)]="q" (ngModelChange)="emit()" type="text" class="mt-1 w-full border rounded-md px-2 py-1.5" placeholder="Search posts" aria-label="Search posts">
+      </div>
     </div>
-    <div class="flex items-center gap-1 text-xs text-gray-600">
-      <button (click)="onReset()" class="reset-link text-xs px-1" aria-label="Reset to previous filters">Reset</button>
-      <span>|</span>
-      <button (click)="onClear()" class="reset-link text-xs px-1" aria-label="Clear all filters">Clear</button>
-    </div>
-  </div>
-  <hr class="divider my-1">
-  <div class="space-y-6">
-        <!-- Collapsible: Trending Topics -->
-        <details open class="collapsible-details group">
-          <summary class="section-title flex items-center gap-2 cursor-pointer hover-title">
-            <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><path d="M10 3L7 21M17 3l-3 18M4 9h16M3 15h16" stroke="#727272" stroke-width="1.2" stroke-linecap="round"/></svg>
-            Trending Topics
-          </summary>
-          <div class="flex flex-wrap gap-2 mt-2">
-            <button type="button" class="chip" (click)="applyTopic('Housing')">#Housing</button>
-            <button type="button" class="chip" (click)="applyTopic('StudyAbroad')">#StudyAbroad</button>
-            <button type="button" class="chip" (click)="applyTopic('SetlyRide')">#SetlyRide</button>
-          </div>
-        </details>
-        <hr class="divider my-3">
-
-        <!-- Collapsible: Search -->
-        <details class="collapsible-details group">
-          <summary class="section-title flex items-center gap-2 cursor-pointer hover-title">
-            <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#727272" stroke-width="1.2"/><path d="M21 21l-3.8-3.8" stroke="#727272" stroke-width="1.2" stroke-linecap="round"/></svg>
-            Search
-          </summary>
+    <hr class="divider my-2">
+    <!-- Location (hover to expand) -->
+    <div class="filter-section" (mouseenter)="hoveredSection.set('location')" (mouseleave)="hoveredSection.set(null)">
+      <div class="section-title flex items-center gap-2 cursor-pointer hover-title">
+        <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
+        Location
+      </div>
+      <div *ngIf="hoveredSection() === 'location'" class="flex flex-wrap gap-2 mt-2 transition-all duration-300">
           <div class="mt-2">
-            <input [(ngModel)]="q" (ngModelChange)="emit()" type="text" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="Search posts" aria-label="Search posts">
-          </div>
-        </details>
-        <hr class="divider my-3">
-
-        <!-- Collapsible: Location -->
-        <details class="collapsible-details group">
-          <summary class="section-title flex items-center gap-2 cursor-pointer hover-title">
-            <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
-            Location
-          </summary>
-          <div class="flex flex-wrap gap-2 mt-2">
-            <button (click)="setCity('Boston')" type="button" class="chip flex items-center gap-1" [class.chip-selected]="city==='Boston'" aria-label="City Boston">
-              <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
-              <span>Boston</span>
-            </button>
-            <button (click)="setCity('NYC')" type="button" class="chip flex items-center gap-1" [class.chip-selected]="city==='NYC'" aria-label="City NYC">
-              <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
-              <span>NYC</span>
-            </button>
-            <button (click)="setCity('Austin')" type="button" class="chip flex items-center gap-1" [class.chip-selected]="city==='Austin'" aria-label="City Austin">
-              <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
-              <span>Austin</span>
-            </button>
-          </div>
-        </details>
-        <hr class="divider my-3">
-
-          <!-- Search & Location Combined -->
-          <div class="search-location-block">
-            <div class="section-title flex items-center gap-2 mb-1">
-              <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#727272" stroke-width="1.2"/><path d="M21 21l-3.8-3.8" stroke="#727272" stroke-width="1.2" stroke-linecap="round"/></svg>
-              Search & location
-            </div>
-            <div class="mb-1">
-              <input [(ngModel)]="q" (ngModelChange)="emit()" type="text" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="Search posts" aria-label="Search posts">
-            </div>
-            <div class="flex flex-wrap gap-2 mt-1">
-              <button (click)="setCity('Boston')" type="button" class="chip flex items-center gap-1" [class.chip-selected]="city==='Boston'" aria-label="City Boston">
-                <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
-                <span>Boston</span>
-              </button>
-              <button (click)="setCity('NYC')" type="button" class="chip flex items-center gap-1" [class.chip-selected]="city==='NYC'" aria-label="City NYC">
-                <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
-                <span>NYC</span>
-              </button>
-              <button (click)="setCity('Austin')" type="button" class="chip flex items-center gap-1" [class.chip-selected]="city==='Austin'" aria-label="City Austin">
-                <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
-                <span>Austin</span>
-              </button>
-            </div>
-          </div>
-          <hr class="divider my-2">
-        <!-- Collapsible: Social filters -->
-        <details class="collapsible-details group">
-          <summary class="section-title flex items-center gap-2 cursor-pointer hover-title">
-            <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><path d="M16 14c2.21 0 4 1.79 4 4v2H4v-2c0-2.21 1.79-4 4-4m8 0h-8m8 0a4 4 0 10-8 0m8-6a3 3 0 11-6 0 3 3 0 016 0z" stroke="#727272" stroke-width="1.2"/></svg>
-            Social Filters
-          </summary>
-          <div class="mt-2">
-            <div class="flex flex-wrap gap-2 mb-3">
-              <button type="button" (click)="toggleType('person')" class="chip" [class.chip-selected]="typeIncluded('person')">People</button>
-              <button type="button" (click)="toggleType('room')" class="chip" [class.chip-selected]="typeIncluded('room')">Rooms</button>
-              <button type="button" (click)="toggleType('ride')" class="chip" [class.chip-selected]="typeIncluded('ride')">Rides</button>
-              <button type="button" (click)="toggleType('thread')" class="chip" [class.chip-selected]="typeIncluded('thread')">Topics</button>
-              <button type="button" (click)="toggleType('update')" class="chip" [class.chip-selected]="typeIncluded('update')">Updates</button>
-            </div>
             <label class="block">
-              <span class="text-sm text-gray-700">University</span>
-              <input [(ngModel)]="university" (ngModelChange)="emit()" type="text" list="uni-suggest" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="University" aria-label="University">
-              <datalist id="uni-suggest">
-                <option *ngFor="let u of universitySuggestions" [value]="u"></option>
+              <span class="text-sm text-gray-700">Search city or area</span>
+              <input [(ngModel)]="city" (ngModelChange)="emit()" type="text" list="city-suggest" class="mt-1 w-full border rounded-md px-2 py-1.5" placeholder="Search city, zip, area" aria-label="Search city">
+              <datalist id="city-suggest">
+                <option *ngFor="let c of citySuggestions" [value]="c"></option>
               </datalist>
             </label>
-            <div class="text-sm text-gray-700 my-2">Interests</div>
-            <div class="flex flex-wrap gap-2">
-              <button *ngFor="let tag of tags" (click)="toggleInterest(tag)" type="button"
-                      class="chip"
-                      [class.chip-selected]="interests().includes(tag)"
-                      aria-pressed="{{interests().includes(tag)}}"
-                      [attr.aria-label]="'Interest ' + tag">
-                {{tag}}
-              </button>
-            </div>
-            <div class="mt-3">
-              <div class="text-sm text-gray-700 mb-1 flex items-center gap-2">
-                <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.2 3.4L16.5 8 13.2 9.2 12 12.5 10.8 9.2 7.5 8l3.3-1.6L12 3z" stroke="#727272" stroke-width="1.2"/></svg>
-                AI Suggested Filters
-              </div>
-              <div class="flex flex-wrap gap-2">
-                <button *ngFor="let s of aiSuggestions" type="button" (click)="applySuggestion(s)" class="chip text-xs hover:bg-blue-50 focus-ring" [title]="s.tip">
-                  {{s.label}}
-                </button>
-              </div>
-            </div>
           </div>
-        </details>
-        <hr class="divider my-3">
-
-        <!-- Collapsible: Room filters -->
-        <details open class="collapsible-details group">
-          <summary class="section-title flex items-center gap-2 cursor-pointer hover-title">
-            <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="#727272" stroke-width="1.2"/></svg>
-            Room Filters
-          </summary>
-          <div class="mt-2">
-            <div class="text-sm text-gray-700 mb-2">Room Type</div>
-            <div class="flex gap-2">
-              <button (click)="toggleRoomType('shared')" class="chip" [class.chip-selected]="roomType==='shared'" aria-label="Shared room type">Shared</button>
-              <button (click)="toggleRoomType('private')" class="chip" [class.chip-selected]="roomType==='private'" aria-label="Private room type">Private</button>
-            </div>
-            <div class="grid grid-cols-2 gap-3 mt-3">
-              <label class="block">
-                <span class="text-sm text-gray-700">Min Price</span>
-                <input [(ngModel)]="minPrice" (ngModelChange)="emit()" type="number" min="0" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="0" aria-label="Minimum price">
-              </label>
-              <label class="block">
-                <span class="text-sm text-gray-700">Max Price</span>
-                <input [(ngModel)]="maxPrice" (ngModelChange)="emit()" type="number" min="0" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="3000" aria-label="Maximum price">
-              </label>
-            </div>
+        <button (click)="setCity('Boston')" type="button" class="chip flex items-center gap-1" [class.chip-selected]="city==='Boston'" aria-label="City Boston">
+          <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
+          <span>Boston</span>
+        </button>
+        <button (click)="setCity('NYC')" type="button" class="chip flex items-center gap-1" [class.chip-selected]="city==='NYC'" aria-label="City NYC">
+          <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
+          <span>NYC</span>
+        </button>
+        <button (click)="setCity('Austin')" type="button" class="chip flex items-center gap-1" [class.chip-selected]="city==='Austin'" aria-label="City Austin">
+          <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#727272"/></svg>
+          <span>Austin</span>
+        </button>
+      </div>
+    </div>
+  <hr class="divider my-2">
+    <!-- Social Filters (hover to expand) -->
+    <div class="filter-section" (mouseenter)="hoveredSection.set('social')" (mouseleave)="hoveredSection.set(null)">
+      <div class="section-title flex items-center gap-2 cursor-pointer hover-title">
+        <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><path d="M16 14c2.21 0 4 1.79 4 4v2H4v-2c0-2.21 1.79-4 4-4m8 0h-8m8 0a4 4 0 10-8 0m8-6a3 3 0 11-6 0 3 3 0 016 0z" stroke="#727272" stroke-width="1.2"/></svg>
+        Social Filters
+      </div>
+      <div *ngIf="hoveredSection() === 'social'" class="mt-2 transition-all duration-300">
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button type="button" (click)="toggleType('person')" class="chip" [class.chip-selected]="typeIncluded('person')" data-hover="Show People filters">People</button>
+          <button type="button" (click)="toggleType('room')" class="chip" [class.chip-selected]="typeIncluded('room')" data-hover="Show Room filters">Rooms</button>
+          <button type="button" (click)="toggleType('ride')" class="chip" [class.chip-selected]="typeIncluded('ride')" data-hover="Show Ride filters">Rides</button>
+          <button type="button" (click)="toggleType('thread')" class="chip" [class.chip-selected]="typeIncluded('thread')" data-hover="Show Topics filters">Topics</button>
+          <button type="button" (click)="toggleType('update')" class="chip" [class.chip-selected]="typeIncluded('update')" data-hover="Show Updates filters">Updates</button>
+        </div>
+        <label class="block">
+          <span class="text-sm text-gray-700">University</span>
+          <input [(ngModel)]="university" (ngModelChange)="emit()" type="text" list="uni-suggest" class="mt-1 w-full border rounded-md px-2 py-1.5" placeholder="University" aria-label="University">
+          <datalist id="uni-suggest">
+            <option *ngFor="let u of universitySuggestions" [value]="u"></option>
+          </datalist>
+        </label>
+        <div class="text-sm text-gray-700 my-2">Interests</div>
+        <div class="flex flex-wrap gap-2">
+          <button *ngFor="let tag of tags" (click)="toggleInterest(tag)" type="button"
+                  class="chip"
+                  [class.chip-selected]="interests().includes(tag)"
+                  aria-pressed="{{interests().includes(tag)}}"
+                  [attr.aria-label]="'Interest ' + tag">
+            {{tag}}
+          </button>
+        </div>
+        <div class="mt-3">
+          <div class="text-sm text-gray-700 mb-1 flex items-center gap-2">
+            <svg width="14" height="14" style="color:#727272;" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.2 3.4L16.5 8 13.2 9.2 12 12.5 10.8 9.2 7.5 8l3.3-1.6L12 3z" stroke="#727272" stroke-width="1.2"/></svg>
+            AI Suggested Filters
           </div>
-        </details>
-        <hr class="divider my-3">
+          <div class="flex flex-wrap gap-2">
+            <button *ngFor="let s of aiSuggestions" type="button" (click)="applySuggestion(s)" class="chip text-xs hover:bg-blue-50 focus-ring" [title]="s.tip">
+              {{s.label}}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <hr class="divider my-2">
+    <!-- Room Filters (hover to expand) -->
+    <div class="filter-section" (mouseenter)="hoveredSection.set('room')" (mouseleave)="hoveredSection.set(null)">
+      <div class="section-title flex items-center gap-2 cursor-pointer hover-title">
+        <svg width="16" height="16" style="color:#727272; margin-right:4px;" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="#727272" stroke-width="1.2"/></svg>
+        Room Filters
+      </div>
+      <div *ngIf="hoveredSection() === 'room'" class="mt-2 transition-all duration-300">
+        <div class="text-sm text-gray-700 mb-2">Room Type</div>
+        <div class="flex gap-2">
+          <button (click)="toggleRoomType('shared')" class="chip" [class.chip-selected]="roomType==='shared'" aria-label="Shared room type" data-hover="Show Shared room options">Shared</button>
+          <button (click)="toggleRoomType('private')" class="chip" [class.chip-selected]="roomType==='private'" aria-label="Private room type" data-hover="Show Private room options">Private</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mt-2">
+          <label class="block">
+            <span class="text-sm text-gray-700" data-hover="Set minimum price">Min Price</span>
+            <input [(ngModel)]="minPrice" (ngModelChange)="emit()" type="number" min="0" class="mt-1 w-full border rounded-md px-2 py-1.5" placeholder="0" aria-label="Minimum price" data-hover="Set minimum price">
+          </label>
+          <label class="block">
+            <span class="text-sm text-gray-700" data-hover="Set maximum price">Max Price</span>
+            <input [(ngModel)]="maxPrice" (ngModelChange)="emit()" type="number" min="0" class="mt-1 w-full border rounded-md px-2 py-1.5" placeholder="3000" aria-label="Maximum price" data-hover="Set maximum price">
+          </label>
+        </div>
+      </div>
+    </div>
+    <hr class="divider my-3">
 
-        <div class="flex items-center justify-between mt-1 gap-0">
-          <button (click)="applyFilters()" class="apply-btn text-xs px-3 py-1" aria-label="Apply filters">Apply Filters</button>
-          <button (click)="close()" class="close-btn text-xs px-3 py-1" aria-label="Close filters">Close</button>
+        <div class="flex items-center justify-between mt-1 gap-1">
+          <button (click)="applyFilters()" class="apply-btn text-xs px-2 py-1" aria-label="Apply filters">Apply</button>
+          <button (click)="close()" class="close-btn text-xs px-2 py-1" aria-label="Close filters">Close</button>
         </div>
       </div>
     </div>
@@ -209,13 +162,13 @@ import { ToastService } from '../../../core/services/toast.service';
       box-shadow: 0 8px 24px rgba(0,0,0,0.04) !important;
     }
     .section-title {
-      font-size: 1.15rem;
+      font-size: 1rem;
       font-weight: 600;
       color: #111;
-      margin-top: 8px;
+      margin-top: 4px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       transition: color 0.2s;
     }
     .hover-title:hover {
@@ -224,8 +177,8 @@ import { ToastService } from '../../../core/services/toast.service';
     .chip {
       border: 1px solid #E5E7EB;
       border-radius: 9999px;
-      padding: 0.25rem 0.625rem;
-      font-size: 0.92rem;
+      padding: 0.22rem 0.5rem;
+      font-size: 0.85rem;
       background: #fff;
       color: #333;
       transition: box-shadow 0.2s, background 0.2s, transform 0.2s;
@@ -259,7 +212,7 @@ import { ToastService } from '../../../core/services/toast.service';
     }
     .divider {
       border-top: 1px solid rgba(0,0,0,0.06);
-      margin: 12px 0;
+      margin: 8px 0;
     }
     .verified-row {
       background: #f8f8fa;
@@ -279,8 +232,8 @@ import { ToastService } from '../../../core/services/toast.service';
       transition: background 0.2s, color 0.2s, box-shadow 0.2s;
     }
     .apply-btn {
-      padding: 0.75rem 2rem;
-      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
       font-weight: 600;
       border-radius: 9999px;
       background: linear-gradient(90deg,#635bff 0%,#7b73ff 100%);
@@ -288,15 +241,15 @@ import { ToastService } from '../../../core/services/toast.service';
       box-shadow: 0 4px 16px rgba(99,91,255,0.10);
       border: none;
       transition: transform 0.2s, box-shadow 0.2s;
-      height: 48px;
+      height: 36px;
     }
     .apply-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 24px rgba(99,91,255,0.16);
     }
     .close-btn {
-      padding: 0.75rem 2rem;
-      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
       font-weight: 500;
       border-radius: 9999px;
       background: #f8f8fa;
@@ -304,7 +257,7 @@ import { ToastService } from '../../../core/services/toast.service';
       border: 1px solid #e5e7eb;
       box-shadow: none;
       transition: background 0.2s, color 0.2s;
-      height: 48px;
+      height: 36px;
     }
     .close-btn:hover {
       background: #edeaff;
@@ -357,11 +310,7 @@ export class ConnectFiltersPanelComponent {
   flash = false;
   aiSuggestions: { label: string; tip: string; patch: any }[] = [];
 
-  savedFilters = [
-    { name: 'Verified Boston', filter: { city: 'Boston', verifiedOnly: true } },
-    { name: 'Private NYC', filter: { city: 'NYC', roomType: 'private' } },
-    { name: 'Shared Austin', filter: { city: 'Austin', roomType: 'shared' } }
-  ];
+  hoveredSection = signal<string | null>(null);
 
   constructor() {
     // hydrate from service
@@ -458,18 +407,6 @@ export class ConnectFiltersPanelComponent {
     if (topic === 'Housing') { this.toggleType('room'); return; }
     // StudyAbroad defaults to topics (threads/updates)
     this.toggleType('thread'); this.toggleType('update');
-  }
-  applySavedFilter(saved: any) {
-    this.q = saved.filter.q || '';
-    this.city = saved.filter.city || '';
-    this.university = saved.filter.universityId || '';
-    this.verifiedOnly = !!saved.filter.verifiedOnly;
-    this.roomType = saved.filter.roomType;
-    this.minPrice = saved.filter.minPrice;
-    this.maxPrice = saved.filter.maxPrice;
-    this.interests.set([...(saved.filter.interests || [])]);
-    this.includeTypes.set([...(saved.filter.includeTypes as any || [])]);
-    this.emit();
   }
   applyFilters() {
     this.emit();

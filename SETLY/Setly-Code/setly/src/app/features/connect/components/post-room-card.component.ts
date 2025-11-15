@@ -13,7 +13,7 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
   standalone: true,
   imports: [CommonModule, RouterModule, TimeAgoPipe],
   template: `
-  <article class="card-white hover-lift overflow-hidden room-card" [attr.aria-label]="post.title" role="article" (mouseenter)="onHover(true)" (mouseleave)="onHover(false)">
+  <article class="card-white hover-lift overflow-hidden unified-feed-card room-card" [attr.aria-label]="post.title" role="article" (mouseenter)="onHover(true)" (mouseleave)="onHover(false)">
       <header class="flex items-center justify-between p-4 border-b border-gray-100">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs">{{post.authorId[0]}}</div>

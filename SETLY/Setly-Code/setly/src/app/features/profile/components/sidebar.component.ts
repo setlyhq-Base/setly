@@ -9,7 +9,8 @@ export type ProfileSection =
   | 'verification'
   | 'verification'
   | 'preferences'
-  | 'settings';
+  | 'settings'
+  | 'data';
 
 interface NavItem {
   key: ProfileSection;
@@ -74,6 +75,7 @@ export class ProfileSidebarComponent {
     { key: 'verification', label: 'Verification', icon: '✅' },
     { key: 'preferences', label: 'Preferences', icon: '🛠️' },
     { key: 'settings', label: 'Settings', icon: '⚙️' },
+    { key: 'data', label: 'Your Data', icon: '📦' },
   ];
 
   select(key: ProfileSection) {

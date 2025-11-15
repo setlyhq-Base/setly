@@ -8,8 +8,8 @@ import { PostRoomStore } from './post-room.store';
   standalone: true,
   imports: [FormsModule, CommonModule],
   template: `
-    <div class="space-y-8">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">Pricing & Details</h2>
+    <div class="space-y-8 pricing-step">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4 leading-tight">Pricing & Details</h2>
 
       <!-- Monthly Rent -->
       <div class="form-group">
@@ -104,13 +104,13 @@ import { PostRoomStore } from './post-room.store';
       </div>
 
       <!-- Summary -->
-      <div class="bg-white rounded-xl p-6 border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">📋 Ready to Publish</h3>
-        <p class="text-gray-700 mb-4">
+      <div class="summary-box bg-white rounded-xl p-5 border border-gray-200">
+        <h3 class="text-base font-semibold text-gray-900 mb-3 leading-tight">📋 Ready to Publish</h3>
+        <p class="text-gray-700 mb-3 text-sm leading-relaxed">
           Your room listing will be published and visible to students searching for housing.
           You can edit or remove the listing at any time from your dashboard.
         </p>
-        <div class="bg-white rounded-lg p-4 space-y-2">
+        <div class="bg-white rounded-lg p-4 space-y-2 text-sm">
           <div class="flex justify-between text-sm">
             <span class="text-gray-600">Monthly Rent:</span>
             <span class="font-semibold text-gray-900">
@@ -130,11 +130,17 @@ import { PostRoomStore } from './post-room.store';
     </div>
   `,
   styles: [`
-    .chip-checkbox {
-      @apply relative inline-flex items-center cursor-pointer;
-    }
+    .chip-checkbox { @apply relative inline-flex items-center cursor-pointer; }
     .chip-checkbox input:checked + .chip-checkbox-label { @apply bg-blue-500 text-white border-blue-500; }
     .chip-checkbox-label { @apply px-4 py-2 rounded-full border-2 border-gray-300 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-blue-500; }
+    /* Compact overrides */
+    .post-room-compact .pricing-step h2 { @apply text-lg mb-3; }
+    .post-room-compact .pricing-step .form-group { margin-bottom:1rem; }
+    .post-room-compact .chip-checkbox-label { @apply px-3 py-1 text-xs; }
+    .post-room-compact .pricing-step .summary-box { @apply p-4; }
+    .post-room-compact .pricing-step .summary-box h3 { @apply mb-2 text-sm; }
+    .post-room-compact .pricing-step .summary-box p { @apply text-xs mb-2; }
+    .post-room-compact .pricing-step .summary-box div { @apply text-xs; }
   `]
 })
 export class PricingStepComponent {

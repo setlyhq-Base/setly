@@ -1,5 +1,6 @@
 import * as admin from 'firebase-admin';
 import dotenv from 'dotenv';
+import { logger } from '../utils/logger';
 
 // Ensure env vars from .env are loaded before reading them
 dotenv.config();
@@ -17,12 +18,15 @@ const hasFirebaseCreds = !!(
 );
 const hasADC = !!process.env.GOOGLE_APPLICATION_CREDENTIALS;
 const hasInlineJSON = !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+const explicitlyDisabled = process.env.FIREBASE_DISABLE === '1';
 
 let auth: admin.auth.Auth | null = null;
 let db: admin.firestore.Firestore | null = null;
 
 try {
-  if (hasFirebaseCreds) {
+  if (explicitlyDisabled) {
+    logger.warn('[Firebase] Admin SDK explicitly disabled via FIREBASE_DISABLE=1');
+  } else if (hasFirebaseCreds) {
     const app = admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID!,
@@ -32,14 +36,14 @@ try {
     });
     auth = app.auth();
     db = app.firestore();
-    console.log('[Firebase] Admin initialized from FIREBASE_* env vars');
+    logger.info('[Firebase] Admin initialized from FIREBASE_* env vars');
   } else if (hasADC) {
     const app = admin.initializeApp({
       credential: admin.credential.applicationDefault()
     });
     auth = app.auth();
     db = app.firestore();
-    console.log('[Firebase] Admin initialized from GOOGLE_APPLICATION_CREDENTIALS (ADC)');
+    logger.info('[Firebase] Admin initialized from GOOGLE_APPLICATION_CREDENTIALS (ADC)');
   } else if (hasInlineJSON) {
     const json = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON!);
     const app = admin.initializeApp({
@@ -47,12 +51,12 @@ try {
     });
     auth = app.auth();
     db = app.firestore();
-    console.log('[Firebase] Admin initialized from FIREBASE_SERVICE_ACCOUNT_JSON');
+    logger.info('[Firebase] Admin initialized from FIREBASE_SERVICE_ACCOUNT_JSON');
   } else {
-    console.warn('[Firebase] Admin SDK disabled (no credentials found). Features depending on admin will be unavailable.');
+    logger.warn('[Firebase] Admin SDK disabled (no credentials found). Features depending on admin will be unavailable.');
   }
 } catch (e) {
-  console.error('[Firebase] Failed to initialize Admin SDK:', e);
+  logger.error('[Firebase] Failed to initialize Admin SDK:', (e as any)?.message || e);
 }
 
 export { auth, db, hasFirebaseCreds };

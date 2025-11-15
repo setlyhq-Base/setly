@@ -1,0 +1,237 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "SETLY" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e8]: SETLY
+      - generic [ref=e11]:
+        - textbox "Search for rooms" [ref=e12]:
+          - /placeholder: Search for rooms near USA universities...
+        - generic:
+          - img
+        - button "Submit search" [ref=e13] [cursor=pointer]:
+          - img [ref=e14]
+      - navigation [ref=e16]:
+        - link "Connect" [ref=e17] [cursor=pointer]:
+          - /url: /connect
+        - link "Browse" [ref=e18] [cursor=pointer]:
+          - /url: /browse
+        - link "Post Room" [ref=e19] [cursor=pointer]:
+          - /url: /open-room
+        - link "Messages" [ref=e20] [cursor=pointer]:
+          - /url: /messages
+        - link "Ride" [ref=e21] [cursor=pointer]:
+          - /url: /ride
+        - link "Profile" [ref=e22] [cursor=pointer]:
+          - /url: /profile
+        - button "Sign In" [ref=e23] [cursor=pointer]
+  - main [ref=e24]:
+    - main [ref=e26]:
+      - navigation [ref=e27]:
+        - list [ref=e28]:
+          - listitem [ref=e29]:
+            - button "Photos" [ref=e30] [cursor=pointer]
+          - listitem [ref=e31]:
+            - button "Details" [ref=e32] [cursor=pointer]
+          - listitem [ref=e33]:
+            - button "Amenities" [ref=e34] [cursor=pointer]
+          - listitem [ref=e35]:
+            - button "Location" [ref=e36] [cursor=pointer]
+          - listitem [ref=e37]:
+            - button "Host" [ref=e38] [cursor=pointer]
+          - listitem [ref=e39]:
+            - button "Rules" [ref=e40] [cursor=pointer]
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - img "Main photo" [ref=e44]
+            - button "Show all photos" [ref=e45] [cursor=pointer]
+          - generic [ref=e46]:
+            - img "Photo 2" [ref=e48]
+            - img "Photo 3" [ref=e50]
+            - img "Photo 4" [ref=e52]
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - heading "Cozy Private Room Near Harvard" [level=1] [ref=e55]
+            - paragraph [ref=e56]: 285 Huntington Ave, Cambridge, MA
+            - paragraph [ref=e57]: Approx 1.2 km from campus
+            - paragraph [ref=e58]: Available from Nov 20, 2025 to Nov 13, 2026
+          - generic [ref=e59]:
+            - button "Share" [ref=e60] [cursor=pointer]
+            - button "Save" [ref=e61] [cursor=pointer]
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - generic [ref=e66]: Verified Host · Host
+            - paragraph [ref=e68]: "Why you'll love this space: airy interiors, natural light, and a quiet neighborhood close to campus."
+          - generic [ref=e69]:
+            - heading "Amenities & Essentials" [level=2] [ref=e70]
+            - generic [ref=e71]:
+              - generic [ref=e72]:
+                - heading "Other" [level=3] [ref=e73]
+                - generic [ref=e74]:
+                  - generic [ref=e75]: Refrigerator
+                  - generic [ref=e76]: Dishwasher
+                  - generic [ref=e77]: Bike storage
+                  - generic [ref=e78]: High-speed Wi‑Fi
+                  - generic [ref=e79]: Balcony
+                  - generic [ref=e80]: Smart lock
+                  - generic [ref=e81]: 24/7 security
+                  - generic [ref=e82]: Elevator
+              - button "Show all amenities" [ref=e84] [cursor=pointer]
+          - generic [ref=e85]:
+            - heading "Neighborhood & Connectivity" [level=2] [ref=e86]
+            - iframe [ref=e88]:
+              
+            - generic [ref=e89]: Located in Cambridge’s student-friendly neighborhood. Approx 1.2 km from campus. Safe, well-lit streets with great cafés, gyms, and transit nearby.
+            - generic [ref=e90]:
+              - generic "University" [ref=e91]:
+                - generic [ref=e92]: 🏫
+                - generic [ref=e93]: University
+              - generic "Café" [ref=e94]:
+                - generic [ref=e95]: ☕
+                - generic [ref=e96]: Café
+              - generic "Gym" [ref=e97]:
+                - generic [ref=e98]: 🏋️
+                - generic [ref=e99]: Gym
+              - generic "Transit Stop" [ref=e100]:
+                - generic [ref=e101]: 🚌
+                - generic [ref=e102]: Transit Stop
+              - generic "Library" [ref=e103]:
+                - generic [ref=e104]: 📚
+                - generic [ref=e105]: Library
+            - paragraph [ref=e106]: 285 Huntington Ave, Cambridge, MA
+            - paragraph [ref=e107]: "Coordinates: 42.377, -71.1167"
+            - paragraph [ref=e108]:
+              - link "Open in Google Maps" [ref=e109] [cursor=pointer]:
+                - /url: https://www.google.com/maps/search/?api=1&query=42.377,-71.1167
+          - generic [ref=e110]:
+            - generic [ref=e111]:
+              - img "Host avatar" [ref=e112]
+              - generic [ref=e113]:
+                - heading "Hosted by Host" [level=3] [ref=e114]
+                - paragraph [ref=e115]: Joined · 2025 · Response rate 95% · Responds within 1 hour
+            - button "Message host" [ref=e116] [cursor=pointer]
+            - paragraph [ref=e117]: To protect your payment, always communicate and pay through Setly.
+          - generic [ref=e118]:
+            - heading "Things to know" [level=2] [ref=e119]
+            - generic [ref=e120]:
+              - generic [ref=e121]:
+                - heading "House rules" [level=4] [ref=e122]
+                - list [ref=e123]:
+                  - listitem [ref=e124]: No parties or events
+                  - listitem [ref=e125]: No pets
+                  - listitem [ref=e126]: Smoking not allowed
+              - generic [ref=e127]:
+                - heading "Safety & property" [level=4] [ref=e128]
+                - list [ref=e129]:
+                  - listitem [ref=e130]: Security camera (exterior)
+                  - listitem [ref=e131]: Smoke alarm
+                  - listitem [ref=e132]: Carbon monoxide alarm
+              - generic [ref=e133]:
+                - heading "Cancellation" [level=4] [ref=e134]
+                - paragraph [ref=e135]: Flexible — full refund up to 24 hours before check-in.
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - generic [ref=e141]: $1200 / month
+            - generic [ref=e142]:
+              - generic [ref=e143]:
+                - generic [ref=e144]: Check in
+                - textbox [ref=e145]
+              - generic [ref=e146]:
+                - generic [ref=e147]: Check out
+                - textbox [ref=e148]
+              - generic [ref=e149]:
+                - generic [ref=e150]: Guests
+                - combobox [ref=e151]:
+                  - option "1 guest" [selected]
+                  - option "2 guests"
+                  - option "3 guests"
+                  - option "4 guests"
+                  - option "5 guests"
+                  - option "6 guests"
+            - generic [ref=e152]:
+              - generic [ref=e153]:
+                - generic [ref=e154]: Monthly price
+                - generic [ref=e155]: $1200
+              - generic [ref=e156]:
+                - generic [ref=e157]: Service fee
+                - generic [ref=e158]: $60
+              - generic [ref=e159]:
+                - generic [ref=e160]: Total
+                - generic [ref=e161]: $1260
+            - button "Request to Book" [ref=e162] [cursor=pointer]
+            - generic [ref=e163]: You won't be charged yet
+          - generic [ref=e164]: Report listing issue
+  - contentinfo [ref=e166]:
+    - generic [ref=e167]:
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - generic [ref=e172]: SETLY
+          - paragraph [ref=e173]: Setly - Find Your next Room near your university with roommates who match your lifestyle.
+        - generic [ref=e174]:
+          - heading "Company" [level=3] [ref=e175]
+          - list [ref=e176]:
+            - listitem [ref=e177]:
+              - link "About Setly" [ref=e178] [cursor=pointer]:
+                - /url: /about
+                - text: About
+            - listitem [ref=e179]:
+              - link "Careers at Setly" [ref=e180] [cursor=pointer]:
+                - /url: /careers
+                - text: Careers
+            - listitem [ref=e181]:
+              - link "Setly blog" [ref=e182] [cursor=pointer]:
+                - /url: /blog
+                - text: Blog
+            - listitem [ref=e183]:
+              - link "Safety information" [ref=e184] [cursor=pointer]:
+                - /url: /safety
+                - text: Safety
+            - listitem [ref=e185]:
+              - link "Help center" [ref=e186] [cursor=pointer]:
+                - /url: /help
+                - text: Help
+        - generic [ref=e187]:
+          - heading "Support" [level=3] [ref=e188]
+          - list [ref=e189]:
+            - listitem [ref=e190]:
+              - link "Terms of service" [ref=e191] [cursor=pointer]:
+                - /url: /terms
+                - text: Terms
+            - listitem [ref=e192]:
+              - link "Privacy policy" [ref=e193] [cursor=pointer]:
+                - /url: /privacy
+                - text: Privacy
+            - listitem [ref=e194]:
+              - link "Contact support" [ref=e195] [cursor=pointer]:
+                - /url: mailto:support@setly.com
+                - text: Contact
+        - generic [ref=e196]:
+          - heading "Connect" [level=3] [ref=e197]
+          - list [ref=e198]:
+            - listitem [ref=e199]:
+              - link "Follow us on Facebook" [ref=e200] [cursor=pointer]:
+                - /url: https://facebook.com/setly
+                - text: Facebook
+            - listitem [ref=e201]:
+              - link "Follow us on Twitter" [ref=e202] [cursor=pointer]:
+                - /url: https://twitter.com/setly
+                - text: Twitter
+            - listitem [ref=e203]:
+              - link "Follow us on Instagram" [ref=e204] [cursor=pointer]:
+                - /url: https://instagram.com/setly
+                - text: Instagram
+            - listitem [ref=e205]:
+              - link "Follow us on LinkedIn" [ref=e206] [cursor=pointer]:
+                - /url: https://linkedin.com/company/setly
+                - text: LinkedIn
+      - paragraph [ref=e208]: © 2025 Setly. All rights reserved.
+  - button "Open Setly Assistant" [ref=e209] [cursor=pointer]:
+    - generic [ref=e210]: ⭐
+  - generic:
+    - status
+```

@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadsController = void 0;
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
-const uuid_1 = require("uuid");
+const crypto_1 = require("crypto");
 const aws_1 = require("../config/aws");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
@@ -39,7 +39,7 @@ class UploadsController {
             }
             // Generate unique key
             const extension = contentType.split('/')[1];
-            const key = `${keyPrefix}/${(0, uuid_1.v4)()}.${extension}`;
+            const key = `${keyPrefix}/${(0, crypto_1.randomUUID)()}.${extension}`;
             // Create presigned POST
             const presignedPost = await (0, s3_presigned_post_1.createPresignedPost)(aws_1.s3Client, {
                 Bucket: aws_1.AWS_CONFIG.bucketName,
@@ -93,13 +93,13 @@ class UploadsController {
                 key = `users/${req.user.uid}/avatar.${normalizedExt}`;
             }
             else if (type === 'room-photo') {
-                key = `rooms/${req.user.uid}/${(0, uuid_1.v4)()}.${normalizedExt}`;
+                key = `rooms/${req.user.uid}/${(0, crypto_1.randomUUID)()}.${normalizedExt}`;
             }
             else if (type === 'room-video') {
-                key = `rooms/${req.user.uid}/videos/${(0, uuid_1.v4)()}.${normalizedExt}`;
+                key = `rooms/${req.user.uid}/videos/${(0, crypto_1.randomUUID)()}.${normalizedExt}`;
             }
             else if (type === 'room-video-thumb') {
-                key = `rooms/${req.user.uid}/thumbs/${(0, uuid_1.v4)()}.${normalizedExt}`;
+                key = `rooms/${req.user.uid}/thumbs/${(0, crypto_1.randomUUID)()}.${normalizedExt}`;
             }
             else {
                 return res.status(400).json({ error: 'Unsupported type' });

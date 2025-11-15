@@ -18,7 +18,7 @@ import { GeocodingService, AddressSuggestion } from '../../core/services/geocodi
           <span class="block font-medium truncate" [title]="s.label">{{ s.label }}</span>
           <span class="block text-[11px] text-gray-500">{{ s.city }}, {{ s.state }} {{ s.postcode }}</span>
         </li>
-        <li *ngIf="!loading() && results().length===0" class="px-3 py-2 text-gray-500">No matches</li>
+        <li *ngIf="!loading() && results().length===0" class="px-3 py-2 text-gray-500">Start Typing</li>
       </ul>
     </div>
   `

@@ -8,22 +8,22 @@ import { ToastService } from '../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="space-y-6">
-      <div class="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg" data-testid="pr-photos-dropzone">
+    <div class="space-y-6 photos-step">
+      <div class="text-center dropzone" data-testid="pr-photos-dropzone">
         <label class="cursor-pointer">
           <input type="file" multiple accept="image/*,.heic,.heif" (change)="onFileSelect($event)" class="hidden" />
           <div class="text-gray-600">
-            <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="icon-add mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
-            <p class="text-lg font-medium">Click to upload photos</p>
-            <p class="text-sm mt-2">Minimum 3 photos required, max 12</p>
+            <p class="text-base font-medium leading-tight">Click to upload photos</p>
+            <p class="text-xs mt-1">Minimum 3 photos required (max 12)</p>
           </div>
         </label>
       </div>
-      <div *ngIf="store.draft().photos.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div *ngIf="store.draft().photos.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-3 photo-grid">
         <div *ngFor="let photo of store.draft().photos; let i = index" 
-             class="relative aspect-square border rounded-lg overflow-hidden"
+             class="relative aspect-square border rounded-md overflow-hidden photo-item"
              [attr.data-testid]="'pr-photo-' + i">
           <img [src]="photo.preview" [alt]="photo.alt || 'Room photo'" class="w-full h-full object-cover" />
           <div *ngIf="photo.isCover" class="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded" data-testid="pr-photo-cover">
@@ -43,6 +43,15 @@ import { ToastService } from '../../core/services/toast.service';
       </p>
     </div>
   `
+  ,styles:[`
+    .photos-step .dropzone { @apply p-6 border border-dashed border-gray-300 rounded-lg; }
+    .post-room-compact .photos-step .dropzone { @apply p-4 rounded-md; }
+    .photos-step .icon-add { @apply w-12 h-12; }
+    .post-room-compact .photos-step .icon-add { @apply w-10 h-10; }
+    .photo-grid .photo-item { @apply transition; }
+    .post-room-compact .photo-grid { @apply gap-2; }
+    .post-room-compact .photo-item { @apply border-gray-200; }
+  `]
 })
 export class PhotosStepComponent {
   store = inject(PostRoomStore);

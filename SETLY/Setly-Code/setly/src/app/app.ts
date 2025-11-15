@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './shared/ui/header.component';
 import { FooterComponent } from './shared/ui/footer.component';
 import { AssistantWidgetComponent } from './features/assistant/assistant-widget.component';
+import { FabComponent } from './shared/ui/fab.component';
 import { ToastContainerComponent } from './shared/ui/toast-container.component';
 import { environment as env } from '../environments/environment';
 import { UserStore } from './core/state/user.store';
@@ -10,7 +11,7 @@ import { AuthSyncService } from './core/services/auth-sync.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, FooterComponent, AssistantWidgetComponent, ToastContainerComponent],
+  imports: [RouterOutlet, HeaderComponent, FooterComponent, AssistantWidgetComponent, FabComponent, ToastContainerComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

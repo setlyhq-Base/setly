@@ -42,6 +42,16 @@ export class AssistantWidgetComponent implements OnInit, AfterViewInit, OnDestro
   private userScrolledUp = false;
   private ro?: ResizeObserver;
 
+  // Draggable positions (desktop): launcher and panel
+  launcherX = signal<number>(24); // px from left
+  launcherY = signal<number>(Math.round(window.innerHeight / 2)); // px from top
+  panelX = signal<number>(24);
+  panelY = signal<number>(Math.round(window.innerHeight / 2));
+  @ViewChild('launcherRef') launcherRef?: ElementRef<HTMLButtonElement>;
+  @ViewChild('panelRef') panelRef?: ElementRef<HTMLDivElement>;
+  private dragging: { type: 'launcher'|'panel'; dx: number; dy: number } | null = null;
+  private suppressNextOutsideClose = false;
+
   constructor(public svc: AssistantService, private router: Router, private el: ElementRef<HTMLElement>) {
     this.items = this.svc.messages;
     this.playbooks = this.svc.playbooks;
@@ -63,6 +73,16 @@ export class AssistantWidgetComponent implements OnInit, AfterViewInit, OnDestro
     this.ro = new ResizeObserver(() => this.computeHeights());
     try { this.ro.observe(this.el.nativeElement); } catch {}
     this.computeHeights();
+
+    // Load persisted positions (desktop only)
+    try {
+      const s1 = localStorage.getItem('assistantLauncherPos');
+      if (s1) { const pos = JSON.parse(s1) as { x:number; y:number }; if (Number.isFinite(pos.x) && Number.isFinite(pos.y)) { this.launcherX.set(pos.x); this.launcherY.set(pos.y); } }
+    } catch {}
+    try {
+      const s2 = localStorage.getItem('assistantPanelPos');
+      if (s2) { const pos = JSON.parse(s2) as { x:number; y:number }; if (Number.isFinite(pos.x) && Number.isFinite(pos.y)) { this.panelX.set(pos.x); this.panelY.set(pos.y); } }
+    } catch {}
   }
   ngAfterViewInit(){
     setTimeout(()=> this.scrollToBottom(), 0);
@@ -81,6 +101,7 @@ export class AssistantWidgetComponent implements OnInit, AfterViewInit, OnDestro
     try { this.ro?.disconnect(); } catch {}
     // restore scroll lock if any
     document.body.style.overflow = '';
+    this.endDrag();
   }
 
   open(){
@@ -91,6 +112,13 @@ export class AssistantWidgetComponent implements OnInit, AfterViewInit, OnDestro
     setTimeout(()=>{
       const inputEl = (this.el.nativeElement.querySelector('[data-testid="assistant-input"]') as HTMLElement | null);
       inputEl?.focus?.();
+      // Anchor panel next to launcher on first open or if user hasn't moved it
+      if (!this.isMobile()) {
+        try {
+          const moved = localStorage.getItem('assistantPanelMoved') === '1';
+          if (!moved) this.anchorPanelNearLauncher();
+        } catch { this.anchorPanelNearLauncher(); }
+      }
     }, 0);
   }
   close(){ this.isOpen = false; this.svc.onClose(); document.body.style.overflow = ''; }
@@ -106,6 +134,17 @@ export class AssistantWidgetComponent implements OnInit, AfterViewInit, OnDestro
   onSwitchThread(id: string){ this.svc.switchThread(id); this.showThreads.set(false); setTimeout(()=> this.scrollToBottom(), 0); }
 
   @HostListener('document:keydown.escape') onEsc(){ if (this.isOpen) this.close(); }
+  @HostListener('document:click', ['$event']) onDocClick(ev: MouseEvent){
+    if (!this.isOpen) return;
+    if (this.suppressNextOutsideClose) { this.suppressNextOutsideClose = false; return; }
+    const target = ev.target as Node | null;
+    const panel = this.panelRef?.nativeElement as Node | undefined;
+    const launcher = this.launcherRef?.nativeElement as Node | undefined;
+    if (panel && target && panel.contains(target)) return; // inside panel
+    if (launcher && target && launcher.contains(target)) return; // on launcher
+    // Otherwise, outside click -> close
+    this.close();
+  }
 
   private scrollToBottom(){ try{ this.viewport?.scrollToIndex(1e9); }catch{} }
   private scrollToBottomIfNeeded(){ if (!this.userScrolledUp) this.scrollToBottom(); }
@@ -119,5 +158,98 @@ export class AssistantWidgetComponent implements OnInit, AfterViewInit, OnDestro
     document.documentElement.style.setProperty('--cmp', `${cmp}px`);
     if (this.isMobile()) this.panelHeight.set('100dvh'); else this.panelHeight.set('min(70vh, 720px)');
     this.listHeight.set(`calc(100% - ${hdr + cmp}px)`);
+  }
+
+  // Drag logic (desktop only)
+  onLauncherPointerDown(ev: PointerEvent){
+    if (this.isMobile()) return;
+    try { (ev.target as Element).setPointerCapture?.(ev.pointerId); } catch {}
+    const rect = this.launcherRef?.nativeElement.getBoundingClientRect();
+    const dx = ev.clientX - (rect?.left ?? 0);
+    const dy = ev.clientY - (rect?.top ?? 0);
+    this.dragging = { type: 'launcher', dx, dy };
+    document.addEventListener('pointermove', this.onPointerMove, { passive: false });
+    document.addEventListener('pointerup', this.onPointerUp, { passive: false });
+    document.body.classList.add('assistant-dragging');
+    ev.preventDefault();
+  }
+  onPanelHeaderPointerDown(ev: PointerEvent){
+    if (this.isMobile()) return;
+    // Ignore drags starting on buttons
+    const t = ev.target as HTMLElement;
+    if (t && t.closest('button')) return;
+    try { (ev.target as Element).setPointerCapture?.(ev.pointerId); } catch {}
+    const rect = this.panelRef?.nativeElement.getBoundingClientRect();
+    const dx = ev.clientX - (rect?.left ?? 0);
+    const dy = ev.clientY - (rect?.top ?? 0);
+    this.dragging = { type: 'panel', dx, dy };
+    document.addEventListener('pointermove', this.onPointerMove, { passive: false });
+    document.addEventListener('pointerup', this.onPointerUp, { passive: false });
+    document.body.classList.add('assistant-dragging');
+    ev.preventDefault();
+  }
+  private onPointerMove = (ev: PointerEvent) => {
+    if (!this.dragging) return;
+    const maxX = window.innerWidth;
+    const maxY = window.innerHeight;
+    let x = ev.clientX - this.dragging.dx;
+    let y = ev.clientY - this.dragging.dy;
+    // Size-aware clamping
+    if (this.dragging.type === 'launcher') {
+      const el = this.launcherRef?.nativeElement;
+      const w = el?.offsetWidth ?? 56; const h = el?.offsetHeight ?? 56;
+      x = Math.max(0, Math.min(x, maxX - w));
+      y = Math.max(0, Math.min(y, maxY - h));
+      this.launcherX.set(x); this.launcherY.set(y);
+    } else {
+      const el = this.panelRef?.nativeElement;
+      const w = el?.offsetWidth ?? 420; const h = el?.offsetHeight ?? 520;
+      x = Math.max(0, Math.min(x, maxX - w));
+      y = Math.max(0, Math.min(y, maxY - h));
+      this.panelX.set(x); this.panelY.set(y);
+    }
+    ev.preventDefault();
+  };
+  private onPointerUp = (_ev: PointerEvent) => {
+    if (!this.dragging) return;
+    if (this.dragging.type === 'launcher') {
+      try { localStorage.setItem('assistantLauncherPos', JSON.stringify({ x: this.launcherX(), y: this.launcherY() })); } catch {}
+    } else {
+      try {
+        localStorage.setItem('assistantPanelPos', JSON.stringify({ x: this.panelX(), y: this.panelY() }));
+        localStorage.setItem('assistantPanelMoved', '1');
+      } catch {}
+    }
+    this.endDrag();
+  };
+  private endDrag(){
+    document.removeEventListener('pointermove', this.onPointerMove);
+    document.removeEventListener('pointerup', this.onPointerUp);
+    document.body.classList.remove('assistant-dragging');
+    this.dragging = null;
+    // Prevent immediate outside-click close on drag end
+    this.suppressNextOutsideClose = true;
+    setTimeout(() => { this.suppressNextOutsideClose = false; }, 0);
+  }
+
+  private anchorPanelNearLauncher(){
+    try {
+      const l = this.launcherRef?.nativeElement.getBoundingClientRect();
+      const panelEl = this.panelRef?.nativeElement as HTMLElement | undefined;
+      if (!l || !panelEl) return;
+      const gap = 12;
+      const pW = panelEl.offsetWidth || 420;
+      const pH = panelEl.offsetHeight || Math.min(720, Math.round(window.innerHeight * 0.7));
+      let x = l.right + gap; // default to the right of launcher
+      if (x + pW > window.innerWidth - gap) {
+        x = l.left - pW - gap; // place to left if no space on right
+      }
+      x = Math.max(gap, Math.min(x, window.innerWidth - pW - gap));
+      // Vertically center relative to launcher
+      let y = Math.round(l.top + (l.height / 2) - (pH / 2));
+      y = Math.max(gap, Math.min(y, window.innerHeight - pH - gap));
+      this.panelX.set(x);
+      this.panelY.set(y);
+    } catch {}
   }
 }

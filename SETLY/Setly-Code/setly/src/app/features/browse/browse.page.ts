@@ -10,16 +10,38 @@ import { RoomStore } from '../../core/state/room.store';
   imports: [CommonModule, RoomCardComponent, FiltersBarComponent],
   template: `
     <main class="min-h-screen bg-gray-50">
-      <!-- Filters Bar -->
-      <app-filters-bar (filtersChanged)="onFiltersChanged($event)"></app-filters-bar>
+      <!-- Page Header -->
+      <section class="bg-white border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+          <h1 class="text-2xl font-bold text-gray-900">Browse</h1>
+          <!-- Category Tabs -->
+          <nav class="mt-4 flex items-center gap-4 text-sm font-medium" aria-label="Browse categories">
+            <a routerLink="/browse" routerLinkActive="active-tab" class="tab-link">Rooms</a>
+            <a routerLink="/ride" class="tab-link">Rides</a>
+            <a routerLink="/connect/marketplace" class="tab-link">Marketplace</a>
+          </nav>
+        </div>
+      </section>
+
+      <!-- Filters Bar below tabs with Post button on right -->
+      <div class="bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+          <div class="flex items-start gap-4 py-3">
+            <div class="flex-1 min-w-0">
+              <app-filters-bar (filtersChanged)="onFiltersChanged($event)"></app-filters-bar>
+            </div>
+            <div class="pt-1">
+              <a routerLink="/open-room" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-indigo-600 text-white shadow hover:bg-indigo-700 focus-ring" aria-label="Post a room">+</a>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Listings Grid -->
       <section class="py-8">
         <div class="max-w-7xl mx-auto px-4">
           <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">
-              Browse Rooms
-            </h1>
+            <div></div>
             <select class="px-3 py-2 border border-gray-300 rounded-lg">
               <option>Most recent</option>
               <option>Price: Low to High</option>
@@ -59,6 +81,10 @@ import { RoomStore } from '../../core/state/room.store';
           </div>
         </div>
       </section>
+      <!-- Floating Action Button (mobile) -->
+      <a routerLink="/open-room" aria-label="Post a room" class="md:hidden fixed bottom-5 right-5 w-14 h-14 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-indigo-400">
+        <span class="text-3xl leading-none">+</span>
+      </a>
     </main>
   `
 })

@@ -418,3 +418,6 @@ app.get('/api/universities', async (req, res) => {
     res.status(500).json({ error: 'universities_unavailable' });
   }
 });
+
+// Phone verification routes
+app.use('/api/phone', require('./src/routes/phone.routes'));

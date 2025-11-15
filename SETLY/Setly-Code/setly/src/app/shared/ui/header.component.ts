@@ -1,4 +1,4 @@
-import { Component, HostBinding, HostListener } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserStore } from '../../core/state/user.store';
@@ -8,6 +8,7 @@ import { RiderStoreService } from '../../core/services/rider-store.service';
 import { SearchBarComponent } from './search-bar.component';
 import { ToastService } from '../../core/services/toast.service';
 import { Router } from '@angular/router';
+import { ConversationStoreService } from '../../features/messages/conversation-store.service';
 
 @Component({
   selector: 'app-header',
@@ -26,14 +27,17 @@ import { Router } from '@angular/router';
           <app-search-bar></app-search-bar>
         </div>
 
-        <!-- Navigation -->
+        <!-- Navigation (restored legacy order: Connect · Post · Browse · Messages) -->
         <div class="flex items-center space-x-6" *ngIf="authStore.user().isAuthenticated; else loggedOut">
-          <a routerLink="/connect" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Connect</a>
-          <a routerLink="/browse" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Browse</a>
-          <a routerLink="/open-room" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Post Room</a>
-          <a routerLink="/messages" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Messages</a>
-          <a routerLink="/ride" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Ride</a>
-          <span data-testid="rider-quick-toggle" class="text-sm text-gray-600">Rider: {{ riderStore.enabled() ? 'On' : 'Off' }}</span>
+          <a routerLink="/connect" routerLinkActive="text-accent" class="nav-link">Connect</a>
+          <a routerLink="/people" routerLinkActive="text-accent" class="nav-link">People</a>
+          <a routerLink="/explore" routerLinkActive="text-accent" class="nav-link">Explore</a>
+          <a routerLink="/post" routerLinkActive="text-accent" class="nav-link">Post</a>
+          <a routerLink="/browse" routerLinkActive="text-accent" class="nav-link">Browse</a>
+          <a routerLink="/messages" routerLinkActive="text-accent" class="nav-link relative">
+            Messages
+            <span *ngIf="conversations.unreadTotal() > 0" class="absolute -top-2 -right-3 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-semibold text-white bg-rose-500 shadow-sm">{{ conversations.unreadTotal() }}</span>
+          </a>
           <!-- Avatar dropdown -->
           <div class="relative profile-menu-wrapper">
             <button (click)="toggleMenu($event)" class="flex items-center gap-2 focus:outline-none" aria-haspopup="true" [attr.aria-expanded]="menuOpen" aria-label="Open profile menu">
@@ -51,12 +55,15 @@ import { Router } from '@angular/router';
         </div>
         <ng-template #loggedOut>
           <nav class="flex items-center space-x-6">
-            <a routerLink="/connect" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Connect</a>
-            <a routerLink="/browse" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Browse</a>
-            <a routerLink="/open-room" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Post Room</a>
-            <a routerLink="/messages" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Messages</a>
-            <a routerLink="/ride" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Ride</a>
-            <a routerLink="/profile" routerLinkActive="text-accent" class="text-gray-700 hover:text-gray-900 transition-colors">Profile</a>
+            <a routerLink="/connect" routerLinkActive="text-accent" class="nav-link">Connect</a>
+            <a routerLink="/people" routerLinkActive="text-accent" class="nav-link">People</a>
+            <a routerLink="/explore" routerLinkActive="text-accent" class="nav-link">Explore</a>
+            <a routerLink="/post" routerLinkActive="text-accent" class="nav-link">Post</a>
+            <a routerLink="/browse" routerLinkActive="text-accent" class="nav-link">Browse</a>
+            <a routerLink="/messages" routerLinkActive="text-accent" class="nav-link relative">
+              Messages
+              <span *ngIf="conversations.unreadTotal() > 0" class="absolute -top-2 -right-3 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-semibold text-white bg-rose-500 shadow-sm">{{ conversations.unreadTotal() }}</span>
+            </a>
             <button (click)="goToSignIn()" class="btn-secondary">Sign In</button>
           </nav>
         </ng-template>
@@ -68,10 +75,10 @@ import { Router } from '@angular/router';
       @apply inline-block w-2.5 h-2.5 rounded-full align-middle;
       background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
     }
+    .nav-link { @apply text-gray-700 hover:text-gray-900 transition-colors; font-weight:500; }
   `]
 })
 export class HeaderComponent {
-  @HostBinding('class.scrolled') scrolled = false;
   menuOpen = false;
   private closeTimeout: any;
   useDark = false;
@@ -81,7 +88,8 @@ export class HeaderComponent {
     private authService: AuthService,
     public authStore: AuthStore,
     private toast: ToastService,
-    private router: Router
+    private router: Router,
+    public conversations: ConversationStoreService
   ) {
     // Bridge legacy window 'toast' events to central ToastService (for AuthSync, etc.)
     window.addEventListener('toast', (e: any) => {
@@ -94,12 +102,6 @@ export class HeaderComponent {
     // Simple heuristic: enable dark header on profile pages for premium feel
     const path = window.location.pathname;
     if (/\/profile/.test(path)) this.useDark = true;
-  }
-
-  @HostListener('window:scroll')
-  onScroll() {
-    // Apply scrolled class when page is offset from top
-    this.scrolled = window.scrollY > 0;
   }
 
   async signOut() {

@@ -1,22 +1,17 @@
-.form-group {
-  margin-bottom: 1.5rem;
-}
+/* Compact adjustments for Post Room flow */
+/* Normal density base */
+.post-room-page .form-group { margin-bottom: 1.5rem; }
+.post-room-page .form-label { margin-bottom:0.5rem; font-size:0.95rem; }
+.post-room-page .form-input { padding:0.75rem 1rem; font-size:0.95rem; border-radius:0.5rem; }
 
-.form-label {
-  display: block;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
+/* Compact overrides */
+.post-room-compact .form-group { margin-bottom: 1.1rem; }
+.post-room-compact .form-label { margin-bottom:0.4rem; font-size:0.85rem; }
+.post-room-compact .form-input { padding:0.55rem 0.75rem; font-size:0.85rem; border-radius:0.4rem; }
 
-.form-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  transition: all 0.2s;
-}
+.form-label { display:block; font-weight:600; color:#374151; }
+
+.form-input { width:100%; border:1px solid #d1d5db; transition:all .18s; }
 
 .form-input:focus {
   outline: none;
@@ -37,14 +32,9 @@
   font-weight: 500;
 }
 
-.radio-card {
-  position: relative;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
-  padding: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+.radio-card { position:relative; cursor:pointer; transition:all .18s; }
+.post-room-page .radio-card { border:2px solid #e5e7eb; border-radius:.75rem; padding:1rem; }
+.post-room-compact .radio-card { border:1.5px solid #e5e7eb; border-radius:.6rem; padding:.7rem .65rem; }
 
 .radio-card:hover {
   border-color: #3b82f6;
@@ -81,11 +71,18 @@
   overflow-y: auto;
 }
 
-.autocomplete-item {
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  transition: background-color 0.15s;
-}
+.autocomplete-item { cursor:pointer; transition:background-color .15s; }
+.post-room-page .autocomplete-item { padding:0.75rem 1rem; font-size:.875rem; }
+.post-room-compact .autocomplete-item { padding:0.55rem 0.75rem; font-size:.8rem; }
+
+/* Description textarea line-height adjustments */
+.post-room-compact #description { line-height:1.35; }
+.post-room-page:not(.post-room-compact) #description { line-height:1.5; }
+
+/* Collapsible header */
+.collapsible-header { padding:0.55rem 0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; background:#f8fafc; font-size:.8rem; user-select:none; }
+.collapsible-header:hover { background:#f1f5f9; }
+.post-room-page:not(.post-room-compact) .collapsible-header { font-size:.85rem; padding:0.65rem 0.85rem; }
 
 .autocomplete-item:hover {
   background-color: #f3f4f6;

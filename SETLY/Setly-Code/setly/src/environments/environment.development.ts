@@ -32,5 +32,7 @@ export const environment = {
     mockPhoneAuth: true,
     disableRecaptchaEnterprise: true
   },
-  universityApiBase: 'https://universities.hipolabs.com'
+  universityApiBase: 'https://universities.hipolabs.com',
+  // Load prebuilt dataset from S3 for fast and reliable autocomplete
+  universitiesDataUrl: 'https://setly-s3-bucket.s3.us-east-2.amazonaws.com/universities/us_in_universities.json'
 };

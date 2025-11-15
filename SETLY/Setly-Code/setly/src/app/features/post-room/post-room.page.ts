@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -26,73 +26,83 @@ import { ToastContainerComponent } from '../../shared/ui/toast-container.compone
   ],
   template: `
     <app-toast-container></app-toast-container>
-    <!-- Hero Section -->
-  <section class="section-premium bg-white animate-fade-in">
+    <!-- Density Toggle -->
+    <div class="flex justify-end items-center gap-2 px-4 pt-3 text-xs">
+      <span class="text-gray-500">Density:</span>
+      <button type="button" (click)="toggleDensity()" class="px-2 py-1 rounded border text-gray-700 hover:bg-gray-50"
+        [attr.aria-pressed]="isCompact()" data-testid="pr-density-toggle">
+        {{ isCompact() ? 'Compact' : 'Comfort' }}
+      </button>
+    </div>
+
+    <div class="post-room-page" [class.post-room-compact]="isCompact()">
+    <!-- Hero Section (reduced vertical spacing) -->
+  <section class="bg-white animate-fade-in py-6 lg:py-8">
       <div class="container mx-auto px-4">
         <div class="text-center">
-          <h1 class="heading-premium mb-6 text-blue-500">Post Your Room</h1>
-          <p class="subheading-premium max-w-2xl mx-auto">
-            join a trusted community of Setly hosts.
+          <h1 class="text-2xl lg:text-3xl font-bold tracking-tight mb-3 text-blue-600">Post Your Room</h1>
+          <p class="text-sm lg:text-base max-w-2xl mx-auto text-slate-600">
+            Join a trusted community of Setly hosts.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- Main Content -->
-    <main class="section-premium bg-white">
+  <!-- Main Content (tightened) -->
+  <main class="bg-white pt-2 pb-10 lg:pb-14">
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto">
           <!-- Progress Steps -->
-          <div class="mb-12" data-testid="pr-stepper">
-            <div class="flex items-center justify-center space-x-4">
+          <div class="mb-6" data-testid="pr-stepper">
+            <div class="flex items-center justify-center space-x-3 text-xs">
               <div class="flex items-center">
                 <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center font-semibold"
+                  class="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs"
                   [class]="store.currentStep() >= 1 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'"
                   [attr.aria-current]="store.currentStep() === 1 ? 'step' : null"
                 >
                   1
                 </div>
                 <span
-                  class="ml-3 text-sm font-medium"
+                  class="ml-2 font-medium"
                   [class]="store.currentStep() >= 1 ? 'text-gray-900' : 'text-gray-500'"
                 >
                   Room Details
                 </span>
               </div>
               <div
-                class="w-16 h-0.5"
+                class="w-12 h-0.5"
                 [class]="store.currentStep() >= 2 ? 'bg-blue-500' : 'bg-gray-300'"
               ></div>
               <div class="flex items-center">
                 <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center font-semibold"
+                  class="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs"
                   [class]="store.currentStep() >= 2 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'"
                   [attr.aria-current]="store.currentStep() === 2 ? 'step' : null"
                 >
                   2
                 </div>
                 <span
-                  class="ml-3 text-sm font-medium"
+                  class="ml-2 font-medium"
                   [class]="store.currentStep() >= 2 ? 'text-gray-900' : 'text-gray-500'"
                 >
                   Photos
                 </span>
               </div>
               <div
-                class="w-16 h-0.5"
+                class="w-12 h-0.5"
                 [class]="store.currentStep() >= 3 ? 'bg-blue-500' : 'bg-gray-300'"
               ></div>
               <div class="flex items-center">
                 <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center font-semibold"
+                  class="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs"
                   [class]="store.currentStep() >= 3 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'"
                   [attr.aria-current]="store.currentStep() === 3 ? 'step' : null"
                 >
                   3
                 </div>
                 <span
-                  class="ml-3 text-sm font-medium"
+                  class="ml-2 font-medium"
                   [class]="store.currentStep() >= 3 ? 'text-gray-900' : 'text-gray-500'"
                 >
                   Pricing
@@ -102,7 +112,7 @@ import { ToastContainerComponent } from '../../shared/ui/toast-container.compone
           </div>
 
           <!-- Step Content -->
-          <div class="card-premium">
+          <div class="card-premium px-4 py-5" style="padding:1.25rem 1.25rem;">
             <!-- Step 1: Room Details -->
             <app-room-details-step *ngIf="store.currentStep() === 1"></app-room-details-step>
 
@@ -158,10 +168,23 @@ import { ToastContainerComponent } from '../../shared/ui/toast-container.compone
           </div>
         </div>
       </main>
+    </div>
   `
 })
 export class PostRoomPage {
   store = inject(PostRoomStore);
+  isCompact = signal<boolean>(false);
+  ngOnInit() {
+    const saved = localStorage.getItem('postRoomDensity');
+    if (saved === 'compact') this.isCompact.set(true);
+  }
+  toggleDensity() {
+    this.isCompact.update((v: boolean) => {
+      const next = !v;
+      localStorage.setItem('postRoomDensity', next ? 'compact' : 'comfort');
+      return next;
+    });
+  }
   private roomsService = inject(RoomsService);
   private analytics = inject(AnalyticsService);
   private currentUserService = inject(CurrentUserService);
@@ -258,6 +281,8 @@ export class PostRoomPage {
         setTimeout(() => {
           this.router.navigate(['/listing', created.id]);
         }, 900);
+        // Emit event for FAB to handle
+        window.dispatchEvent(new CustomEvent('roomPosted'));
       } else {
         this.toast.error('Failed to create listing');
       }

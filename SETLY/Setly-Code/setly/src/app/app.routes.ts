@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { PostLandingPage } from './features/post/post.page';
 import { AuthGuard } from './core/guards/auth.guard';
 import { ProfileGuard } from './core/guards/profile.guard';
 import { TrustedActionGuard } from './core/guards/trusted-action.guard';
@@ -13,6 +14,21 @@ export const routes: Routes = [
     path: 'u/:username',
     loadComponent: () => import('./features/profile/profile.page').then(m => m.ProfilePage),
     title: 'Profile - Setly'
+  },
+  {
+    path: 'explore',
+    loadComponent: () => import('./features/search/search.page').then(m => m.SearchPage),
+    title: 'Explore - Setly',
+    canActivate: []
+  },
+  // Backward compatibility: redirect old /search to /explore
+  { path: 'search', redirectTo: 'explore', pathMatch: 'full' },
+  // Redirect legacy connect/people to new People page
+  { path: 'connect/people', redirectTo: 'people', pathMatch: 'full' },
+  {
+    path: 'people',
+    loadComponent: () => import('./features/people/people.page').then(m => m.PeoplePage),
+    title: 'People - Setly'
   },
   {
     path: '',
@@ -56,7 +72,7 @@ export const routes: Routes = [
   {
     path: 'browse',
     loadComponent: () => import('./features/browse/browse.page').then(m => m.BrowsePage),
-    title: 'Browse Rooms - Setly',
+    title: 'Browse - Setly',
     // Publicly accessible; login required only for actions like posting or booking
     canActivate: []
   },
@@ -80,6 +96,12 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'post',
+    loadComponent: () => Promise.resolve(PostLandingPage),
+    title: 'Create a new post - Setly',
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'messages',
     loadComponent: () => import('./features/messages/messages.page').then(m => m.MessagesPage),
     title: 'Messages - Setly',
@@ -87,10 +109,9 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
-    loadComponent: () => import('./features/profile/profile.page').then(m => m.ProfilePage),
+    loadComponent: () => import('./features/profile/profile-v2.page').then(m => m.ProfileV2Page),
     title: 'Profile - Setly',
-    canActivate: [AuthGuard],
-    canDeactivate: [() => import('./core/guards/pending-changes.guard').then(m => m.PendingChangesGuard)]
+    canActivate: [AuthGuard]
   },
   {
     path: 'dashboard',
@@ -136,6 +157,11 @@ export const routes: Routes = [
     title: 'Connect - Topics - Setly'
   },
   {
+    path: 'profile/:id',
+    loadComponent: () => import('./features/user-profile/user-profile.page').then(m => m.UserProfilePage),
+    title: 'Profile - Setly'
+  },
+  {
     path: 'connect/map',
     loadComponent: () => import('./features/connect/connect-map.page').then(m => m.ConnectMapPage),
     title: 'Connect Map - Setly'
@@ -149,6 +175,12 @@ export const routes: Routes = [
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.page').then(m => m.SettingsPage),
     title: 'Settings - Setly',
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'admin/users',
+    loadComponent: () => import('./features/admin/admin-users.page').then(m => m.AdminUsersPage),
+    title: 'Admin · Users - Setly',
     canActivate: [AuthGuard]
   },
   // Legacy redirects

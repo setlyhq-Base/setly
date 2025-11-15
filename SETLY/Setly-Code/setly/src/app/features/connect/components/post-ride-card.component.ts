@@ -13,7 +13,7 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
   standalone: true,
   imports: [CommonModule, RouterModule, TimeAgoPipe],
   template: `
-  <article class="card-white hover-lift overflow-hidden" [attr.aria-label]="post.from + ' to ' + post.to" role="article">
+  <article class="card-white hover-lift overflow-hidden unified-feed-card" [attr.aria-label]="post.from + ' to ' + post.to" role="article">
       <header class="flex items-center justify-between p-4 border-b border-gray-100">
         <div class="flex items-center gap-3">
           <div class="relative">

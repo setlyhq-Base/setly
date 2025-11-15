@@ -41,7 +41,7 @@ export const FAQS: Faq[] = [
     category: "Housing",
     tags: ["housing", "rent", "apartments"],
     question: "How do I find housing near my university?",
-    answer: "Use Setly's housing search to filter by university proximity. Check listings on Facebook groups, Craigslist, or university housing offices. Always view in person."
+    answer: "Use Setly Community housing search to filter by university proximity. Check listings on Facebook groups, Craigslist, or university housing offices. Always view in person."
   },
   {
     id: "docs-visa-007",
@@ -146,7 +146,7 @@ export const FAQS: Faq[] = [
     category: "Transport",
     tags: ["ground", "transport", "shuttle"],
     question: "Ground transport from airport?",
-    answer: "Uber/Lyft, shuttles, public transit. Setly's Uber deep link is convenient. Pre-book for peak times."
+    answer: "Uber/Lyft, shuttles, public transit. Setly Community Uber deep link is convenient. Pre-book for peak times."
   },
   {
     id: "docs-sevis-022",

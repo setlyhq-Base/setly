@@ -11,7 +11,7 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
   standalone: true,
   imports: [CommonModule, TimeAgoPipe],
   template: `
-  <article class="card-white hover-lift overflow-hidden transition-shadow" role="article" [attr.aria-label]="post.name" (mouseenter)="hover.set(true)" (mouseleave)="hover.set(false)" [class.shadow-glow-blue]="hover()">
+  <article class="card-white hover-lift overflow-hidden transition-shadow unified-feed-card" role="article" [attr.aria-label]="post.name" (mouseenter)="hover.set(true)" (mouseleave)="hover.set(false)" [class.shadow-glow-blue]="hover()">
     <header class="flex items-center justify-between p-4 border-b border-gray-100">
       <div class="flex items-center gap-3">
         <span class="relative inline-block">

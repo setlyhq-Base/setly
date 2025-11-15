@@ -8,12 +8,13 @@ import { AnyConnectPost, ConnectFeedResponse } from './models/connect.models';
 import { ConnectFiltersPanelComponent } from './components/connect-filters-panel.component';
 import { ConnectFeedComponent } from './components/connect-feed.component';
 import { ConnectRightRailComponent } from './components/connect-right-rail.component';
+import { PeopleDirectoryComponent } from './components/people-directory.component';
 import { ToastContainerComponent } from '../../shared/ui/toast-container.component';
 
 @Component({
   selector: 'app-connect',
   standalone: true,
-  imports: [CommonModule, RouterModule, ConnectFiltersPanelComponent, ConnectFeedComponent, ConnectRightRailComponent, ToastContainerComponent],
+  imports: [CommonModule, RouterModule, ConnectFiltersPanelComponent, ConnectFeedComponent, ConnectRightRailComponent, PeopleDirectoryComponent, ToastContainerComponent],
   templateUrl: './connect.page.html',
   styleUrls: ['./connect.page.scss']
 })
@@ -128,6 +129,22 @@ export class ConnectPage implements OnDestroy {
       this.visHandler = () => (document as any).removeEventListener('visibilitychange', onVisible);
     }
   }
+
+  // Community sidebars data (placeholder demo data for premium layout widgets)
+  suggestedPeople: Array<{ name: string; university: string; mutual?: number }> = [
+    { name: 'Alice Johnson', university: 'Boston University', mutual: 3 },
+    { name: 'Dev Patel', university: 'Northeastern', mutual: 1 },
+    { name: 'Maria Gomez', university: 'Harvard', mutual: 2 }
+  ];
+  savedItems: Array<{ title: string; type: string }> = [
+    { title: 'Sunny Shared Apartment', type: 'room' },
+    { title: 'Boston → NYC Friday Ride', type: 'ride' }
+  ];
+  weeklyDigest: Array<{ title: string; meta: string }> = [
+    { title: 'Top 5 verified hosts near BU', meta: 'Rooms · 2 min read' },
+    { title: 'Study group forming for CS50', meta: 'Topics · trending' }
+  ];
+  trustScore = 82; // demo metric
 
   // Helpers
   private includeTypesForTab(tab: string): Array<'person'|'room'|'ride'|'thread'|'event'|'update'|'market'> | [] {

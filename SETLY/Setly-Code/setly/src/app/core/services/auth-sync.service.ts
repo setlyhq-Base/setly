@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Auth, onAuthStateChanged, getIdToken, User } from '@angular/fire/auth';
 import { HttpClient } from '@angular/common/http';
+import { timeout } from 'rxjs/operators';
 import { AuthStore } from '../state/auth.store';
 import { ProfileStore } from '../state/profile.store';
 import { firstValueFrom } from 'rxjs';
@@ -15,6 +16,7 @@ export class AuthSyncService {
   private profileStore = inject(ProfileStore);
   private userStore = inject(UserStore);
   private initialized = false;
+  private heartbeatHandle: any;
 
   init() {
     if (this.initialized) return;
@@ -23,6 +25,7 @@ export class AuthSyncService {
       if (!fbUser) {
         this.authStore.setLoggedOut();
         this.profileStore.hydrate(null, 0, null); // clear
+        this.stopHeartbeat();
         return;
       }
       try {
@@ -31,11 +34,15 @@ export class AuthSyncService {
         // Prefer configured API base or relative proxy path
         const base = (environment?.apiBaseUrl || '').replace(/\/$/, '');
         const url = base ? `${base}/auth/sync` : '/api/auth/sync';
-        const res = await firstValueFrom(this.http.post<{ user: any; profile: any; completion: number; verifications?: any; isNew?: boolean }>(
-          url,
-          { idToken },
-          { headers: { Authorization: `Bearer ${idToken}` } }
-        ));
+        const res = await firstValueFrom(
+          this.http
+            .post<{ user: any; profile: any; completion: number; verifications?: any; isNew?: boolean }>(
+              url,
+              { idToken },
+              { headers: { Authorization: `Bearer ${idToken}` } }
+            )
+            .pipe(timeout(3000))
+        );
         this.authStore.setUser({
           userId: res.user.userId,
           email: res.user.email,
@@ -45,10 +52,27 @@ export class AuthSyncService {
           provider: res.user.provider,
           isNew: !!res.isNew,
         });
-  this.profileStore.hydrate(res.profile, res.completion, res.verifications || null);
+        // Merge with any locally saved quick-capture patch and/or durable cache if backend hasn't reflected it yet
+        let mergedProfile = res.profile;
+        try {
+          const uid = res.user.userId || fbUser.uid;
+          const lastRaw = localStorage.getItem(`qc.lastPatch.${uid}`);
+          const cacheRaw = localStorage.getItem(`profile.cache.${uid}`);
+          if (cacheRaw) {
+            const cache = JSON.parse(cacheRaw);
+            mergedProfile = { ...mergedProfile, ...cache };
+          }
+          if (lastRaw) {
+            const patch = JSON.parse(lastRaw);
+            mergedProfile = { ...mergedProfile, ...patch };
+          }
+        } catch {}
+        this.profileStore.hydrate(mergedProfile, res.completion, res.verifications || null);
         // Ensure legacy UserStore is hydrated for header/profile fallbacks
         try { await this.userStore.refresh(); } catch {}
         this.emitToast(res.isNew ? `Welcome to Setly, ${res.user.displayName || 'there'}!` : `Welcome back, ${res.user.displayName || 'there'}!`);
+        // Begin presence heartbeat (immediate + interval)
+        this.startHeartbeat();
       } catch (e: any) {
         console.error('[AuthSync] sync failed', e);
         // Graceful degrade: hydrate stores from Firebase user so app remains usable
@@ -62,18 +86,27 @@ export class AuthSyncService {
             provider: fbUser.providerData?.[0]?.providerId || 'firebase',
             isNew: false,
           });
+          // Start with a minimal local profile
+          let fallbackProfile: any = {
+            userId: fbUser.uid,
+            displayName: fbUser.displayName || undefined,
+            avatarUrl: fbUser.photoURL || undefined,
+            about: '',
+            interests: [],
+            languages: [],
+            socials: {},
+            visibility: { publicProfile: true, showCity: true, showSchool: false },
+            location: '',
+          };
+          // Merge in durable cache and last known patch so returning users see their info immediately
+          try {
+            const cacheRaw = localStorage.getItem(`profile.cache.${fbUser.uid}`);
+            if (cacheRaw) fallbackProfile = { ...fallbackProfile, ...JSON.parse(cacheRaw) };
+            const lastRaw = localStorage.getItem(`qc.lastPatch.${fbUser.uid}`);
+            if (lastRaw) fallbackProfile = { ...fallbackProfile, ...JSON.parse(lastRaw) };
+          } catch {}
           this.profileStore.hydrate(
-            {
-              userId: fbUser.uid,
-              displayName: fbUser.displayName || undefined,
-              avatarUrl: fbUser.photoURL || undefined,
-              about: '',
-              interests: [],
-              languages: [],
-              socials: {},
-              visibility: { publicProfile: true, showCity: true, showSchool: false },
-              location: '',
-            },
+            fallbackProfile,
             0,
             {
               emailVerified: !!fbUser.email,
@@ -90,11 +123,41 @@ export class AuthSyncService {
         } else {
           this.emitToast('Signed in with Google. Sync will retry in background.', 'success');
         }
+        // Begin presence heartbeat even if sync failed (dev/offline-friendly)
+        this.startHeartbeat();
       }
     });
   }
 
   private emitToast(message: string, type: 'success' | 'error' = 'success') {
     window.dispatchEvent(new CustomEvent('toast', { detail: { type, message } }));
+  }
+
+  private async sendHeartbeatOnce() {
+    try {
+      const fbUser = this.af.currentUser as User | null;
+      const base = (environment?.apiBaseUrl || '').replace(/\/$/, '');
+      const url = base ? `${base}/presence/heartbeat` : '/api/presence/heartbeat';
+      let headers: any = {};
+      if (fbUser) {
+        try { const tok = await getIdToken(fbUser, false); headers = { Authorization: `Bearer ${tok}` }; } catch {}
+      }
+      await firstValueFrom(this.http.post(url, {}, { headers }));
+    } catch {
+      // swallow errors — presence is best-effort
+    }
+  }
+
+  private startHeartbeat() {
+    this.stopHeartbeat();
+    // immediate
+    this.sendHeartbeatOnce();
+    // then every 20s (keep within 60s TTL)
+    this.heartbeatHandle = setInterval(() => this.sendHeartbeatOnce(), 20000);
+  }
+
+  private stopHeartbeat() {
+    try { clearInterval(this.heartbeatHandle); } catch {}
+    this.heartbeatHandle = null;
   }
 }

@@ -10,7 +10,7 @@ import { ConnectFeedService } from '../../../core/services/connect-feed.service'
   standalone: true,
   imports: [CommonModule, MarketDmDrawerComponent],
   template: `
-  <article class="market-card card-white hover-lift overflow-hidden group" role="article" [attr.aria-label]="post.title">
+  <article class="market-card card-white hover-lift overflow-hidden unified-feed-card group" role="article" [attr.aria-label]="post.title">
     <div class="relative">
       <img [src]="post.images[0]" alt="{{post.title}}" class="w-full h-44 object-cover" loading="lazy" />
       <div class="absolute bottom-2 left-2 text-white bg-black/50 rounded px-2 py-0.5 text-sm">$ {{post.price}}</div>

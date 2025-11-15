@@ -24,6 +24,7 @@ export interface User {
   // Legacy fields for compatibility
   avatar?: string;
   phone?: string;
+  phoneVerified?: boolean;
   organization?: Organization;
   graduationYear?: number;
   jobTitle?: string;

@@ -1,5 +1,11 @@
 import express from 'express';
-import fetch from 'node-fetch';
+
+// Use global fetch if available (Node 18+), otherwise dynamically import node-fetch (ESM)
+const getFetch = async (): Promise<any> => {
+  if (typeof (globalThis as any).fetch === 'function') return (globalThis as any).fetch;
+  const mod: any = await import('node-fetch');
+  return mod.default || mod;
+};
 
 const router = express.Router();
 
@@ -7,10 +13,11 @@ const router = express.Router();
 // Uses Open-Meteo geocoding for city suggestions (https://open-meteo.com/en/docs/geocoding-api)
 router.get('/search', async (req, res) => {
   try {
+    const $fetch = await getFetch();
     const q = (req.query.q as string || '').trim();
     if (q.length < 2) return res.json({ items: [] });
     const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=en&format=json`;
-    const r = await fetch(url);
+    const r = await $fetch(url);
     if (!r.ok) return res.status(502).json({ error: 'upstream-failed' });
     const data: any = await r.json();
     const items = (data.results || []).map((r: any) => ({
@@ -33,6 +40,7 @@ router.get('/search', async (req, res) => {
 // Uses OpenStreetMap Nominatim for address autocomplete (respect usage policy; proxy sets UA)
 router.get('/address', async (req, res) => {
   try {
+    const $fetch = await getFetch();
     const q = (req.query.q as string || '').trim();
     if (q.length < 3) return res.json({ items: [] });
     const biasCity = (req.query.city as string || '').trim().toLowerCase();
@@ -73,7 +81,7 @@ router.get('/address', async (req, res) => {
 
     const fetchNominatim = async (query: string) => {
       const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&q=${encodeURIComponent(query)}`;
-      const r = await fetch(url, { headers: { 'User-Agent': 'setly.dev/geo-proxy (dev use)' } as any });
+      const r = await $fetch(url, { headers: { 'User-Agent': 'setly.dev/geo-proxy (dev use)' } as any });
       if (!r.ok) return [] as any[];
       return await r.json() as any[];
     };

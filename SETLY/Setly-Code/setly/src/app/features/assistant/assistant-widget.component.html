@@ -1,20 +1,44 @@
 <button
+  #launcherRef
   data-testid="assistant-launcher"
   (click)="open()"
-  class="fixed bottom-4 right-4 w-14 h-14 rounded-full shadow-lg bg-gradient-to-br from-[#6A70FF] to-[#8A5BFF] text-white flex items-center justify-center focus:outline-none focus:ring-4 focus:ring-indigo-300 z-50 transition transform hover:scale-105"
+  (pointerdown)="onLauncherPointerDown($event)"
+  class="assistant-launcher fixed w-14 h-14 rounded-full shadow-lg bg-gradient-to-br from-[#6A70FF] to-[#8A5BFF] text-white flex items-center justify-center focus:outline-none focus:ring-4 focus:ring-indigo-300 z-50 transition hover:scale-105"
   [class.hidden]="isOpen"
+  [ngStyle]="!isMobile() ? { left: launcherX() + 'px', top: launcherY() + 'px' } : { left: '24px', top: '50%' }"
   aria-label="Open Setly Assistant"
 >
-  <span class="text-2xl">⭐</span>
+  <svg class="assistant-icon w-8 h-8" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+    <rect x="12" y="22" width="40" height="26" rx="13" stroke="white" stroke-width="3"/>
+    <circle cx="32" cy="12" r="8" stroke="white" stroke-width="3"/>
+    <path d="M32 20v-8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="24" cy="35" r="4" fill="white"/>
+    <circle cx="40" cy="35" r="4" fill="white"/>
+    <rect x="4" y="30" width="8" height="12" rx="4" stroke="white" stroke-width="3"/>
+    <rect x="52" y="30" width="8" height="12" rx="4" stroke="white" stroke-width="3"/>
+  </svg>
   <span *ngIf="hasNewTips" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 border-2 border-white"></span>
 </button>
 
-<div *ngIf="isOpen" class="fixed right-4 bottom-4 z-[60] sm:right-5 sm:bottom-5" [class.w-screen]="isMobile()" [class.max-w-[420px]]="!isMobile()" [class.w-[clamp(380px,38vw,420px)]]="!isMobile()">
+<div *ngIf="isOpen"
+  #panelRef
+  class="fixed z-[60]"
+  [ngStyle]="isMobile() ? { left: '12px', right: '12px', bottom: '16px' } : { left: panelX() + 'px', top: panelY() + 'px' }"
+  [class.w-screen]="isMobile()"
+  [class.max-w-[420px]]="!isMobile()"
+  [class.w-[clamp(380px,38vw,420px)]]="!isMobile()">
   <section data-testid="assistant-modal" class="rounded-2xl shadow-2xl bg-white/90 backdrop-blur-xl border border-gray-200 overflow-hidden animate-scale-fade relative pointer-events-auto" role="dialog" aria-modal="true" aria-label="Setly Assistant" [ngStyle]="{ height: panelHeight() }">
     <!-- Header -->
-    <header class="sticky top-0 z-10 flex items-center justify-between px-4 h-[56px] sm:h-[60px] bg-gradient-to-r from-[#6A70FF] to-[#8A5BFF] text-white">
+    <header class="sticky top-0 z-10 flex items-center justify-between px-4 h-[56px] sm:h-[60px] bg-gradient-to-r from-[#6A70FF] to-[#8A5BFF] text-white cursor-grab"
+      (pointerdown)="onPanelHeaderPointerDown($event)">
       <div class="flex items-center gap-2 font-medium">
-        <span class="text-lg">⭐</span>
+        <svg class="assistant-icon w-6 h-6" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <rect x="12" y="22" width="40" height="26" rx="13" stroke="white" stroke-width="3"/>
+          <circle cx="32" cy="12" r="8" stroke="white" stroke-width="3"/>
+          <path d="M32 20v-8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="24" cy="35" r="4" fill="white"/>
+          <circle cx="40" cy="35" r="4" fill="white"/>
+        </svg>
         <div class="flex flex-col leading-tight">
           <span>Setly Assistant <span class="align-super text-[10px] bg-white/20 px-1 rounded">beta</span></span>
           <span class="text-xs opacity-90" aria-live="polite">{{ subtitles[subtitleIndex] }}</span>

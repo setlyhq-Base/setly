@@ -104,10 +104,10 @@ import { AssistantService } from '../../assistant/assistant.service';
       </div>
 
       <!-- Manual pagination instead of infinite scroll -->
-      <div class="py-4 text-center" *ngIf="feed.nextCursor">
-        <button (click)="requestMore.emit()" [disabled]="loading" class="px-4 py-2 border rounded-md text-sm focus-ring inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" [attr.aria-busy]="loading">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round"/></svg>
-          {{ loading ? 'Loading…' : 'Load more' }}
+      <div class="py-6 text-center" *ngIf="feed.nextCursor">
+        <button (click)="requestMore.emit()" [disabled]="loading" class="px-6 py-3 rounded-full btn-brand text-base font-semibold shadow focus-ring transition inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" [attr.aria-busy]="loading">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/></svg>
+          {{ loading ? 'Loading…' : 'Load More' }}
         </button>
       </div>
     </div>

@@ -14,10 +14,10 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   standalone: true,
   imports: [CommonModule, FormsModule, ProgressRingComponent],
   template: `
-  <div class="space-y-4" aria-label="Right rail" [class.mobile-carousel]="isMobile">
+  <div class="space-y-6" aria-label="Right rail" [class.mobile-carousel]="isMobile" style="max-width:320px;">
       <!-- People You May Know -->
-  <details [attr.open]="!isMobile ? true : null" class="card-white p-4 rail-section" [class.snap-start]="isMobile">
-        <summary class="font-medium mb-3 cursor-pointer">People You May Know</summary>
+  <details [attr.open]="!isMobile ? true : null" class="card-white p-5 rail-section unified-feed-card" [class.snap-start]="isMobile" style="border-radius:14px;">
+  <summary class="font-semibold text-lg mb-3 cursor-pointer text-gray-900">People You May Know</summary>
           <div class="space-y-2">
           <div *ngFor="let p of people" class="flex items-center justify-between group">
             <div class="flex items-center gap-2">
@@ -40,8 +40,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         </div>
       </details>
       <!-- Saved Searches -->
-  <details [attr.open]="!isMobile ? true : null" class="card-white p-4 rail-section" [class.snap-start]="isMobile">
-        <summary class="font-medium mb-3 cursor-pointer flex items-center gap-2">
+  <details [attr.open]="!isMobile ? true : null" class="card-white p-5 rail-section unified-feed-card" [class.snap-start]="isMobile" style="border-radius:14px;">
+  <summary class="font-semibold text-lg mb-3 cursor-pointer flex items-center gap-2 text-gray-900">
           <!-- Bookmark icon -->
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3z" stroke="#5A4FF3" stroke-width="1.5" stroke-linejoin="round"/></svg>
           <span>Saved</span>
@@ -62,8 +62,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         </div>
       </details>
       <!-- Trust & Verification -->
-  <details [attr.open]="!isMobile ? true : null" class="card-white p-4 rail-section" [class.snap-start]="isMobile">
-        <summary class="font-medium mb-1 cursor-pointer inline-flex items-center gap-2">Trust
+  <details [attr.open]="!isMobile ? true : null" class="card-white p-5 rail-section unified-feed-card" [class.snap-start]="isMobile" style="border-radius:14px;">
+  <summary class="font-semibold text-lg mb-1 cursor-pointer inline-flex items-center gap-2 text-gray-900">Trust
           <span class="text-gray-500" title="Your trust score improves how you appear in Connect. Complete verifications to boost it.">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="#9CA3AF" stroke-width="1.2"/><path d="M12 8v5" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="#9CA3AF"/></svg>
           </span>

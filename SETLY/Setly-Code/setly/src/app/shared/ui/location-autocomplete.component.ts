@@ -18,7 +18,7 @@ import { debounce } from 'rxjs';
           <span class="font-medium">{{ s.city }}, {{ s.state }} <span class="text-gray-400">{{ s.country }}</span></span>
           <span class="text-[11px] text-gray-500">Lat {{ s.lat }}, Lon {{ s.lon }}</span>
         </li>
-        <li *ngIf="!loading() && results().length===0" class="px-3 py-2 text-gray-500">No matches</li>
+        <li *ngIf="!loading() && results().length===0" class="px-3 py-2 text-gray-500">Start Typing</li>
       </ul>
     </div>
   `

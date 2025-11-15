@@ -42,7 +42,9 @@ export class ProfileStore {
       // Backend currently exposes /api/users/me; map minimal fields to ProfileSpec
       const me = await this.http.get<any>('/api/users/me').toPromise();
       if (me) {
-        const profile = {
+        // Map backend fields; preserve any locally-present fields (e.g., quick-capture patch like location/university/company)
+        const existing = this._profile();
+        const mapped: ProfileSpec = {
           userId: me.id,
           displayName: me.displayName,
           avatarUrl: me.publicUrl || me.photoUrl,
@@ -50,9 +52,22 @@ export class ProfileStore {
           languages: me.languages || [],
           interests: me.interests || [],
           socials: me.socials || {},
-          visibility: me.profileVisibility || { publicProfile: true }
+          visibility: me.profileVisibility || { publicProfile: true },
         } as ProfileSpec;
-        this._profile.set(profile);
+        // Derive a friendly location from city/state if backend does not supply `location`
+        const derivedLoc = [me.city, me.state].filter(Boolean).join(me.city && me.state ? ', ' : '');
+        if (derivedLoc && !mapped.location) mapped.location = derivedLoc;
+        // Merge durable cache from previous sessions if present
+        try {
+          const cacheRaw = localStorage.getItem(`profile.cache.${me.id}`);
+          if (cacheRaw) {
+            const cache = JSON.parse(cacheRaw);
+            Object.assign(mapped, cache);
+          }
+        } catch {}
+        // Merge with any existing local fields so we don't drop quick-capture details
+        const merged = existing ? ({ ...existing, ...mapped } as ProfileSpec) : mapped;
+        this._profile.set(merged);
         // Derive verifications (emailVerified not provided by /users/me; keep last known or defaults)
         if (!this._verifications()) {
           this._verifications.set({ emailVerified: false, phoneVerified: false, eduVerified: false, idVerified: false });

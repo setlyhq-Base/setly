@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { auth } from '../config/firebase';
 import { UserService, StoredUser } from '../services/user.service';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -60,7 +61,7 @@ router.post('/sync', async (req: AuthedRequest, res: Response) => {
         phoneNumber = firebaseUser.phoneNumber || undefined;
       }
     } catch (e) {
-      console.warn('[AUTH SYNC] Could not fetch Firebase user', e);
+      logger.warn('[AUTH SYNC] Could not fetch Firebase user', (e as any)?.message || e);
     }
 
     const stored = await UserService.upsertAuthUser(uid, email || '', displayName, photoUrl);
@@ -84,7 +85,7 @@ router.post('/sync', async (req: AuthedRequest, res: Response) => {
 
   res.json({ user: canonicalUser, profile, completion, verifications, isNew: !existing });
   } catch (e: any) {
-    console.error('[AUTH SYNC] Error', e);
+    logger.error('[AUTH SYNC] Error', e?.message || e);
     res.status(500).json({ error: e.message || 'Failed to sync user' });
   }
 });

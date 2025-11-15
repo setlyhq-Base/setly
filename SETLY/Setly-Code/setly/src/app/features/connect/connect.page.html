@@ -25,96 +25,130 @@
     </div>
   </div>
 
-  <!-- Desktop 3 column layout with sticky rails -->
-  <div class="mx-auto max-w-[1600px] px-4 py-6 hidden lg:grid gap-6" style="grid-template-columns: 280px 1fr 320px;" aria-label="Desktop 3 column layout">
+  <!-- Desktop 3 column layout with airy premium rails -->
+  <div class="connect-grid mx-auto max-w-[1600px] px-6 py-10 hidden lg:grid" aria-label="Desktop 3 column layout">
     <!-- Left Rail -->
-    <aside class="space-y-4 sticky self-start" style="top: calc(var(--header-height) + 24px)" aria-label="Filters panel">
-      <app-connect-filters-panel (filtersChanged)="onFiltersPanelChange($event)"></app-connect-filters-panel>
+    <aside class="space-y-6 sticky self-start" style="top: calc(var(--header-height) + 32px);" aria-label="Filters panel" role="complementary">
+      <!-- Filters Card -->
+      <div class="rail-card">
+        <h2 class="rail-title">Filters</h2>
+        <app-connect-filters-panel (filtersChanged)="onFiltersPanelChange($event)"></app-connect-filters-panel>
+      </div>
+      <!-- Trending Topics -->
+      <div class="rail-card">
+        <h2 class="rail-title">Trending Topics</h2>
+        <div class="flex flex-wrap gap-2">
+          <button class="chip-pill" *ngFor="let t of ['Housing','Sublets','Campus rides','Textbooks','Study groups']" (click)="applyQuick({ interests: [(filters().interests||[]).includes(t)?undefined:t] })">{{t}}</button>
+        </div>
+      </div>
+      <!-- Quick Filters -->
+      <div class="rail-card">
+        <h2 class="rail-title">Quick Filters</h2>
+        <div class="flex flex-col gap-2">
+          <button class="toggle-pill" (click)="applyQuick({ verifiedOnly: true })" [class.on]="filters().verifiedOnly">Verified Hosts</button>
+          <button class="toggle-pill" (click)="applyQuick({ roomType: 'shared' })" [class.on]="filters().roomType==='shared'">Shared Rooms</button>
+          <button class="toggle-pill" (click)="applyQuick({ roomType: 'private' })" [class.on]="filters().roomType==='private'">Private Rooms</button>
+        </div>
+      </div>
     </aside>
 
     <!-- Center Feed -->
-    <main>
-      <!-- Page hero -->
-      <div class="card-white p-4 mb-4 hover-lift" aria-label="Connect overview">
-        <div class="flex flex-wrap items-start md:items-center justify-between gap-x-6 gap-y-3">
-          <div class="leading-tight min-w-[200px]">
-            <h1 class="text-xl font-semibold mb-0">Setly Connect</h1>
-            <p class="text-sm text-gray-600 mt-0.5">Discover people, rooms, rides, and marketplace items around your university.</p>
-          </div>
-          <div class="order-last w-full h-px bg-gray-100 md:hidden"></div>
-          <div class="flex items-center gap-3 shrink-0">
-            <div class="hidden md:block text-xs text-gray-500 leading-none pt-0.5" aria-label="Current results count">{{ filteredPosts().length }} results</div>
-            <button (click)="openCreate()" aria-label="Create new post" class="w-9 h-9 inline-flex items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 active:bg-indigo-600 focus-ring transition">
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </button>
-            <button (click)="toggleFilters()" class="px-3 py-1.5 border rounded-md text-sm focus-ring">Refine</button>
-          </div>
-        </div>
-        <!-- Quick chips -->
-        <div class="mt-4 flex flex-wrap gap-2 text-xs">
-          <button (click)="applyQuick({ verifiedOnly: true })" class="chip focus-ring" [class.chip-selected]="filters().verifiedOnly">Verified only</button>
-          <button (click)="applyQuick({ roomType: 'private' })" class="chip focus-ring" [class.chip-selected]="filters().roomType==='private'">Private rooms</button>
-          <button (click)="applyQuick({ roomType: 'shared' })" class="chip focus-ring" [class.chip-selected]="filters().roomType==='shared'">Shared rooms</button>
-          <button (click)="applyQuick({ city: 'Boston' })" class="chip focus-ring" [class.chip-selected]="filters().city==='Boston'">Boston</button>
-          <button (click)="applyQuick({ city: 'NYC' })" class="chip focus-ring" [class.chip-selected]="filters().city==='NYC'">NYC</button>
-        </div>
-      </div>
-
-      <!-- Page-local header -->
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-3">
-          <label class="text-sm text-gray-600">Sort</label>
-          <select [value]="sort()" (change)="onSortSelect($event)" class="text-sm border rounded-md px-2 py-1">
-            <option value="trending">Trending</option>
-            <option value="new">New</option>
-            <option value="near">Near you</option>
-          </select>
-          <button (click)="viewMode('map')" class="text-sm px-3 py-1 border rounded-md">Map</button>
-          <span *ngIf="smartActive()" class="ml-2 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200" title="Smart suggestions active">
+    <main style="min-width:0;" role="feed" aria-label="Community feed">
+      <div class="center-wrap mx-auto" style="max-width:760px; width:100%;">
+        <!-- Unified control bar: tabs left, actions right -->
+        <nav class="sticky top-0 z-10 feed-bar" aria-label="Filters and actions bar" role="tablist" (keydown)="onTabsKeydown($event)">
+        <!-- Left: Tabs in specific order -->
+        <div class="flex items-center gap-1.5">
+          <button *ngFor="let t of ['All','People','Rooms','Rides','Marketplace','Topics']"
+                  (click)="onTabClick(t)"
+                  class="tab-pill" [class.active]="activeTab()===t"
+                  role="tab"
+                  [attr.aria-selected]="activeTab()===t">
+            {{ t }}
+          </button>
+          <span *ngIf="smartActive()" class="ml-2 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200" title="Smart suggestions active">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.2 3.4L16.5 8 13.2 9.2 12 12.5 10.8 9.2 7.5 8l3.3-1.6L12 3z" stroke="#5A4FF3" stroke-width="1.2"/></svg>
             Smart
             <button (click)="clearSmart()" class="ml-1 text-[10px] px-1 py-0.5 rounded hover:bg-indigo-100" aria-label="Clear smart suggestions">×</button>
           </span>
         </div>
-        <div class="text-sm text-gray-600">{{ filteredPosts().length }} results</div>
-      </div>
-
-      <!-- Live new posts banner -->
-      <div *ngIf="newAvailable()" class="mb-3">
-        <button (click)="showNew()" class="w-full text-sm px-3 py-2 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-800 focus-ring">
-          {{ newCount() > 0 ? (newCount() + ' new posts available — tap to refresh') : 'New posts available — tap to refresh' }}
-        </button>
-      </div>
-
-      <!-- Tabs (sticky sub-header) -->
-      <nav class="sticky -top-4 z-10 bg-white/90 backdrop-blur flex items-center gap-2 mb-4 relative px-1 py-2 border border-gray-100 shadow-sm rounded-md" aria-label="Content type tabs" role="tablist" (keydown)="onTabsKeydown($event)">
-        <button *ngFor="let t of tabs; let i = index"
-                (click)="onTabClick(t)"
-                [class.btn-brand]="activeTab()===t"
-                class="px-3 py-1.5 rounded-md text-sm border focus-ring"
-                role="tab"
-                [attr.aria-selected]="activeTab()===t">
-          {{ t }}
-        </button>
-        <span class="ml-auto"></span>
-        <button (click)="refreshCurrent()" class="px-3 py-1.5 rounded-md text-sm border focus-ring inline-flex items-center gap-2" [attr.aria-busy]="loading()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12a8 8 0 118 8" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Refresh
-        </button>
+        <!-- Right: Sort, Map, Refresh as smaller controls -->
+        <div class="flex items-center gap-1.5">
+          <select [value]="sort()" (change)="onSortSelect($event)" class="sort-select">
+            <option value="trending">Trending</option>
+            <option value="new">New</option>
+            <option value="near">Near you</option>
+          </select>
+          <button (click)="viewMode('map')" class="action-btn">Map</button>
+          <button (click)="refreshCurrent()" class="action-btn inline-flex items-center gap-1.5" [attr.aria-busy]="loading()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12a8 8 0 118 8" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Refresh
+          </button>
+        </div>
       </nav>
 
-      <!-- Feed -->
-      <app-connect-feed
-        [feed]="{ posts: filteredPosts(), nextCursor: feed().nextCursor }"
-        [loading]="loading()"
-        (requestMore)="loadMore()"
-        (postOpened)="onPostOpened($event)">
-      </app-connect-feed>
+      <!-- Directory or Feed -->
+      <ng-container *ngIf="activeTab() === 'People'; else unifiedFeed">
+        <app-people-directory></app-people-directory>
+      </ng-container>
+      <ng-template #unifiedFeed>
+        <div class="relative">
+          <button *ngIf="newAvailable()" (click)="showNew()" class="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-sm focus-ring z-10">
+            {{ newCount() > 0 ? (newCount() + ' new posts — tap to refresh') : 'New posts — tap to refresh' }}
+          </button>
+          <app-connect-feed
+            [feed]="{ posts: filteredPosts(), nextCursor: feed().nextCursor }"
+            [loading]="loading()"
+            (requestMore)="loadMore()"
+            (postOpened)="onPostOpened($event)">
+          </app-connect-feed>
+        </div>
+      </ng-template>
+    </div>
     </main>
 
     <!-- Right Rail -->
-    <aside class="space-y-4 sticky self-start" style="top: calc(var(--header-height) + 24px)" aria-label="Right rail">
-      <app-connect-right-rail (createRequested)="openCreate()"></app-connect-right-rail>
+    <aside class="space-y-6 sticky self-start" style="top: calc(var(--header-height) + 32px);" aria-label="Community widgets" role="complementary">
+      <!-- People You May Know -->
+      <div class="rail-card">
+        <h2 class="rail-title">People You May Know</h2>
+        <ul class="divide-y divide-gray-100">
+          <li *ngFor="let p of suggestedPeople" class="py-2 flex items-center justify-between">
+            <div>
+              <div class="text-sm font-medium text-gray-800">{{p.name}}</div>
+              <div class="text-[11px] text-gray-500">{{p.university}} <span *ngIf="p.mutual" class="ml-1 text-indigo-600">· {{p.mutual}} mutual</span></div>
+            </div>
+            <button class="mini-pill">Connect</button>
+          </li>
+        </ul>
+      </div>
+      <!-- Saved -->
+      <div class="rail-card">
+        <h2 class="rail-title">Saved</h2>
+        <ul class="space-y-2">
+          <li *ngFor="let s of savedItems" class="text-sm flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+            <span>{{s.title}}</span>
+          </li>
+        </ul>
+      </div>
+      <!-- Trust Score -->
+      <div class="rail-card text-center">
+        <h2 class="rail-title mb-1">Trust Score</h2>
+        <div class="text-3xl font-semibold text-indigo-600 mb-1">{{trustScore}}</div>
+        <p class="text-[11px] text-gray-500">Engage with the community to increase</p>
+        <button class="mini-pill mt-3">Improve</button>
+      </div>
+      <!-- Weekly Digest -->
+      <div class="rail-card">
+        <h2 class="rail-title">Weekly Digest</h2>
+        <ul class="space-y-2">
+          <li *ngFor="let d of weeklyDigest" class="text-sm">
+            <div class="font-medium text-gray-800">{{d.title}}</div>
+            <div class="text-[11px] text-gray-500">{{d.meta}}</div>
+          </li>
+        </ul>
+      </div>
     </aside>
   </div>
 
@@ -132,34 +166,39 @@
       <div class="text-sm text-gray-600">{{ filteredPosts().length }} results</div>
     </div>
 
-    <div *ngIf="newAvailable()" class="mb-3">
-      <button (click)="showNew()" class="w-full text-sm px-3 py-2 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-800 focus-ring">
-        {{ newCount() > 0 ? (newCount() + ' new posts available — tap to refresh') : 'New posts available — tap to refresh' }}
-      </button>
-    </div>
 
-    <nav class="sticky -top-4 z-10 bg-white/90 backdrop-blur flex items-center gap-2 mb-4 relative px-1 py-2 border border-gray-100 shadow-sm rounded-md" aria-label="Content type tabs" role="tablist" (keydown)="onTabsKeydown($event)">
+  <nav class="sticky -top-2 z-10 bg-white/90 backdrop-blur flex items-center gap-1.5 mb-3 relative px-1.5 py-1 border border-gray-100 rounded-md" aria-label="Content type tabs" role="tablist" (keydown)="onTabsKeydown($event)">
       <button *ngFor="let t of tabs"
               (click)="onTabClick(t)"
               [class.btn-brand]="activeTab()===t"
-              class="px-3 py-1.5 rounded-md text-sm border focus-ring"
+              class="px-2.5 py-1 rounded-md text-sm border"
               role="tab"
               [attr.aria-selected]="activeTab()===t">
         {{ t }}
       </button>
       <span class="ml-auto"></span>
-      <button (click)="refreshCurrent()" class="px-3 py-1.5 rounded-md text-sm border focus-ring inline-flex items-center gap-2" [attr.aria-busy]="loading()">
+      <button (click)="refreshCurrent()" class="px-2.5 py-1 rounded-md text-xs border inline-flex items-center gap-1.5" [attr.aria-busy]="loading()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12a8 8 0 118 8" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round"/></svg>
         Refresh
       </button>
     </nav>
 
-    <app-connect-feed
-      [feed]="{ posts: filteredPosts(), nextCursor: feed().nextCursor }"
-      [loading]="loading()"
-      (requestMore)="loadMore()"
-      (postOpened)="onPostOpened($event)">
-    </app-connect-feed>
+    <div class="relative">
+      <button *ngIf="newAvailable()" (click)="showNew()" class="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-sm focus-ring z-10">
+        {{ newCount() > 0 ? (newCount() + ' new posts — tap to refresh') : 'New posts — tap to refresh' }}
+      </button>
+      <ng-container *ngIf="activeTab() === 'People'; else mobileFeed">
+        <app-people-directory></app-people-directory>
+      </ng-container>
+      <ng-template #mobileFeed>
+        <app-connect-feed
+          [feed]="{ posts: filteredPosts(), nextCursor: feed().nextCursor }"
+          [loading]="loading()"
+          (requestMore)="loadMore()"
+          (postOpened)="onPostOpened($event)">
+        </app-connect-feed>
+      </ng-template>
+    </div>
 
     <div *ngIf="showMobileFilters()" class="mt-4">
       <app-connect-filters-panel (filtersChanged)="onFiltersPanelChange($event)"></app-connect-filters-panel>

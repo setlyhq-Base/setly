@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { s3Client, AWS_CONFIG, AWS_ENABLED } from '../config/aws';
 import fs from 'fs';
 import path from 'path';
@@ -43,7 +43,7 @@ export class UploadsController {
 
       // Generate unique key
       const extension = contentType.split('/')[1];
-      const key = `${keyPrefix}/${uuidv4()}.${extension}`;
+  const key = `${keyPrefix}/${randomUUID()}.${extension}`;
 
       // Create presigned POST
   const presignedPost = await createPresignedPost(s3Client!, {
@@ -98,11 +98,11 @@ export class UploadsController {
       if (type === 'avatar') {
         key = `users/${req.user.uid}/avatar.${normalizedExt}`;
       } else if (type === 'room-photo') {
-        key = `rooms/${req.user.uid}/${uuidv4()}.${normalizedExt}`;
+        key = `rooms/${req.user.uid}/${randomUUID()}.${normalizedExt}`;
       } else if (type === 'room-video') {
-        key = `rooms/${req.user.uid}/videos/${uuidv4()}.${normalizedExt}`;
+        key = `rooms/${req.user.uid}/videos/${randomUUID()}.${normalizedExt}`;
       } else if (type === 'room-video-thumb') {
-        key = `rooms/${req.user.uid}/thumbs/${uuidv4()}.${normalizedExt}`;
+        key = `rooms/${req.user.uid}/thumbs/${randomUUID()}.${normalizedExt}`;
       } else {
         return res.status(400).json({ error: 'Unsupported type' });
       }

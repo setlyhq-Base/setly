@@ -247,6 +247,28 @@ import { ToastService } from '../../core/services/toast.service';
               <app-profile-edit-form (saved)="onProfileSaved()" (dirtyChange)="onDirty($event)"></app-profile-edit-form>
             </div>
 
+            <!-- Section: Your Data (consolidated saved data) -->
+            <div *ngIf="section() === 'data'" class="card space-y-4 animate-fade-in">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold">Your Saved Data</h2>
+                <div class="flex items-center gap-2">
+                  <button class="btn" (click)="copyAll()">Copy JSON</button>
+                  <button class="btn" (click)="refreshData()">Refresh</button>
+                </div>
+              </div>
+              <p class="text-sm text-gray-600">This view shows the data currently stored in your profile stores. It helps confirm what’s saved and visible to you in the app.</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 class="font-medium mb-2">ProfileSpec (ProfileStore)</h3>
+                  <pre class="bg-gray-50 border border-gray-200 rounded-xl p-3 overflow-auto text-xs leading-relaxed" style="max-height: 380px;">{{ profileJson() }}</pre>
+                </div>
+                <div>
+                  <h3 class="font-medium mb-2">User (UserStore)</h3>
+                  <pre class="bg-gray-50 border border-gray-200 rounded-xl p-3 overflow-auto text-xs leading-relaxed" style="max-height: 380px;">{{ userJson() }}</pre>
+                </div>
+              </div>
+            </div>
+
             <!-- Section: Settings -->
             <div *ngIf="section() === 'settings'" class="card space-y-6 animate-fade-in">
               <h2 class="text-lg font-semibold">Settings</h2>
@@ -490,7 +512,8 @@ export class ProfilePage {
     { id: 'connections', label: 'Connections', icon: '🌍' },
     { id: 'verification', label: 'Verification', icon: '✅' },
     { id: 'preferences', label: 'Preferences', icon: '🛠️' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' }
+    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'data', label: 'Your Data', icon: '📦' }
   ];
 
   metrics = [
@@ -666,5 +689,35 @@ export class ProfilePage {
         this.saving = false;
       }
     }, 300);
+  }
+
+  // ----- Data section helpers -----
+  profileJson(): string {
+    try {
+      return JSON.stringify(this.profileStore.profile(), null, 2);
+    } catch { return '{}'; }
+  }
+  userJson(): string {
+    try {
+      return JSON.stringify(this.userStore.user(), null, 2);
+    } catch { return '{}'; }
+  }
+  async refreshData() {
+    try {
+      await this.profileStore.loadMe();
+      await this.userStore.refresh();
+      this.toast.success('Data refreshed');
+    } catch {
+      this.toast.error('Failed to refresh');
+    }
+  }
+  async copyAll() {
+    const data = { profile: this.profileStore.profile(), user: this.userStore.user() };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      this.toast.success('Copied');
+    } catch {
+      this.toast.error('Copy failed');
+    }
   }
 }

@@ -19,7 +19,7 @@ import { debounceTime, Subject, takeUntil } from 'rxjs';
         (focus)="showSuggestions = true"
         (blur)="hideSuggestions()"
         placeholder="Search for rooms near USA universities..."
-        class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+  class="w-full px-4 py-2.5 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
         aria-label="Search for rooms"
         autocomplete="off"
         data-testid="search-input"
@@ -29,15 +29,7 @@ import { debounceTime, Subject, takeUntil } from 'rxjs';
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
       </div>
-      <button
-        (click)="onSubmit()"
-        class="absolute inset-y-0 right-0 pr-3 flex items-center"
-        aria-label="Submit search"
-      >
-        <svg class="h-5 w-5 text-brand-blue hover:text-brand-blue/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-        </svg>
-      </button>
+      <!-- Removed arrow submit button per design request; submit via Enter key -->
 
       <!-- Suggestions Dropdown -->
       <div

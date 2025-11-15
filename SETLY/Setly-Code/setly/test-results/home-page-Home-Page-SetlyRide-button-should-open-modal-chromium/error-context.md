@@ -1,0 +1,237 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "SETLY" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e8]: SETLY
+      - generic [ref=e11]:
+        - textbox "Search for rooms" [ref=e12]:
+          - /placeholder: Search for rooms near USA universities...
+        - generic:
+          - img
+        - button "Submit search" [ref=e13] [cursor=pointer]:
+          - img [ref=e14]
+      - navigation [ref=e16]:
+        - link "Connect" [ref=e17] [cursor=pointer]:
+          - /url: /connect
+        - link "Browse" [ref=e18] [cursor=pointer]:
+          - /url: /browse
+        - link "Post Room" [ref=e19] [cursor=pointer]:
+          - /url: /open-room
+        - link "Messages" [ref=e20] [cursor=pointer]:
+          - /url: /messages
+        - link "Ride" [ref=e21] [cursor=pointer]:
+          - /url: /ride
+        - link "Profile" [ref=e22] [cursor=pointer]:
+          - /url: /profile
+        - button "Sign In" [ref=e23] [cursor=pointer]
+  - main [ref=e24]:
+    - generic [ref=e26]:
+      - generic [ref=e27]: home-component-mounted
+      - region "Complete your profile" [ref=e30]:
+        - generic [ref=e31]:
+          - generic [ref=e32]: "0"
+          - generic [ref=e33]:
+            - generic [ref=e34]: Finish your profile to post a room or message hosts (0%)
+            - generic [ref=e35]: Complete a few quick steps to unlock trusted actions.
+        - button "Complete profile" [ref=e36] [cursor=pointer]
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - generic [ref=e44]:
+            - generic [ref=e45]: Trusted student housing & rides
+            - heading "Your next move." [level=1] [ref=e47]
+            - paragraph [ref=e48]: Find trusted homes and rides near your university — connect, live, and move with confidence.
+          - generic [ref=e49]:
+            - button "Explore Rooms" [ref=e50] [cursor=pointer]:
+              - generic [ref=e52]:
+                - img [ref=e53]
+                - text: Explore Rooms
+            - button "Book a Ride" [ref=e55] [cursor=pointer]:
+              - img [ref=e56]
+              - text: Book a Ride
+          - generic [ref=e61]:
+            - generic [ref=e62]:
+              - generic [ref=e63]: 10k+
+              - generic [ref=e64]: Students
+            - generic [ref=e65]:
+              - generic [ref=e66]: 500+
+              - generic [ref=e67]: Universities
+            - generic [ref=e68]:
+              - generic [ref=e69]: 95%
+              - generic [ref=e70]: Satisfaction
+        - generic [ref=e71]:
+          - generic [ref=e79]:
+            - combobox "Search universities or cities" [ref=e81]
+            - generic [ref=e82]:
+              - generic [ref=e85]:
+                - generic [ref=e86]: Check-in
+                - textbox "Check-in" [ref=e87]:
+                  - /placeholder: Select date
+              - generic [ref=e90]:
+                - generic [ref=e91]: Check-out
+                - textbox "Check-out" [ref=e92]:
+                  - /placeholder: Select date
+            - generic [ref=e93]:
+              - button "shared" [pressed] [ref=e94] [cursor=pointer]
+              - button "Private" [ref=e95] [cursor=pointer]
+            - generic [ref=e96]:
+              - generic [ref=e97]:
+                - checkbox "Student-verified rooms only" [ref=e98]
+                - generic [ref=e99]: Student-verified rooms only
+              - paragraph [ref=e100]: All listings are verified by current students
+            - button "Search for rooms" [ref=e101] [cursor=pointer]: Search
+          - paragraph [ref=e102]: Verified profiles • Fast messaging • Secure platform
+      - generic [ref=e105]:
+        - generic [ref=e106]:
+          - heading "Featured Rooms" [level=2] [ref=e107]
+          - paragraph [ref=e108]: Curated spaces with quality, comfort and the right vibe – refreshed daily.
+        - button "Browse all" [ref=e110] [cursor=pointer]:
+          - text: Browse all
+          - img [ref=e111]
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - heading "SetlyRide" [level=2] [ref=e170]
+          - paragraph [ref=e171]: Trusted Setly rides near you.
+        - generic [ref=e172]:
+          - generic [ref=e173]:
+            - generic [ref=e174]:
+              - img [ref=e176]
+              - heading "SetlyRide" [level=3] [ref=e181]
+              - paragraph [ref=e182]: Carpool with a Setly near you.
+            - button "Request SetlyRide" [active] [ref=e183] [cursor=pointer]
+          - generic [ref=e184]:
+            - generic [ref=e185]:
+              - generic [ref=e187]: U
+              - heading "Uber" [level=3] [ref=e188]
+              - paragraph [ref=e189]: Quick ride with Uber.
+            - button "Open Uber" [ref=e190] [cursor=pointer]
+      - dialog "Request SetlyRide" [ref=e191]:
+        - generic [ref=e192]:
+          - generic [ref=e193]:
+            - heading "Request SetlyRide" [level=2] [ref=e194]
+            - button "Close modal" [ref=e195] [cursor=pointer]: ×
+          - generic [ref=e196]:
+            - generic [ref=e197]:
+              - generic [ref=e198]: Pickup location
+              - textbox "Pickup location" [ref=e199]:
+                - /placeholder: e.g., Campus entrance
+            - generic [ref=e200]:
+              - generic [ref=e201]: Destination
+              - textbox "Destination" [ref=e202]:
+                - /placeholder: e.g., Airport
+            - generic [ref=e203]:
+              - generic [ref=e204]: Who can see this request?
+              - generic [ref=e205]:
+                - generic [ref=e206]:
+                  - radio "All students" [checked] [ref=e207]
+                  - text: All students
+                - generic [ref=e208]:
+                  - radio "Undergrads only" [ref=e209]
+                  - text: Undergrads only
+                - generic [ref=e210]:
+                  - radio "Grads only" [ref=e211]
+                  - text: Grads only
+                - generic [ref=e212]:
+                  - radio "International students" [ref=e213]
+                  - text: International students
+            - generic [ref=e214]:
+              - generic [ref=e215]: When?
+              - generic [ref=e216]:
+                - generic [ref=e217]:
+                  - radio "Now" [checked] [ref=e218]
+                  - text: Now
+                - generic [ref=e219]:
+                  - radio "Schedule for later" [ref=e220]
+                  - text: Schedule for later
+            - generic [ref=e221]:
+              - generic [ref=e222]: Seats available
+              - combobox "Seats available" [ref=e223]:
+                - option "1 seat" [selected]
+                - option "2 seats"
+                - option "3 seats"
+                - option "4+ seats"
+            - generic [ref=e224]:
+              - generic [ref=e225]: Additional notes (optional)
+              - textbox "Additional notes (optional)" [ref=e226]:
+                - /placeholder: e.g., Need help with luggage, prefer non-smoker driver
+            - paragraph [ref=e228]:
+              - checkbox [ref=e229]
+              - text: I understand SetlyRide is peer-to-peer and Setly is not a carrier. I agree to our
+              - link "terms of service" [ref=e230] [cursor=pointer]:
+                - /url: /terms/settlyride
+              - text: .
+            - generic [ref=e231]:
+              - button "Cancel ride request" [ref=e232] [cursor=pointer]: Cancel
+              - button "Submit ride request" [disabled] [ref=e233]: Request Ride
+  - contentinfo [ref=e235]:
+    - generic [ref=e236]:
+      - generic [ref=e237]:
+        - generic [ref=e238]:
+          - generic [ref=e241]: SETLY
+          - paragraph [ref=e242]: Setly - Find Your next Room near your university with roommates who match your lifestyle.
+        - generic [ref=e243]:
+          - heading "Company" [level=3] [ref=e244]
+          - list [ref=e245]:
+            - listitem [ref=e246]:
+              - link "About Setly" [ref=e247] [cursor=pointer]:
+                - /url: /about
+                - text: About
+            - listitem [ref=e248]:
+              - link "Careers at Setly" [ref=e249] [cursor=pointer]:
+                - /url: /careers
+                - text: Careers
+            - listitem [ref=e250]:
+              - link "Setly blog" [ref=e251] [cursor=pointer]:
+                - /url: /blog
+                - text: Blog
+            - listitem [ref=e252]:
+              - link "Safety information" [ref=e253] [cursor=pointer]:
+                - /url: /safety
+                - text: Safety
+            - listitem [ref=e254]:
+              - link "Help center" [ref=e255] [cursor=pointer]:
+                - /url: /help
+                - text: Help
+        - generic [ref=e256]:
+          - heading "Support" [level=3] [ref=e257]
+          - list [ref=e258]:
+            - listitem [ref=e259]:
+              - link "Terms of service" [ref=e260] [cursor=pointer]:
+                - /url: /terms
+                - text: Terms
+            - listitem [ref=e261]:
+              - link "Privacy policy" [ref=e262] [cursor=pointer]:
+                - /url: /privacy
+                - text: Privacy
+            - listitem [ref=e263]:
+              - link "Contact support" [ref=e264] [cursor=pointer]:
+                - /url: mailto:support@setly.com
+                - text: Contact
+        - generic [ref=e265]:
+          - heading "Connect" [level=3] [ref=e266]
+          - list [ref=e267]:
+            - listitem [ref=e268]:
+              - link "Follow us on Facebook" [ref=e269] [cursor=pointer]:
+                - /url: https://facebook.com/setly
+                - text: Facebook
+            - listitem [ref=e270]:
+              - link "Follow us on Twitter" [ref=e271] [cursor=pointer]:
+                - /url: https://twitter.com/setly
+                - text: Twitter
+            - listitem [ref=e272]:
+              - link "Follow us on Instagram" [ref=e273] [cursor=pointer]:
+                - /url: https://instagram.com/setly
+                - text: Instagram
+            - listitem [ref=e274]:
+              - link "Follow us on LinkedIn" [ref=e275] [cursor=pointer]:
+                - /url: https://linkedin.com/company/setly
+                - text: LinkedIn
+      - paragraph [ref=e277]: © 2025 Setly. All rights reserved.
+  - button "Open Setly Assistant" [ref=e278] [cursor=pointer]:
+    - generic [ref=e279]: ⭐
+  - generic:
+    - status
+```

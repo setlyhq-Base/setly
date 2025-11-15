@@ -1,38 +1,50 @@
-/* Global theme tokens for Connect */
+/* Global theme tokens (Setly brand) */
 :root {
-	--bg-header: #0B0B0F;
-	--bg-page: #FFFFFF;
-	--text: #111827;
+	/* Brand core */
+	--brand-blue: #3A7AFE; /* Setly Blue */
+	--brand-purple: #7A5CFF; /* Setly Purple */
+	--brand-start: #3A7AFE; /* gradient start */
+	--brand-end: #7A5CFF;   /* gradient end */
+	--brand-gradient: linear-gradient(90deg, var(--brand-start), var(--brand-end));
+
+	/* Secondary */
+	--aqua-mint: #4CE1C8;   /* confirmations, friendly highlights */
+	--warm-white: #F8FAFF;  /* default surfaces */
+	--deep-navy: #0F1A3B;   /* primary text and structure */
+
+	/* App tokens */
+	--bg-header: #FFFFFF;
+	--bg-page: var(--warm-white);
+	--text: var(--deep-navy);
 	--text-muted: #6B7280;
-	--brand: #5A4FF3;
-	--ring: #A5B4FC;
-	--card: #FFFFFF;
-	--card-border: rgba(17, 24, 39, 0.08);
+	--ring: #7FA8FF; /* soft ring derived from Setly Blue */
+	--card: var(--warm-white);
+	--card-border: rgba(58, 122, 254, 0.12); /* blue-tinted subtle border */
 	--font-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-	--glow-color: #5A4FF3;
+	--glow-color: rgba(58, 122, 254, 0.45);
 	--header-height: 64px; /* keep sticky elements aligned with app header */
 }
 
 /* Page background gradient for subtle depth */
 html, body {
-	background: linear-gradient(to bottom, #FFFFFF 0%, #FAFAFF 100%);
+	background: linear-gradient(to bottom, var(--warm-white) 0%, #FFFFFF 100%);
 	color: var(--text);
 	font-family: var(--font-sans);
 }
 
 /* Sticky header visual treatment (blur on scroll) */
 .app-header {
-	background: rgba(255, 255, 255, 0.85);
-	border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+	background: rgba(255, 255, 255, 0.9);
+	border-bottom: 1px solid rgba(58, 122, 254, 0.10);
 	backdrop-filter: none;
 	-webkit-backdrop-filter: none;
 	transition: backdrop-filter 200ms ease, -webkit-backdrop-filter 200ms ease, background-color 200ms ease, border-color 200ms ease;
 }
 .app-header.scrolled {
-	background: rgba(255, 255, 255, 0.72);
+	background: rgba(255, 255, 255, 0.78);
 	backdrop-filter: blur(8px);
 	-webkit-backdrop-filter: blur(8px);
-	border-bottom-color: rgba(17, 24, 39, 0.08);
+	border-bottom-color: rgba(58, 122, 254, 0.14);
 }
 
 /* Utility classes used by Connect */
@@ -46,12 +58,12 @@ html, body {
 	transition: transform 150ms ease, box-shadow 150ms ease;
 }
 .hover-lift:hover {
-	transform: translateY(-2px);
-	box-shadow:
-	  0 8px 22px rgba(17, 24, 39, 0.10),
-	  0 0 0 1px var(--card-border),
-	  0 0 0 3px rgba(90, 79, 243, 0.12);
-  cursor: pointer;
+		transform: translateY(-2px);
+		box-shadow:
+			0 10px 28px -6px rgba(58, 122, 254, 0.18),
+			0 0 0 1px var(--card-border),
+			0 0 0 3px rgba(122, 92, 255, 0.12);
+		cursor: pointer;
 }
 
 /* Hover glow utility for primary interactive elements */
@@ -64,16 +76,16 @@ html, body {
 }
 
 .btn-brand {
-	background: var(--brand);
+	background: var(--brand-gradient);
 	color: #fff;
+	border: none;
+	box-shadow: 0 8px 18px -6px rgba(58, 122, 254, 0.35), 0 2px 6px rgba(122, 92, 255, 0.18);
 }
-.btn-brand:hover {
-	filter: brightness(1.05);
-}
+.btn-brand:hover { filter: brightness(1.05); }
 
 /* Secondary buttons */
-.btn-outline { border: 1px solid var(--card-border); background: #fff; color: var(--text); }
-.btn-outline:hover { background: #F8F9FF; border-color: rgba(90,79,243,0.35); }
+.btn-outline { border: 1px solid var(--brand-blue); background: #fff; color: var(--deep-navy); }
+.btn-outline:hover { background: #ffffff; box-shadow: 0 2px 8px rgba(58,122,254,0.12); }
 .btn-soft { background: rgba(90,79,243,0.08); color: #2E2A8A; }
 .btn-soft:hover { background: rgba(90,79,243,0.12); }
 

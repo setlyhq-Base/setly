@@ -47,7 +47,7 @@ import { University, UniversityDirectoryService } from '../../core/services/univ
           <span class="text-[11px] text-gray-500">{{ formatSubline(uni) }}</span>
         </li>
         <li *ngIf="!loading() && filteredUniversities().length === 0" class="px-4 py-2 text-gray-500">
-          No matches. Try a different spelling.
+          Start Typing.
         </li>
       </ul>
     </div>
@@ -80,17 +80,17 @@ export class UniversitySearchComponent implements OnInit {
     this.query.set(value);
     this.showDropdown.set(true);
     this.activeIndex.set(-1);
-    // Debounce 250ms, require min 2 chars
+    // Debounce 150ms, require min 1 char for snappier feel
     clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(async () => {
       const q = this.query();
-      if (q.trim().length < 2) {
+      if (q.trim().length < 1) {
         this.filteredUniversities.set([]);
         return;
       }
       const res = await this.svc.search(q);
       this.filteredUniversities.set(res);
-    }, 250);
+    }, 150);
   }
 
   onFocus(): void {
@@ -143,6 +143,7 @@ export class UniversitySearchComponent implements OnInit {
     const parts = [] as string[];
     if (uni.city) parts.push(uni.city);
     if (uni.state) parts.push(uni.state);
+    if (!parts.length && (uni as any).country) parts.push((uni as any).country);
     return parts.join(', ');
   }
 }

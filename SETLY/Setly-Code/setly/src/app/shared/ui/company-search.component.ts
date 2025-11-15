@@ -38,7 +38,7 @@ interface Company { id: string; name: string; city?: string; state?: string; cou
           <span class="font-medium leading-tight">{{ c.name }}</span>
           <span class="text-[11px] text-gray-500" *ngIf="c.city || c.country">{{ c.city || '' }}<ng-container *ngIf="c.city && c.country">, </ng-container>{{ c.country || '' }}</span>
         </li>
-        <li *ngIf="!loading() && filtered().length === 0" class="px-4 py-2 text-gray-500">No matches</li>
+        <li *ngIf="!loading() && filtered().length === 0" class="px-4 py-2 text-gray-500">Start Typing</li>
       </ul>
     </div>
   `

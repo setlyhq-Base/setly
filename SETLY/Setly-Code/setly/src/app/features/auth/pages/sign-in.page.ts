@@ -224,6 +224,10 @@ export class SignInPage {
   private humanError(code: string): string {
     const map: Record<string, string> = {
       'auth/popup-closed-by-user': 'Closed before completing. Try again.',
+      'auth/popup-blocked': 'Your browser blocked the sign-in window. We\'ll try again with a full-page redirect.',
+      'auth/operation-not-supported-in-this-environment': 'This browser blocks popups. Redirecting to Google sign-in…',
+      'auth/cookie-not-supported': 'Cookies are disabled. Redirecting to complete sign-in…',
+      'auth/unauthorized-domain': 'Sign-in is not enabled for this domain. Please contact support.',
       'auth/account-exists-with-different-credential': 'Account exists with different provider. Try that one.',
       'default': 'Sign in failed. Please try again.'
     };

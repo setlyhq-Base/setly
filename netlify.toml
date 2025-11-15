@@ -1,10 +1,15 @@
 [build]
+  # Monorepo: point Netlify to the Angular app folder
   base = "SETLY/Setly-Code/setly"
+  # Install deps and build the Angular app
   command = "npm ci --legacy-peer-deps && npm run build"
+  # Angular 17+ builder outputs to dist/<project>/browser by default
   publish = "dist/setly/browser"
 
 [build.environment]
+  # Use Node 22 on Netlify build image
   NODE_VERSION = "22"
+  # Ensure peer dependency resolution in CI matches local
   NPM_FLAGS = "--legacy-peer-deps"
 
 # Angular SPA: serve index.html for all routes

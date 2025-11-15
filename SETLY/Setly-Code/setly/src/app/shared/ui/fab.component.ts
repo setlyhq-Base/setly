@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PostRoomPage } from '../../features/post-room/post-room.page';
-import { PostRoomPopoverComponent } from '../../features/post-room/post-room-popover.component';
 import { SetlyRideFormComponent } from '../../features/ride/setly-ride-form.component';
 import { ToastService } from '../../core/services/toast.service';
 import { ToastContainerComponent } from './toast-container.component';
@@ -11,7 +10,7 @@ import { ToastContainerComponent } from './toast-container.component';
 @Component({
   selector: 'app-fab',
   standalone: true,
-  imports: [CommonModule, FormsModule, PostRoomPage, PostRoomPopoverComponent, SetlyRideFormComponent, ToastContainerComponent],
+  imports: [CommonModule, FormsModule, PostRoomPage, SetlyRideFormComponent, ToastContainerComponent],
   template: `
     <!-- FAB Button -->
     <button
@@ -75,8 +74,17 @@ import { ToastContainerComponent } from './toast-container.component';
     <div *ngIf="showPopover()" class="fab-backdrop" (click)="closePopover()"></div>
 
     <!-- Modals -->
-    <!-- New unified popover variant -->
-    <app-post-room-popover *ngIf="showRoomPopover()" (close)="closeRoomPopover()" (roomPosted)="onRoomPosted()"></app-post-room-popover>
+    <div *ngIf="showRoomModal()" class="modal-overlay" (click)="closeRoomModal()">
+      <div class="modal-content wide" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Post a Room</h2>
+          <button class="close-btn" (click)="closeRoomModal()" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <app-post-room-page (roomPosted)="onRoomPosted()"></app-post-room-page>
+        </div>
+      </div>
+    </div>
 
     <div *ngIf="showRideModal()" class="modal-overlay" (click)="closeRideModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
@@ -361,7 +369,6 @@ import { ToastContainerComponent } from './toast-container.component';
 export class FabComponent implements OnInit {
   showPopover = signal(false);
   showRoomModal = signal(false);
-  showRoomPopover = signal(false);
   showRideModal = signal(false);
   showMarketModal = signal(false);
 
@@ -381,8 +388,7 @@ export class FabComponent implements OnInit {
   selectOption(type: 'room' | 'ride' | 'market') {
     this.closePopover();
     if (type === 'room') {
-      // Use new popover experience
-      this.showRoomPopover.set(true);
+      this.showRoomModal.set(true);
     } else if (type === 'ride') {
       this.showRideModal.set(true);
     } else if (type === 'market') {
@@ -390,8 +396,9 @@ export class FabComponent implements OnInit {
     }
   }
 
-  closeRoomModal() { this.showRoomModal.set(false); }
-  closeRoomPopover() { this.showRoomPopover.set(false); }
+  closeRoomModal() {
+    this.showRoomModal.set(false);
+  }
 
   closeRideModal() {
     this.showRideModal.set(false);
@@ -418,7 +425,6 @@ export class FabComponent implements OnInit {
   onEscape(){
     if (this.showPopover()) this.closePopover();
     if (this.showRoomModal()) this.closeRoomModal();
-    if (this.showRoomPopover()) this.closeRoomPopover();
     if (this.showRideModal()) this.closeRideModal();
     if (this.showMarketModal()) this.closeMarketModal();
   }

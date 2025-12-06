@@ -14,9 +14,12 @@ import { GeocodingService, AddressSuggestion } from '../../core/services/geocodi
              role="combobox" aria-expanded="{{open()}}" aria-haspopup="listbox" [attr.aria-activedescendant]="activeId()" autocomplete="off" />
       <ul *ngIf="open()" class="absolute z-40 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto mt-1 text-sm" role="listbox">
         <li *ngIf="loading()" class="px-3 py-2 text-gray-500">Searching…</li>
-        <li *ngFor="let s of results(); let i=index" (mousedown)="choose(s)" [id]="'addr-opt-'+i" role="option" class="px-3 py-2 cursor-pointer" [class.bg-indigo-50]="i===active()">
-          <span class="block font-medium truncate" [title]="s.label">{{ s.label }}</span>
-          <span class="block text-[11px] text-gray-500">{{ s.city }}, {{ s.state }} {{ s.postcode }}</span>
+        <li *ngFor="let s of results(); let i=index" (mousedown)="choose(s)" [id]="'addr-opt-'+i" role="option" class="px-3 py-2 cursor-pointer flex flex-col gap-1" [class.bg-indigo-50]="i===active()">
+          <div class="flex items-center justify-between gap-3">
+            <span class="font-medium text-gray-900 truncate" [title]="s.label">{{ s.label }}</span>
+            <span *ngIf="badgeFor(s)" class="text-[10px] font-semibold uppercase tracking-wide text-indigo-500">{{ badgeFor(s) }}</span>
+          </div>
+          <span class="text-[11px] text-gray-500 truncate" *ngIf="secondaryLine(s)" [title]="secondaryLine(s)">{{ secondaryLine(s) }}</span>
         </li>
         <li *ngIf="!loading() && results().length===0" class="px-3 py-2 text-gray-500">Start Typing</li>
       </ul>
@@ -59,7 +62,12 @@ export class AddressAutocompleteComponent {
   }
   onFocus() { this.open.set(true); if (this.query().trim().length >= 3) this.onInput({ target: { value: this.query() } } as any); }
   onBlur() { setTimeout(()=> this.open.set(false), 160); }
-  choose(s: AddressSuggestion) { this.query.set(s.address); this.open.set(false); this.picked.emit(s); }
+  choose(s: AddressSuggestion) {
+    const display = s.address || s.label;
+    this.query.set(display);
+    this.open.set(false);
+    this.picked.emit(s);
+  }
   activeId(): string | null { return this.active()>=0 ? 'addr-opt-'+this.active() : null; }
   onKey(ev: KeyboardEvent) {
     if (!this.open()) return;
@@ -68,5 +76,17 @@ export class AddressAutocompleteComponent {
     else if (ev.key==='ArrowUp') { ev.preventDefault(); this.active.set(Math.max(this.active()-1,0)); }
     else if (ev.key==='Enter') { if (this.active()>=0 && this.active()<list.length) { ev.preventDefault(); this.choose(list[this.active()]); } }
     else if (ev.key==='Escape') { this.open.set(false); }
+  }
+
+  badgeFor(s: AddressSuggestion): string | null {
+    if (s.source === 'google_places') return 'Google';
+    if (s.source === 'nominatim') return 'OpenStreetMap';
+    return null;
+  }
+
+  secondaryLine(s: AddressSuggestion): string | null {
+    if (s.description) return s.description;
+    const parts = [s.city, s.state, s.postcode, s.country].filter(Boolean).join(', ');
+    return parts || null;
   }
 }

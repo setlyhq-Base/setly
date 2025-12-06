@@ -6,6 +6,7 @@ import { PostRoomStore } from './post-room.store';
 import { US_STATES } from '../../shared/constants/us-states';
 import { AddressAutocompleteComponent } from '../../shared/ui/address-autocomplete.component';
 import { LocationAutocompleteComponent } from '../../shared/ui/location-autocomplete.component';
+import { GeoSuggestion } from '../../core/services/geocoding.service';
 
 @Component({
   selector: 'app-room-details-step',
@@ -114,9 +115,11 @@ export class RoomDetailsStepComponent {
   }
 
   // If user later picks a city via dedicated autocomplete component (future), attach lat/lon too
-  onLocationPicked(loc: { city: string; state: string; country?: string; lat?: number; lon?: number }) {
-    this.city = loc.city;
-    this.state = loc.state;
+  onLocationPicked(loc: GeoSuggestion) {
+    const city = loc.kind === 'university' ? loc.label : (loc.city || loc.label);
+    const state = loc.kind === 'university' ? (loc.country || '') : (loc.state || '');
+    this.city = city;
+    this.state = state;
     this.store.updateDraft({ city: this.city, state: this.state, lat: loc.lat, lon: loc.lon });
   }
 

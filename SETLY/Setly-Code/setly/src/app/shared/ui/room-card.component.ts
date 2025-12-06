@@ -23,6 +23,9 @@ import { CurrencyCompactPipe } from '../pipes/currency-compact.pipe';
           [src]="room.image"
           [alt]="room.title"
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          loading="lazy" decoding="async" fetchpriority="low"
+          (load)="onImgLoad()"
+          [class.img-loading]="imgLoading"
         >
         <div class="absolute top-3 right-3">
           <span
@@ -83,10 +86,15 @@ import { CurrencyCompactPipe } from '../pipes/currency-compact.pipe';
 })
 export class RoomCardComponent {
   @Input({ required: true }) room!: RoomCard;
+  imgLoading = true;
 
   constructor(private router: Router) {}
 
   navigateToDetail(): void {
     this.router.navigate(['/listing', this.room.id]);
+  }
+
+  onImgLoad(): void {
+    this.imgLoading = false;
   }
 }

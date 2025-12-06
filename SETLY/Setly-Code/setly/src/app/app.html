@@ -4,10 +4,12 @@
     Auth in demo mode – add Firebase config to environment files for full sign-in.
   </div>
 }
-<main class="min-h-screen" data-testid="main-wrapper">
+<main class="min-h-screen pb-24 md:pb-0" data-testid="main-wrapper">
   <router-outlet></router-outlet>
   </main>
-<app-footer></app-footer>
+<div class="hidden md:block">
+  <app-footer></app-footer>
+</div>
 @if (environment.assistant.enabled) {
   <app-assistant-widget data-testid="assistant-widget"></app-assistant-widget>
 }

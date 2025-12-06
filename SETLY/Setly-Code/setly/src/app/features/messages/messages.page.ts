@@ -17,48 +17,97 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
     .typing-dots span:nth-child(2){ animation-delay: .2s; }
     .typing-dots span:nth-child(3){ animation-delay: .4s; }
     @keyframes tdots { 0%, 80%, 100% { transform: translateY(0); opacity:.4 } 40% { transform: translateY(-2px); opacity:1 } }
+    .messages-shell { min-height: 0; }
+    .messages-shell > aside,
+    .messages-shell > section { min-height: 0; }
+    .mobile-pane-btn {
+      flex: 1 1 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.45);
+      background: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #475569;
+      transition: all .2s;
+    }
+    .mobile-pane-btn--active {
+      background: linear-gradient(90deg, #3A7AFE, #7A5CFF);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 12px 24px -18px rgba(58,122,254,0.6);
+    }
+    .mobile-pane-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.7rem;
+      line-height: 1;
+    }
   </style>
   <main class="min-h-screen bg-white" data-testid="messages-page">
-    <div class="max-w-[1500px] mx-auto h-[calc(100vh-var(--header-height,64px))] px-4 md:px-6 py-4">
-      <div class="h-full rounded-2xl border border-gray-200 shadow-sm overflow-hidden grid" style="grid-template-columns: 320px 1fr;">
-        <!-- LEFT: Inbox -->
-        <aside class="h-full bg-white border-r border-gray-100">
-          <!-- Inbox header -->
-          <div class="px-4 pt-4 pb-3 border-b border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-              <h2 class="text-xl font-bold text-gray-900">Chats</h2>
+    <div class="mx-auto flex h-[calc(100vh-var(--header-height,64px))] max-w-[1500px] flex-col px-4 py-4 sm:px-6">
+      <div class="mb-3 flex items-center gap-2 md:hidden">
+        <button type="button" class="mobile-pane-btn" (click)="setMobilePane('list')" [class.mobile-pane-btn--active]="mobilePane()==='list'">
+          Chats
+          <span *ngIf="totalUnread() > 0" class="mobile-pane-badge">{{ totalUnread() }}</span>
+        </button>
+        <button type="button" class="mobile-pane-btn" (click)="setMobilePane('chat')" [class.mobile-pane-btn--active]="mobilePane()==='chat'">
+          Conversation
+        </button>
+      </div>
+      <div class="messages-shell flex grow flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:grid lg:grid-cols-[320px_minmax(0,1fr)]">
+        <aside class="flex min-h-[280px] flex-col border-b border-gray-100 bg-white lg:min-h-0 lg:border-b-0 lg:border-r lg:border-gray-100 lg:flex" [class.hidden]="mobilePane()==='chat'">
+          <div class="border-b border-gray-100 px-4 pb-3 pt-4 sm:px-5">
+            <div class="mb-2 flex items-center justify-between gap-2">
+              <h2 class="text-lg font-semibold text-gray-900 sm:text-xl">Chats</h2>
               <div class="flex items-center gap-2">
-                <button class="p-2 rounded-lg border text-gray-600" title="New message">✉️</button>
-                <button class="p-2 rounded-lg border text-gray-600" title="Options">⋯</button>
+                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600" title="New message">
+                  ✉️
+                </button>
+                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600" title="Options">
+                  ⋯
+                </button>
               </div>
             </div>
-            <input type="search" [(ngModel)]="inboxQuery" (input)="noop()" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Search messages…" />
+            <input type="search" [(ngModel)]="inboxQuery" (input)="noop()" class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-200" placeholder="Search messages…" />
             <div class="mt-3 flex items-center gap-2 overflow-x-auto pb-1 text-sm">
-              <button *ngFor="let f of filtersList" (click)="currentFilter.set(f)" class="px-3 py-1 rounded-md border bg-white"
+              <button type="button" *ngFor="let f of filtersList" (click)="currentFilter.set(f)" class="rounded-full border border-gray-200 px-3 py-1 text-xs font-medium uppercase tracking-[0.08em] text-gray-600 transition hover:border-indigo-200 hover:bg-indigo-50"
                       [class.text-indigo-700]="currentFilter()==f" [class.border-indigo-200]="currentFilter()==f" [class.bg-indigo-50]="currentFilter()==f">
                 {{ f }}
               </button>
             </div>
           </div>
 
-          <!-- Inbox list -->
-          <div class="h-[calc(100%-120px)] overflow-y-auto px-2 py-2">
-            <button *ngFor="let c of filteredConversations()" (click)="select(c.id)"
-                    class="w-full text-left px-3 py-3 rounded-xl flex items-center gap-3 hover:bg-gray-50 relative"
+          <div class="flex-1 overflow-y-auto px-2 py-2">
+            <button type="button" *ngFor="let c of filteredConversations()" (click)="select(c.id)"
+                    class="relative flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-gray-50"
                     [class.bg-indigo-50]="activeId===c.id">
+              <span class="absolute inset-y-0 left-0 w-1 rounded-l-2xl" [class.bg-indigo-500]="activeId===c.id"></span>
               <span class="relative inline-block">
-                <img *ngIf="c.avatarUrl; else init" [src]="c.avatarUrl" alt="avatar" class="w-10 h-10 rounded-full object-cover border"/>
-                <ng-template #init><div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center">{{(c.label||'S').slice(0,1)}}</div></ng-template>
-                <span *ngIf="(c.unread||0)>0" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] leading-[18px] text-center ring-2 ring-white">{{ c.unread }}</span>
-                <span *ngIf="c.online" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+                <img *ngIf="c.avatarUrl; else init" [src]="c.avatarUrl" alt="avatar" class="h-10 w-10 rounded-full border object-cover"/>
+                <ng-template #init><div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white">{{(c.label||'S').slice(0,1)}}</div></ng-template>
+                <span *ngIf="(c.unread||0)>0" class="absolute -top-1 -right-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold text-white ring-2 ring-white">{{ c.unread }}</span>
+                <span *ngIf="c.online" class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white"></span>
               </span>
-              <span class="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" [class.bg-indigo-500]="activeId===c.id"></span>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center justify-between gap-2">
-                  <div class="font-medium text-gray-900 truncate">{{ c.label }}</div>
-                  <div class="text-[11px] text-gray-500 whitespace-nowrap">{{ formatTime(c.updatedAt) }}</div>
+                  <div class="truncate text-sm font-medium text-gray-900">{{ c.label }}</div>
+                  <div class="whitespace-nowrap text-[11px] text-gray-500">{{ formatTime(c.updatedAt) }}</div>
                 </div>
-                <div class="text-xs text-gray-600 truncate">
+                <div class="truncate text-xs text-gray-600">
                   <ng-container *ngIf="!c.typing; else typingTpl">{{ lastMessageText(c) || c.preview || 'New conversation' }}</ng-container>
                   <ng-template #typingTpl>
                     <span class="typing-dots align-middle"><span></span><span></span><span></span></span>
@@ -70,52 +119,58 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
           </div>
         </aside>
 
-        <!-- RIGHT: Chat window -->
-        <section class="h-full bg-white grid" style="grid-template-rows: auto 1fr auto;">
-          <!-- Chat header -->
-          <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-            <div class="flex items-center gap-3 min-w-0" *ngIf="active() as conv; else empty">
-              <img [src]="conv.avatarUrl || '/assets/avatar-placeholder.png'" class="w-10 h-10 rounded-full border object-cover" alt="avatar"/>
+        <section class="flex min-h-[320px] flex-col bg-white lg:min-h-0 lg:flex" [class.hidden]="mobilePane()==='list'">
+          <div class="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 sm:px-5">
+            <div class="flex min-w-0 items-center gap-3" *ngIf="active() as conv; else empty">
+              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 lg:hidden" (click)="setMobilePane('list')" aria-label="Back to conversations">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m15 19-7-7 7-7"/></svg>
+              </button>
+              <img [src]="conv.avatarUrl || '/assets/avatar-placeholder.png'" class="h-10 w-10 rounded-full border object-cover" alt="avatar"/>
               <div class="min-w-0">
-                <div class="font-semibold text-gray-900 truncate">{{ conv.label }}</div>
-                <div class="text-xs text-gray-600 truncate">{{ conv.university || 'Setly Member' }} <span *ngIf="conv.location">• {{ conv.location }}</span> <span *ngIf="conv.typing" class="ml-2"><span class="typing-dots align-middle"><span></span><span></span><span></span></span></span> <span *ngIf="!conv.typing && !conv.online && conv.lastSeen" class="ml-2">{{ lastSeenText(conv.lastSeen) }}</span></div>
+                <div class="truncate text-sm font-semibold text-gray-900 sm:text-base">{{ conv.label }}</div>
+                <div class="truncate text-xs text-gray-600">
+                  {{ conv.university || 'Setly Member' }}
+                  <span *ngIf="conv.location">• {{ conv.location }}</span>
+                  <span *ngIf="conv.typing" class="ml-2"><span class="typing-dots align-middle"><span></span><span></span><span></span></span></span>
+                  <span *ngIf="!conv.typing && !conv.online && conv.lastSeen" class="ml-2">{{ lastSeenText(conv.lastSeen) }}</span>
+                </div>
               </div>
             </div>
             <ng-template #empty>
-              <div class="text-sm text-gray-500">Select a conversation to start chatting.</div>
+              <div class="flex w-full items-center justify-between gap-3">
+                <div class="text-sm text-gray-500">Select a conversation to start chatting.</div>
+                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 lg:hidden" (click)="setMobilePane('list')" aria-label="Back to conversations">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m15 19-7-7 7-7"/></svg>
+                </button>
+              </div>
             </ng-template>
-            <button class="p-2 rounded-lg border text-gray-600" title="Info">ℹ️</button>
+            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600" title="Conversation info">ℹ️</button>
           </div>
 
-          <!-- Messages area -->
-          <div class="overflow-y-auto px-5 py-4" #scrollArea>
-            <div *ngIf="active() as conv3; else noConv">
-              <div *ngFor="let m of conv3.messages; let i=index" class="mb-2">
-                <div class="text-center text-[11px] text-gray-400 my-2" *ngIf="showTimestamp(conv3.messages, i)">{{ formatDateTime(m.at) }}</div>
+          <div class="flex-1 overflow-y-auto px-4 py-4 sm:px-5" #scrollArea>
+            <div *ngIf="active() as conv3; else noConv" class="space-y-3">
+              <div *ngFor="let m of conv3.messages; let i=index">
+                <div class="my-2 text-center text-[11px] text-gray-400" *ngIf="showTimestamp(conv3.messages, i)">{{ formatDateTime(m.at) }}</div>
                 <div class="flex items-end gap-2" [class.justify-end]="m.from==='me'">
-                  <div class="relative" [ngClass]="m.from==='me' ? 'bg-gradient-to-r from-[#3A7AFE] to-[#7A5CFF] text-white' : 'bg-[#F0F2F7] text-gray-900'" class="max-w-[70%] px-3 py-2 rounded-2xl shadow-sm"
-                       [ngStyle]="m.from==='me' ? { borderTopRightRadius: '8px' } : { borderTopLeftRadius: '8px' }">
+                  <div class="relative max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm" [ngClass]="m.from==='me' ? 'bg-gradient-to-r from-[#3A7AFE] to-[#7A5CFF] text-white' : 'bg-[#F0F2F7] text-gray-900'" [ngStyle]="m.from==='me' ? { borderTopRightRadius: '8px' } : { borderTopLeftRadius: '8px' }">
                     {{ m.text }}
-                    <!-- Optional bottom-right ticks inside bubble -->
-                    <span *ngIf="m.from==='me'" class="absolute -bottom-3 right-1 text-[11px] leading-none select-none" [class.text-blue-500]="m.status==='read'" [class.text-gray-300]="m.status!=='read'" [title]="statusTitle(m)">{{ statusTicks(m) }}</span>
+                    <span *ngIf="m.from==='me'" class="absolute -bottom-3 right-1 select-none text-[11px] leading-none" [class.text-blue-100]="m.status==='read'" [class.text-white/80]="m.status!=='read'" [title]="statusTitle(m)">{{ statusTicks(m) }}</span>
                   </div>
-                  <!-- Fallback inline ticks to the side for narrow layouts -->
-                  <div *ngIf="m.from==='me'" class="text-[11px] leading-none select-none text-gray-400 min-w-[28px] text-right md:hidden">
+                  <div *ngIf="m.from==='me'" class="min-w-[28px] select-none text-right text-[11px] leading-none text-gray-400 lg:hidden">
                     <span [ngClass]="statusColor(m)" [title]="statusTitle(m)">{{ statusTicks(m) }}</span>
                   </div>
                 </div>
               </div>
             </div>
             <ng-template #noConv>
-              <div class="h-full flex items-center justify-center text-gray-500 text-sm">Select a conversation to start chatting.</div>
+              <div class="flex h-full items-center justify-center text-sm text-gray-500">Select a conversation to start chatting.</div>
             </ng-template>
           </div>
 
-          <!-- Input bar -->
-          <div class="px-5 py-3 border-t border-gray-100 bg-white">
-            <div class="flex items-end gap-3">
-              <textarea #inputEl rows="1" [(ngModel)]="messageText" (input)="onInput()" (keydown.enter)="sendMessage()" placeholder="Type a message" class="flex-1 border rounded-xl px-3 py-2 shadow-sm focus:outline-none" ></textarea>
-              <button (click)="sendMessage()" class="px-4 py-2 rounded-xl text-white shadow-sm" [ngStyle]="{ background: 'linear-gradient(90deg,#3A7AFE,#7A5CFF)' }" [disabled]="!messageText.trim()">Send</button>
+          <div class="border-t border-gray-100 bg-white px-4 py-3 sm:px-5">
+            <div class="flex items-end gap-2 sm:gap-3">
+              <textarea #inputEl rows="1" [(ngModel)]="messageText" (input)="onInput()" (keydown.enter)="sendMessage()" placeholder="Type a message" class="flex-1 resize-none rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-200"></textarea>
+              <button type="button" (click)="sendMessage()" class="rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition" [ngStyle]="{ background: 'linear-gradient(90deg,#3A7AFE,#7A5CFF)' }" [disabled]="!messageText.trim()">Send</button>
             </div>
           </div>
         </section>
@@ -128,13 +183,16 @@ export class MessagesPage implements OnInit {
   private route = inject(ActivatedRoute);
   private store = inject(ConversationStoreService);
   private gateway = inject(MessageGatewayService);
+  private demoSeeded = false;
   messageText = '';
   inboxQuery = '';
   // Define filter type as a string literal union and use a const list for strong typing in template
   readonly filtersList = ['All','Unread','Active','Connections','Verified'] as const;
   readonly currentFilter = signal<(typeof this.filtersList)[number]>('All');
+  readonly mobilePane = signal<'list' | 'chat'>('list');
   get conversations(){ return this.store.conversations(); }
   get activeId(){ return this.store['activeId'](); }
+  totalUnread(){ return this.store.unreadTotal(); }
   filteredConversations: Signal<Conversation[]> = computed(() => {
     const q = this.inboxQuery.trim().toLowerCase();
     let list = this.conversations;
@@ -158,8 +216,16 @@ export class MessagesPage implements OnInit {
     this.gateway.connect();
     // Start presence tracker (heartbeat + online fetch)
     this.gateway.startPresence();
-    // Seed inbox from Threads API
-    this.gateway.getThreads().then(list => this.gateway.mergeThreads(list));
+    // Seed inbox from Threads API; fall back to demo data when nothing is returned
+    this.gateway.getThreads()
+      .then(list => {
+        if (Array.isArray(list) && list.length) {
+          this.gateway.mergeThreads(list);
+        } else {
+          this.seedDemoInbox();
+        }
+      })
+      .catch(() => this.seedDemoInbox());
     // Prefill message from query param if provided
     const qp = this.route.snapshot.queryParamMap;
     const text = qp.get('text');
@@ -171,12 +237,16 @@ export class MessagesPage implements OnInit {
       this.store.ensure(withId, name || withId, market, avatar);
       // proactively mark as read when opened via deep link
       this.gateway.markRead(withId, market).catch(() => {});
+      this.focusChatOnMobile();
     }
-  if (text) this.messageText = text; else if (withId) this.messageText = this.loadDraft(withId) || '';
+    if (text) this.messageText = text; else if (withId) this.messageText = this.loadDraft(withId) || '';
 
     // Auto-scroll when near bottom on new messages in active conversation
     effect(() => {
       const conv = this.active();
+      if (!conv && this.mobilePane()==='chat' && !this.isDesktopWidth()) {
+        this.mobilePane.set('list');
+      }
       const len = conv?.messages?.length || 0; // track
       if (!len) return;
       setTimeout(() => {
@@ -209,6 +279,7 @@ export class MessagesPage implements OnInit {
 
   ensureConversation(withId: string, market?: string) {
     this.store.ensure(withId, withId, market);
+    this.focusChatOnMobile();
     setTimeout(() => this.inputEl?.nativeElement.focus(), 0);
   }
   // When a conversation becomes active and has no history, lazily load from backend
@@ -222,6 +293,7 @@ export class MessagesPage implements OnInit {
     }
     // Notify backend to mark incoming messages from counterpart as read
     if (conv) this.gateway.markRead(id, conv.market).catch(() => {});
+    this.focusChatOnMobile();
   }
   active(){ return this.store.active(); }
 
@@ -269,6 +341,29 @@ export class MessagesPage implements OnInit {
       default: return 'Sent';
     }
   }
+  setMobilePane(view: 'list' | 'chat') {
+    if (view === 'chat' && !this.active()) {
+      const first = this.conversations[0];
+      if (first) {
+        this.select(first.id);
+      }
+    }
+    if (this.mobilePane() !== view) {
+      this.mobilePane.set(view);
+    }
+    if (view === 'chat') {
+      setTimeout(() => this.scrollToBottom(), 0);
+    }
+  }
+  private focusChatOnMobile() {
+    if (!this.isDesktopWidth()) {
+      this.mobilePane.set('chat');
+    }
+  }
+  private isDesktopWidth(): boolean {
+    if (typeof window === 'undefined') return true;
+    return window.matchMedia('(min-width: 1024px)').matches;
+  }
   scrollToBottom(){ try { const el = this.scrollArea?.nativeElement; if (el) el.scrollTop = el.scrollHeight; } catch {}
   }
   noop(){}
@@ -296,5 +391,76 @@ export class MessagesPage implements OnInit {
       const obj = raw ? JSON.parse(raw) as Record<string,string> : {};
       return obj[id] || null;
     } catch { return null; }
+  }
+
+  private seedDemoInbox(){
+    if (this.demoSeeded) return;
+    try {
+      const existing = this.store.conversations();
+      if (existing && existing.length) return;
+    } catch {
+      // ignore inability to introspect store
+    }
+    const base = Date.now();
+    const minutesAgo = (mins: number) => new Date(base - mins * 60_000).toISOString();
+    const samples: Array<{ id: string; label: string; avatarUrl?: string; messages: Message[]; unread?: number; university?: string; location?: string }> = [
+      {
+        id: 'sofia-harper',
+        label: 'Sofia Harper',
+        avatarUrl: 'https://images.setly.dev/avatars/sofia.png',
+        university: 'Northeastern University',
+        location: 'Boston, MA',
+        messages: [
+          { text: 'Hi! I loved your Mission Hill room tour – is it still available for February move-in?', from: 'them', at: minutesAgo(310) },
+          { text: 'Hey Sofia! Yes, February 3 works perfectly. Happy to hold it for you.', from: 'me', at: minutesAgo(304), status: 'read' },
+          { text: 'Amazing, thank you. Can we schedule a quick video walkthrough this weekend?', from: 'them', at: minutesAgo(299) }
+        ],
+        unread: 1
+      },
+      {
+        id: 'evan-chen',
+        label: 'Evan Chen',
+        avatarUrl: 'https://images.setly.dev/avatars/evan.png',
+        university: 'Boston University',
+        location: 'Back Bay',
+        messages: [
+          { text: 'Carpool to Logan still on? I can swing by 30 mins earlier if that helps.', from: 'them', at: minutesAgo(180) },
+          { text: 'Earlier is great – I’ll be ready downstairs at 7:30am.', from: 'me', at: minutesAgo(176), status: 'read' },
+          { text: 'Perfect, see you then!', from: 'them', at: minutesAgo(173) }
+        ]
+      },
+      {
+        id: 'leah-bowers',
+        label: 'Leah Bowers',
+        avatarUrl: 'https://images.setly.dev/avatars/leah.png',
+        university: 'Parsons School of Design',
+        location: 'New York, NY',
+        messages: [
+          { text: 'Your adjustable standing desk looks perfect for my studio 🪑 Any scratches I should know about?', from: 'them', at: minutesAgo(90) },
+          { text: 'It’s in great shape – just a tiny scuff on the back leg. I can send close-ups if you’d like.', from: 'me', at: minutesAgo(84), status: 'read' },
+          { text: 'That works! Could I pick it up Sunday afternoon?', from: 'them', at: minutesAgo(80) }
+        ],
+        unread: 1
+      }
+    ];
+
+    let firstId: string | null = null;
+    for (const sample of samples) {
+      const conv = this.store.ensure(sample.id, sample.label, undefined, sample.avatarUrl);
+      if (!firstId) firstId = conv.id;
+      const history = sample.messages.map(m => ({ ...m }));
+      this.store.setHistory(conv.id, history);
+      const last = history[history.length - 1];
+      this.store.setThreadSummary(conv.id, {
+        label: sample.label,
+        avatarUrl: sample.avatarUrl,
+        lastText: last?.text,
+        lastFrom: last?.from,
+        lastAt: last?.at,
+        unread: sample.unread || 0
+      });
+    }
+    if (firstId) this.store.setActive(firstId);
+    this.demoSeeded = true;
   }
 }

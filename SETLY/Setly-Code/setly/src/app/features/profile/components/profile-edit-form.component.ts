@@ -3,17 +3,19 @@ import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { UserStore } from '../../../core/state/user.store';
+import { GeoSuggestion } from '../../../core/services/geocoding.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UploadsService } from '../../../core/services/uploads.service';
 import { PhoneService } from '../../../core/services/phone.service';
 import { PhoneConfirmationModalComponent } from '../../../shared/ui/phone-confirmation-modal.component';
 import { OtpModalComponent } from '../../../shared/ui/otp-modal.component';
 import { CountryCodeSelectComponent } from '../../../shared/ui/country-code-select.component';
+import { LocationAutocompleteComponent } from '../../../shared/ui/location-autocomplete.component';
 
 @Component({
   selector: 'app-profile-edit-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PhoneConfirmationModalComponent, OtpModalComponent, CountryCodeSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, PhoneConfirmationModalComponent, OtpModalComponent, CountryCodeSelectComponent, LocationAutocompleteComponent],
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6" novalidate>
       <!-- Banner Upload -->
@@ -116,13 +118,23 @@ import { CountryCodeSelectComponent } from '../../../shared/ui/country-code-sele
           <input formControlName="headline" class="input" placeholder="CS student | Traveler | Coffee lover"/>
           <div class="text-xs text-gray-500 text-right">{{ form.value.headline?.length || 0 }}/80</div>
         </div>
-        <div>
-          <label class="label">City</label>
-          <input formControlName="city" class="input" placeholder="City"/>
-        </div>
-        <div>
-          <label class="label">State</label>
-          <input formControlName="state" class="input" placeholder="State"/>
+        <div class="md:col-span-2 grid md:grid-cols-2 gap-6">
+          <div>
+            <label class="label">City</label>
+            <app-location-autocomplete
+              [initialCity]="form.get('city')?.value || ''"
+              [initialState]="form.get('state')?.value || ''"
+              [placeholder]="'Search US city'"
+              (picked)="onCityPicked($event)"
+            ></app-location-autocomplete>
+            <p class="text-xs text-gray-500 mt-1" *ngIf="form.get('city')?.value">
+              Selected: {{ [form.get('city')?.value, form.get('state')?.value].filter(Boolean).join(', ') }}
+            </p>
+          </div>
+          <div>
+            <label class="label">State</label>
+            <input formControlName="state" class="input" placeholder="State"/>
+          </div>
         </div>
       </div>
 
@@ -223,8 +235,8 @@ export class ProfileEditFormComponent {
   form: FormGroup = this.fb.group({
     displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(40)]],
     bio: ['', [Validators.maxLength(280)]],
-  phoneCountry: ['+1'],
-  phoneLocal: [''],
+    phoneCountry: ['+1'],
+    phoneLocal: [''],
     city: [''],
     state: [''],
     headline: ['', [Validators.maxLength(80)]],
@@ -234,32 +246,21 @@ export class ProfileEditFormComponent {
     instagram: [''],
     website: [''],
     whatsapp: [''],
-    avatarFile: [null]
-    , bannerFile: [null]
+    avatarFile: [null],
+    bannerFile: [null]
   });
 
   ngOnInit() {
-    const u = this.userStore.user();
-    if (u) {
-      this.form.patchValue({ displayName: u.name, headline: u.headline || '' });
-      if (u.phone && u.phone.startsWith('+')) {
-        const match = matchDialCode(u.phone);
-        if (match) {
-          const local = u.phone.slice(match.dial.length);
-          this.form.patchValue({ phoneCountry: match.dial, phoneLocal: local });
-        } else {
-          this.form.patchValue({ phoneLocal: u.phone.replace(/[^\d]/g, '') });
-        }
-        // Treat stored phone as verified until edited
-        this.phoneVerified = true;
-        this.verifiedPhone = u.phone;
-      }
+    const user = this.userStore.user();
+    if (user) {
+      this.populateFormFromUser(user);
+      this.applyPhoneFromUser(user);
     }
+
     this.form.valueChanges.subscribe(() => {
       this.dirtyChange.emit(this.form.dirty);
     });
 
-    // Reset verification if phone number is changed after verification
     const phoneCountryCtrl = this.form.get('phoneCountry');
     const phoneLocalCtrl = this.form.get('phoneLocal');
     const resetIfEdited = () => {
@@ -272,10 +273,9 @@ export class ProfileEditFormComponent {
     phoneCountryCtrl?.valueChanges.subscribe(resetIfEdited);
     phoneLocalCtrl?.valueChanges.subscribe(resetIfEdited);
 
-    // Autosave: headline
     const headlineCtrl = this.form.get('headline');
     let headlineTimer: any;
-    let lastSavedHeadline: string | null = null;
+    let lastSavedHeadline: string | null = typeof user?.headline === 'string' ? user.headline : null;
     headlineCtrl?.valueChanges.subscribe((val) => {
       if (typeof val !== 'string') return;
       if (val === lastSavedHeadline) return;
@@ -291,6 +291,89 @@ export class ProfileEditFormComponent {
         }
       }, 1000);
     });
+  }
+
+  private populateFormFromUser(user: any, emitEvent = false): void {
+    this.form.patchValue({
+      displayName: user?.name || '',
+      bio: this.trimValue(user?.bio),
+      city: this.trimValue(user?.city),
+      state: this.trimValue(user?.state),
+      headline: this.trimValue(user?.headline),
+      languages: this.joinList(user?.languages),
+      interests: this.joinList(user?.interests),
+      linkedin: this.trimValue(user?.socials?.linkedin),
+      instagram: this.trimValue(user?.socials?.instagram),
+      website: this.trimValue(user?.socials?.website),
+      whatsapp: this.trimValue(user?.socials?.whatsapp),
+      avatarFile: null,
+      bannerFile: null
+    }, { emitEvent });
+  }
+
+  private applyPhoneFromUser(user: any, emitEvent = false): void {
+    const phone = typeof user?.phone === 'string' ? user.phone : '';
+    let phoneCountry = '+1';
+    let phoneLocal = '';
+    if (phone && phone.startsWith('+')) {
+      const match = matchDialCode(phone);
+      if (match) {
+        phoneCountry = match.dial;
+        phoneLocal = phone.slice(match.dial.length);
+      } else {
+        phoneLocal = phone.replace(/[^\d]/g, '');
+      }
+      this.phoneVerified = true;
+      this.verifiedPhone = phone;
+    } else {
+      if (phone) phoneLocal = phone.replace(/[^\d]/g, '');
+      this.phoneVerified = false;
+      this.verifiedPhone = null;
+    }
+    this.form.patchValue({ phoneCountry, phoneLocal }, { emitEvent });
+  }
+
+  private joinList(value: unknown): string {
+    if (Array.isArray(value)) {
+      return value
+        .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+        .join(', ');
+    }
+    return typeof value === 'string' ? value : '';
+  }
+
+  private trimValue(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
+  onCityPicked(selection: GeoSuggestion) {
+    if (!selection) return;
+    const cityControl = this.form.get('city');
+    const stateControl = this.form.get('state');
+    const previousCity = this.trimValue(cityControl?.value);
+    const previousState = this.trimValue(stateControl?.value);
+    const city = this.trimValue(selection.kind === 'university' ? (selection.city || selection.label) : (selection.city || selection.label));
+    const state = this.trimValue(selection.state) || this.extractStateFromLabel(selection.description || selection.label);
+    this.form.patchValue({ city, state });
+    if (cityControl) {
+      if (city !== previousCity) cityControl.markAsDirty();
+      cityControl.markAsTouched();
+    }
+    if (stateControl) {
+      if (state !== previousState) stateControl.markAsDirty();
+      stateControl.markAsTouched();
+    }
+  }
+
+  private extractStateFromLabel(label?: string): string {
+    if (!label) return '';
+    const parts = label.split(',').map(part => part.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      const candidate = parts[1];
+      if (candidate.length <= 3) return candidate.toUpperCase();
+      return candidate;
+    }
+    return '';
   }
 
   // Basic E.164 validation: must start with + and contain 10-15 digits total
@@ -419,24 +502,51 @@ export class ProfileEditFormComponent {
   }
 
   async onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     if (this.phoneSaveBlocked()) {
       this.toast.error('Please verify your phone before saving.');
       return;
     }
     this.saving = true;
-  const v = this.form.value as any;
-  const phoneE164 = this.combinePhone();
+    const v = this.form.value as any;
+    const clean = (val: unknown) => (typeof val === 'string' ? val.trim() : '');
+    const displayName = clean(v.displayName);
+    const bio = clean(v.bio);
+    const headline = clean(v.headline);
+    const city = clean(v.city);
+    const state = clean(v.state);
+    const languages = typeof v.languages === 'string'
+      ? v.languages.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : [];
+    const interests = typeof v.interests === 'string'
+      ? v.interests.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : [];
+    const socialsClean = {
+      linkedin: clean(v.linkedin),
+      instagram: clean(v.instagram),
+      website: clean(v.website),
+      whatsapp: clean(v.whatsapp)
+    };
+    const socials = {
+      linkedin: socialsClean.linkedin || undefined,
+      instagram: socialsClean.instagram || undefined,
+      website: socialsClean.website || undefined,
+      whatsapp: socialsClean.whatsapp || undefined
+    };
+    const phoneE164 = this.combinePhone();
     const patch = {
-      displayName: v.displayName,
-      bio: v.bio,
-  phone: phoneE164 || undefined,
-      city: v.city,
-      state: v.state,
-      headline: v.headline,
-      languages: v.languages ? v.languages.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-      interests: v.interests ? v.interests.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-      socials: { linkedin: v.linkedin || undefined, instagram: v.instagram || undefined, website: v.website || undefined, whatsapp: v.whatsapp || undefined }
+      displayName,
+      bio,
+      phone: phoneE164 || undefined,
+      city,
+      state,
+      headline,
+      languages,
+      interests,
+      socials
     };
     try {
       // Avatar upload if provided
@@ -467,11 +577,44 @@ export class ProfileEditFormComponent {
         }
       }
       await this.userStore.update(patch);
-        // optimistic local patch for phoneVerified UI elsewhere if needed
-        const u2 = this.userStore.user();
-        if (u2) {
-          this.userStore.setUser({ ...u2, phone: v.phone });
-        }
+      const u2 = this.userStore.user();
+      if (u2) {
+        const cleanedSocials = Object.fromEntries(
+          Object.entries(socialsClean).filter(([, value]) => !!value)
+        ) as Record<string, string>;
+        this.userStore.setUser({
+          ...u2,
+          name: displayName || u2.name,
+          phone: phoneE164 || undefined,
+          bio,
+          city,
+          state,
+          headline,
+          languages,
+          interests,
+          socials: cleanedSocials
+        });
+      }
+      if (phoneE164) {
+        this.phoneVerified = true;
+        this.verifiedPhone = phoneE164;
+      } else {
+        this.phoneVerified = false;
+        this.verifiedPhone = null;
+      }
+      this.form.patchValue({
+        displayName,
+        bio,
+        city,
+        state,
+        headline,
+        languages: languages.length ? languages.join(', ') : '',
+        interests: interests.length ? interests.join(', ') : '',
+        linkedin: socialsClean.linkedin,
+        instagram: socialsClean.instagram,
+        website: socialsClean.website,
+        whatsapp: socialsClean.whatsapp
+      }, { emitEvent: false });
       this.form.markAsPristine();
       this.saved.emit();
     } catch (e) {
@@ -482,8 +625,41 @@ export class ProfileEditFormComponent {
   }
 
   reset() {
-    this.form.reset({ displayName: this.userStore.user()?.name || '' });
-    this.dirtyChange.emit(this.form.dirty);
+    const user = this.userStore.user();
+    if (user) {
+      this.populateFormFromUser(user);
+      this.applyPhoneFromUser(user);
+    } else {
+      this.form.reset({
+        displayName: '',
+        bio: '',
+        phoneCountry: '+1',
+        phoneLocal: '',
+        city: '',
+        state: '',
+        headline: '',
+        languages: '',
+        interests: '',
+        linkedin: '',
+        instagram: '',
+        website: '',
+        whatsapp: '',
+        avatarFile: null,
+        bannerFile: null
+      });
+      this.phoneVerified = false;
+      this.verifiedPhone = null;
+    }
+    this.previewUrl = null;
+    this.bannerPreviewUrl = null;
+    this.phoneError = null;
+    this.pendingPhone = '';
+    this.showConfirm = false;
+    this.showOtp = false;
+    this.otpError = '';
+    this.otpLoading = false;
+    this.form.markAsPristine();
+    this.dirtyChange.emit(false);
   }
 
   isDirty(): boolean { return this.form.dirty; }

@@ -4,11 +4,13 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { UniversityService } from '../../core/services/university.service';
+import { GeoSuggestion } from '../../core/services/geocoding.service';
+import { LocationAutocompleteComponent } from '../../shared/ui/location-autocomplete.component';
 
 @Component({
   selector: 'app-profile-wizard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LocationAutocompleteComponent],
   template: `
     <div class="space-y-6">
       <div class="text-center">
@@ -137,6 +139,103 @@ import { UniversityService } from '../../core/services/university.service';
           </div>
         }
 
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-2">Current City *</label>
+          <app-location-autocomplete
+            [initialCity]="form.get('city')?.value"
+            [initialState]="form.get('state')?.value"
+            [placeholder]="'Search US city'"
+            (picked)="onCityPicked($event)"
+          ></app-location-autocomplete>
+          <div class="mt-2 text-xs text-gray-400" *ngIf="form.get('city')?.value">
+            Selected: {{ [form.get('city')?.value, form.get('state')?.value].filter(Boolean).join(', ') }}
+          </div>
+          <div class="mt-1 text-sm text-red-400" *ngIf="form.get('city')?.invalid && form.get('city')?.touched">
+            Please pick your city
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-2">State</label>
+          <input
+            type="text"
+            formControlName="state"
+            class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="State or region"
+          >
+        </div>
+
+        <div>
+          <label for="phone" class="block text-sm font-medium text-gray-300 mb-2">
+            Phone Number (Optional)
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            formControlName="phone"
+            class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="(555) 123-4567"
+          >
+        </div>
+
+        <div>
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Housing Preferences</h3>
+
+          <div class="space-y-4">
+            <div>
+              <label for="budgetMin" class="block text-sm font-medium text-gray-300 mb-2">
+                Minimum Budget ($)
+              </label>
+              <input
+                id="budgetMin"
+                type="number"
+                formControlName="budgetMin"
+                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="500"
+              >
+            </div>
+
+            <div>
+              <label for="budgetMax" class="block text-sm font-medium text-gray-300 mb-2">
+                Maximum Budget ($)
+              </label>
+              <input
+                id="budgetMax"
+                type="number"
+                formControlName="budgetMax"
+                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="1500"
+              >
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">
+                Room Type
+              </label>
+              <div class="space-y-2">
+                <label class="flex items-center">
+                  <input
+                    type="radio"
+                    formControlName="roomType"
+                    value="private"
+                    class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300"
+                  >
+                  <span class="ml-2 text-sm text-gray-300">Private Room</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="radio"
+                    formControlName="roomType"
+                    value="shared"
+                    class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300"
+                  >
+                  <span class="ml-2 text-sm text-gray-300">Shared Room</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <button
           type="submit"
           [disabled]="loading() || form.invalid"
@@ -172,6 +271,8 @@ export class ProfileWizardComponent {
   ) {
     this.form = this.fb.group({
       role: ['', Validators.required],
+      city: ['', Validators.required],
+      state: [''],
       university: [''],
       program: [''],
       startDate: [''],
@@ -179,7 +280,11 @@ export class ProfileWizardComponent {
       graduated: [false],
       gradYear: [''],
       company: [''],
-      title: ['']
+      title: [''],
+      phone: [''],
+      budgetMin: [500],
+      budgetMax: [1500],
+      roomType: ['private']
     });
 
     // Set initial role from current user if available
@@ -187,6 +292,40 @@ export class ProfileWizardComponent {
     if (currentUser?.role) {
       this.setRole(currentUser.role);
     }
+  }
+
+  onCityPicked(selection: GeoSuggestion) {
+    if (!selection) return;
+    const cityControl = this.form.get('city');
+    const stateControl = this.form.get('state');
+    const prevCity = this.clean(cityControl?.value);
+    const prevState = this.clean(stateControl?.value);
+    const city = this.clean(selection.kind === 'university' ? (selection.city || selection.label) : (selection.city || selection.label));
+    const state = this.clean(selection.state) || this.extractStateFromLabel(selection.description || selection.label);
+    this.form.patchValue({ city, state });
+    if (cityControl) {
+      if (city !== prevCity) cityControl.markAsDirty();
+      cityControl.markAsTouched();
+    }
+    if (stateControl) {
+      if (state !== prevState) stateControl.markAsDirty();
+      stateControl.markAsTouched();
+    }
+  }
+
+  private clean(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
+  private extractStateFromLabel(label?: string): string {
+    if (!label) return '';
+    const parts = label.split(',').map(part => part.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      const candidate = parts[1];
+      if (candidate.length <= 3) return candidate.toUpperCase();
+      return candidate;
+    }
+    return '';
   }
 
   setRole(role: 'student' | 'professional') {
@@ -219,24 +358,42 @@ export class ProfileWizardComponent {
   }
 
   async onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.loading.set(true);
     try {
       const profileData = this.form.value;
       const currentUser = this.authService.currentUser();
+      const city = this.clean(profileData.city);
+      const state = this.clean(profileData.state);
+      const phone = this.clean(profileData.phone);
 
       // Prepare profile data for Firestore
-      const userProfile = {
+      const userProfile: any = {
         ...profileData,
+        city,
+        state,
         id: currentUser?.id || '',
         name: currentUser?.name || '',
         primaryEmail: currentUser?.primaryEmail || '',
         emailVerified: currentUser?.emailVerified || false,
         domainVerified: false, // Will be set by verification process
         createdAt: currentUser?.createdAt || new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        phone
       };
+
+      const role = this.form.get('role')?.value;
+      if (role === 'student') {
+        userProfile.university = this.clean(profileData.university);
+        userProfile.program = this.clean(profileData.program);
+      } else {
+        userProfile.company = this.clean(profileData.company);
+        userProfile.title = this.clean(profileData.title);
+      }
 
       await this.authService.upsertUserProfile(userProfile);
 

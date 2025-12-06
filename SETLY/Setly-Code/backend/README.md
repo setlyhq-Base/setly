@@ -16,6 +16,9 @@ AWS_S3_BUCKET=your-bucket-name     # e.g. setly-uploads-dev
 AWS_ACCESS_KEY_ID=AKIA...          # from CSV
 AWS_SECRET_ACCESS_KEY=...          # from CSV
 
+# Optional: Google Places API key for city/university/address autocomplete
+GOOGLE_PLACES_API_KEY=AIza...      # https://developers.google.com/maps/documentation/places/web-service/get-api-key
+
 # Optional for token verification
 FIREBASE_PROJECT_ID=...
 FIREBASE_CLIENT_EMAIL=...

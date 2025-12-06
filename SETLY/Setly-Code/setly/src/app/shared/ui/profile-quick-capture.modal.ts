@@ -9,6 +9,7 @@ import { AuthStore } from '../../core/state/auth.store';
 import { ProfileStore } from '../../core/state/profile.store';
 import { COUNTRY_CODES, CountryCode, matchDialCode, flagEmoji } from '../data/country-codes';
 import { IntlPhoneInputComponent } from './intl-phone-input.component';
+import { GeoSuggestion } from '../../core/services/geocoding.service';
 
 @Component({
   selector: 'app-profile-quick-capture-modal',
@@ -220,11 +221,19 @@ export class ProfileQuickCaptureModalComponent {
     this.companyId = e.id; this.company = e.name; this.validate();
   }
 
-  onLocationPicked(loc: { city: string; state: string; country?: string; lat?: number; lon?: number }) {
-    const parts = [loc.city, loc.state].filter(Boolean);
-    // Optionally append country if non-US to disambiguate
+  onLocationPicked(loc: GeoSuggestion) {
+    if (!loc) return;
+    const parts: string[] = [];
+    if (loc.kind === 'university') {
+      parts.push(loc.label);
+    } else if (loc.source === 'google_places') {
+      parts.push(loc.label);
+    } else {
+      parts.push(loc.city || loc.label);
+      if (loc.state) parts.push(loc.state);
+    }
     if (loc.country && loc.country !== 'United States') parts.push(loc.country);
-    this.location = parts.join(', ');
+    this.location = parts.filter(Boolean).join(', ');
   }
 
   // expose flag util for template

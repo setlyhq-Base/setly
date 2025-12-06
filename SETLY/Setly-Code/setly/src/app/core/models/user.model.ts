@@ -6,9 +6,13 @@ export interface User {
   coverImageUrl?: string;
   /** Short headline / tagline displayed under name */
   headline?: string;
+  /** Longer bio shown on profile pages */
+  bio?: string;
   primaryEmail: string;
   emailVerified: boolean;
   role: 'student' | 'professional';
+  city?: string;
+  state?: string;
   university?: string;
   program?: string;
   startDate?: string; // ISO date string
@@ -25,6 +29,8 @@ export interface User {
   avatar?: string;
   phone?: string;
   phoneVerified?: boolean;
+  languages?: string[];
+  interests?: string[];
   organization?: Organization;
   graduationYear?: number;
   jobTitle?: string;

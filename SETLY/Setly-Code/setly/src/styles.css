@@ -138,6 +138,17 @@
   .underline-gradient { position:relative; }
   .underline-gradient::after { content:''; position:absolute; left:0; bottom:-4px; height:2px; width:0; background:linear-gradient(90deg,var(--gradient-start),var(--gradient-end)); transition:width .4s cubic-bezier(.16,.8,.3,1); }
   .underline-gradient.active::after, .underline-gradient:hover::after { width:100%; }
+  /* Moving tab indicator (computed via component) */
+  .tab-link { position:relative; padding:0.35rem 0.5rem; color:var(--text-muted); border-radius:6px; transition:color .2s, background .2s; }
+  .tab-link.active-tab { color:var(--text); font-weight:600; }
+  nav[aria-label="Browse categories"] { position:relative; }
+  .tab-indicator { position:absolute; bottom:0; height:3px; border-radius:99px; background: linear-gradient(90deg,var(--gradient-start),var(--gradient-end)); transition:left .28s cubic-bezier(.16,.8,.3,1), width .28s cubic-bezier(.16,.8,.3,1), opacity .2s; left:0; width:0; opacity:0; pointer-events:none; }
+  /* Progressive image placeholder (LQIP blur) */
+  .img-loading { filter: blur(10px) saturate(.9); transform:scale(1.03); transition:filter .6s ease, transform .6s ease; }
+  .img-loaded { filter:none; transform:none; }
+
+  /* Reusable price badge used across cards */
+  .price-badge { display:inline-flex; align-items:center; justify-content:center; padding:6px 10px; border-radius:9999px; font-weight:700; background:linear-gradient(90deg,var(--gradient-start),var(--gradient-end)); color:#fff; box-shadow:0 8px 20px -10px rgba(58,122,254,0.28); font-size:13px; }
   /* Typography utilities */
   .text-xs { font-size: var(--font-xs); }
   .text-s { font-size: var(--font-sm); }

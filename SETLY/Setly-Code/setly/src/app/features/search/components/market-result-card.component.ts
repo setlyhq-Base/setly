@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -6,7 +7,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="card-premium hover-lift group">
+  <div class="card-premium hover-lift group cursor-pointer" (click)="onClick()" tabindex="0" (keydown.enter)="onClick()" (keydown.space)="$event.preventDefault(); onClick()">
       <div class="relative">
         <img [src]="item.image || '/assets/placeholder-room.jpg'" alt="" class="w-full h-44 object-cover rounded-t-2xl">
         <div class="absolute top-3 right-3">
@@ -21,4 +22,12 @@ import { CommonModule } from '@angular/common';
     </div>
   `
 })
-export class MarketResultCardComponent { @Input() item: any; }
+export class MarketResultCardComponent {
+  @Input() item: any;
+  constructor(private router: Router) {}
+  onClick() {
+    if (this.item?.id) {
+      this.router.navigate(['/listing', this.item.id]);
+    }
+  }
+}

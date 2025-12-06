@@ -28,7 +28,8 @@ export const environment = {
   featureFlags: {
     softDisableAuth: false,
     mockPhoneAuth: false,
-    disableRecaptchaEnterprise: false
+    disableRecaptchaEnterprise: false,
+    bypassTrustedActions: false
   },
   universityApiBase: 'https://universities.hipolabs.com',
   // Use S3 dataset for faster, consistent suggestions in production

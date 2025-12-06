@@ -13,7 +13,7 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
   standalone: true,
   imports: [CommonModule, RouterModule, TimeAgoPipe],
   template: `
-  <article class="card-white hover-lift overflow-hidden unified-feed-card" [attr.aria-label]="post.from + ' to ' + post.to" role="article">
+  <article class="card-premium hover-lift overflow-hidden unified-feed-card cursor-pointer" [attr.aria-label]="post.from + ' to ' + post.to" role="article" (click)="navigateToDetail()" tabindex="0" (keydown.enter)="navigateToDetail()" (keydown.space)="$event.preventDefault(); navigateToDetail()">
       <header class="flex items-center justify-between p-4 border-b border-gray-100">
         <div class="flex items-center gap-3">
           <div class="relative">
@@ -87,4 +87,8 @@ export class PostRideCardComponent {
   open(){ this.opened.emit(); this.analytics.postOpened(this.post.id, 'ride'); }
   openUber(){ window.open('https://m.uber.com/ul/', '_blank'); this.analytics.track('ride_uber_clicked', { id: this.post.id }); }
   askSetly(){ this.analytics.track('assistant_seed_from_post', { id: this.post.id, type: 'ride' }); this.assistant.onOpen(); this.assistant.sendUserMessage?.(`Help with ride ${this.post.from} to ${this.post.to}`); }
+
+  navigateToDetail(): void {
+    this.router.navigate(['/listing', this.post.id]);
+  }
 }

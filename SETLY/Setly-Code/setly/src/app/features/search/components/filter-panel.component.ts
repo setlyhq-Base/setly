@@ -20,12 +20,12 @@ import { FormsModule } from '@angular/forms';
         <!-- Rooms Filters -->
         <div *ngSwitchCase="'rooms'" class="space-y-6">
           <div>
-            <label class="filter-label">Price range</label>
-            <input type="range" min="300" max="3000" [(ngModel)]="roomsFilters.price" class="w-full" />
+            <label class="filter-label"><svg class="inline w-3 h-3 mr-2 align-middle text-indigo-500" viewBox="0 0 24 24" fill="none" aria-hidden><path stroke="currentColor" stroke-width="1.6" d="M12 3v18M5 7h14"/></svg>Price range</label>
+            <input type="range" min="300" max="3000" [(ngModel)]="roomsFilters.price" class="w-full range-modern" />
             <div class="text-xs text-gray-500 mt-1">Up to \${{ roomsFilters.price }}/mo</div>
           </div>
           <div>
-            <label class="filter-label">University / City</label>
+            <label class="filter-label"><svg class="inline w-3 h-3 mr-2 align-middle text-indigo-500" viewBox="0 0 24 24" fill="none" aria-hidden><path stroke="currentColor" stroke-width="1.6" d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z"/></svg>University / City</label>
             <input type="text" class="filter-input" [(ngModel)]="roomsFilters.place" placeholder="Boston University" />
           </div>
           <div>
@@ -46,7 +46,7 @@ import { FormsModule } from '@angular/forms';
             </select>
           </div>
           <div>
-            <label class="filter-label">Amenities</label>
+            <label class="filter-label"><svg class="inline w-3 h-3 mr-2 align-middle text-indigo-500" viewBox="0 0 24 24" fill="none" aria-hidden><path stroke="currentColor" stroke-width="1.6" d="M5 12h14M12 5v14"/></svg>Amenities</label>
             <div class="flex flex-wrap gap-2 mt-1">
               <button *ngFor="let a of amenities" type="button" class="pill" [class.on]="roomsFilters.amenities.includes(a)" (click)="toggleAmenity(a)">{{ a }}</button>
             </div>
@@ -150,6 +150,9 @@ import { FormsModule } from '@angular/forms';
     .filter-input { @apply w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white/90 backdrop-blur focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300 transition; }
     .pill { @apply px-3 py-1.5 text-xs rounded-full border border-gray-200 bg-white/90 backdrop-blur text-gray-700 shadow-[0_2px_6px_rgba(0,0,0,0.04)] transition; }
     .pill.on { @apply border-indigo-500 bg-indigo-50 text-indigo-700 shadow-[0_2px_10px_rgba(99,102,241,0.25)]; }
+    .range-modern { -webkit-appearance:none; height:8px; border-radius:999px; background:linear-gradient(90deg,#eef2ff,#f3f4ff); outline:none; }
+    .range-modern::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:999px; background:linear-gradient(135deg,#6366f1,#8b5cf6); box-shadow:0 4px 12px rgba(99,102,241,0.28); margin-top:-5px; }
+    .range-modern:focus { box-shadow:0 0 0 6px rgba(99,102,241,0.08); }
   `]
 })
 export class FilterPanelComponent {

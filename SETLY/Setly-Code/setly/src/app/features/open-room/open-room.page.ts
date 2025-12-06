@@ -10,6 +10,7 @@ import { AddressAutocompleteComponent } from '../../shared/ui/address-autocomple
 import { UploadsService } from '../../core/services/uploads.service';
 import { NgFor } from '@angular/common';
 import { AuthStore } from '../../core/state/auth.store';
+import { GeoSuggestion } from '../../core/services/geocoding.service';
 
 @Component({
   selector: 'app-open-room-page',
@@ -190,11 +191,11 @@ export class OpenRoomPage {
     this.model.universityId = u?.id;
   }
 
-  onLocationPicked(loc: { city: string; state: string; country?: string; lat?: number; lon?: number }) {
-    this.model.city = loc.city;
-    this.model.state = loc.state;
-    this.model.lat = loc.lat;
-    this.model.lon = loc.lon;
+  onLocationPicked(loc: GeoSuggestion) {
+    this.model.city = loc.kind === 'university' ? loc.label : (loc.city || loc.label);
+    this.model.state = loc.kind === 'university' ? (loc.country || '') : (loc.state || '');
+    if (typeof loc.lat === 'number') this.model.lat = loc.lat;
+    if (typeof loc.lon === 'number') this.model.lon = loc.lon;
   }
 
   onAddressPicked(addr: { address: string; city?: string; state?: string; postcode?: string; lat?: number; lon?: number }) {

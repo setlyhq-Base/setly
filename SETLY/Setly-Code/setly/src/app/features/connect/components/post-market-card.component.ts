@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MarketPost } from '../models/connect.models';
 import { MarketDmDrawerComponent } from './market-dm-drawer.component';
 import { ToastService } from '../../../core/services/toast.service';
@@ -10,10 +11,12 @@ import { ConnectFeedService } from '../../../core/services/connect-feed.service'
   standalone: true,
   imports: [CommonModule, MarketDmDrawerComponent],
   template: `
-  <article class="market-card card-white hover-lift overflow-hidden unified-feed-card group" role="article" [attr.aria-label]="post.title">
+  <article class="market-card card-premium hover-lift overflow-hidden unified-feed-card group cursor-pointer" role="article" [attr.aria-label]="post.title" (click)="navigateToDetail()" tabindex="0" (keydown.enter)="navigateToDetail()" (keydown.space)="$event.preventDefault(); navigateToDetail()">
     <div class="relative">
-      <img [src]="post.images[0]" alt="{{post.title}}" class="w-full h-44 object-cover" loading="lazy" />
-      <div class="absolute bottom-2 left-2 text-white bg-black/50 rounded px-2 py-0.5 text-sm">$ {{post.price}}</div>
+      <img [src]="post.images[0]" alt="{{post.title}}" class="w-full h-44 object-cover" loading="lazy" decoding="async" fetchpriority="low" (load)="onImgLoad()" [class.img-loading]="imgLoading" />
+      <div class="absolute bottom-2 left-2">
+        <span class="price-badge">$ {{post.price}}</span>
+      </div>
     </div>
     <div class="p-3">
       <div class="text-sm font-medium truncate" [title]="post.title">{{post.title}}</div>
@@ -32,13 +35,17 @@ import { ConnectFeedService } from '../../../core/services/connect-feed.service'
   styles: [`
     .market-card { width: 100%; }
   `]
+
 })
+
 export class PostMarketCardComponent {
   @Input() post!: MarketPost;
   @Output() opened = new EventEmitter<void>();
   drawerOpen = signal(false);
+  imgLoading = true;
   private toast = inject(ToastService);
   private feed = inject(ConnectFeedService);
+  private router: Router = inject(Router);
 
   saved(){ return !!this.post?.saved; }
   save(){
@@ -49,4 +56,9 @@ export class PostMarketCardComponent {
     this.toast.success(next ? 'Saved item' : 'Removed from saved');
   }
   message(){ this.drawerOpen.set(true); }
+
+  onImgLoad(){ this.imgLoading = false; }
+  navigateToDetail(): void {
+    this.router.navigate(['/listing', this.post.id]);
+  }
 }

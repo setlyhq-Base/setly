@@ -2,7 +2,6 @@ import { Component, EventEmitter, Output, Input, signal, inject, OnInit, OnChang
 import { CommonModule } from '@angular/common';
 import { GeocodingService, GeoSuggestion } from '../../core/services/geocoding.service';
 import { FormsModule } from '@angular/forms';
-import { debounce } from 'rxjs';
 
 @Component({
   selector: 'app-location-autocomplete',
@@ -10,13 +9,16 @@ import { debounce } from 'rxjs';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="relative" (keydown)="onKey($event)">
-      <input type="text" [value]="query()" (input)="onInput($event)" (focus)="onFocus()" (blur)="onBlur()" placeholder="City" class="input-premium" role="combobox" aria-expanded="{{open()}}" aria-haspopup="listbox" [attr.aria-activedescendant]="activeId()" autocomplete="off" />
-      <div *ngIf="selected()" class="text-xs text-gray-500 mt-1">Selected: {{ selected()?.city }}, {{ selected()?.state }}</div>
+  <input type="text" [value]="query()" (input)="onInput($event)" (focus)="onFocus()" (blur)="onBlur()" [placeholder]="placeholder" class="input-premium" role="combobox" aria-expanded="{{open()}}" aria-haspopup="listbox" [attr.aria-activedescendant]="activeId()" autocomplete="off" />
+      <div *ngIf="selected()" class="text-xs text-gray-500 mt-1">Selected: {{ selected()?.label }}</div>
       <ul *ngIf="open()" class="absolute z-30 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto mt-1 text-sm" role="listbox">
         <li *ngIf="loading()" class="px-3 py-2 text-gray-500">Searching…</li>
-        <li *ngFor="let s of results(); let i=index" (mousedown)="choose(s)" [id]="'loc-opt-'+i" role="option" class="px-3 py-2 cursor-pointer flex flex-col" [class.bg-indigo-50]="i===active()">
-          <span class="font-medium">{{ s.city }}, {{ s.state }} <span class="text-gray-400">{{ s.country }}</span></span>
-          <span class="text-[11px] text-gray-500">Lat {{ s.lat }}, Lon {{ s.lon }}</span>
+        <li *ngFor="let s of results(); let i=index" (mousedown)="choose(s)" [id]="'loc-opt-'+i" role="option" class="px-3 py-2 cursor-pointer flex flex-col gap-1" [class.bg-indigo-50]="i===active()">
+          <div class="flex items-center justify-between gap-3">
+            <span class="font-medium text-gray-900">{{ s.label }}</span>
+            <span *ngIf="badgeFor(s)" class="text-[10px] font-semibold uppercase tracking-wide text-indigo-500">{{ badgeFor(s) }}</span>
+          </div>
+          <span class="text-[11px] text-gray-500" *ngIf="secondaryLine(s)">{{ secondaryLine(s) }}</span>
         </li>
         <li *ngIf="!loading() && results().length===0" class="px-3 py-2 text-gray-500">Start Typing</li>
       </ul>
@@ -26,7 +28,8 @@ import { debounce } from 'rxjs';
 export class LocationAutocompleteComponent implements OnInit, OnChanges {
   @Input() initialCity?: string;
   @Input() initialState?: string;
-  @Output() picked = new EventEmitter<{ city: string; state: string; country?: string; lat?: number; lon?: number }>();
+  @Input() placeholder = 'City or university';
+  @Output() picked = new EventEmitter<GeoSuggestion>();
   private geo = inject(GeocodingService);
   query = signal('');
   open = signal(false);
@@ -37,7 +40,19 @@ export class LocationAutocompleteComponent implements OnInit, OnChanges {
   private debounceHandle: any;
 
   ngOnInit() {
-    if (this.initialCity) this.query.set(this.initialCity);
+    if (this.initialCity || this.initialState) {
+      const label = this.composeLabel(this.initialCity, this.initialState);
+      this.query.set(label);
+      this.selected.set({
+        id: 'manual',
+        label,
+        city: this.initialCity || undefined,
+        state: this.initialState || undefined,
+        country: undefined,
+        kind: 'city',
+        source: 'open_meteo'
+      });
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -46,11 +61,18 @@ export class LocationAutocompleteComponent implements OnInit, OnChanges {
         (changes['initialState'] && changes['initialState'].currentValue !== undefined)) {
       const c = this.initialCity || '';
       const s = this.initialState || '';
-      // Update input box text
-      if (c && this.query() !== c) this.query.set(c);
-      // Mark as selected so "Selected:" hint appears
+      const label = this.composeLabel(c, s);
+      if (label && this.query() !== label) this.query.set(label);
       if (c || s) {
-        this.selected.set({ id: 'manual', city: c, state: s, country: '', lat: 0, lon: 0, name: c } as any);
+        this.selected.set({
+          id: 'manual',
+          label,
+          city: c || undefined,
+          state: s || undefined,
+          country: undefined,
+          kind: 'city',
+          source: 'open_meteo'
+        });
       }
     }
   }
@@ -61,7 +83,7 @@ export class LocationAutocompleteComponent implements OnInit, OnChanges {
     this.open.set(true);
     this.active.set(-1);
     clearTimeout(this.debounceHandle);
-    if (v.trim().length < 2) { this.results.set([]); return; }
+    if (v.trim().length < 2) { this.results.set([]); this.loading.set(false); return; }
     this.loading.set(true);
     this.debounceHandle = setTimeout(() => {
       this.geo.search(v).subscribe(list => {
@@ -74,9 +96,9 @@ export class LocationAutocompleteComponent implements OnInit, OnChanges {
   onBlur() { setTimeout(()=> this.open.set(false), 150); }
   choose(s: GeoSuggestion) {
     this.selected.set(s);
-    this.query.set(`${s.city}`);
+    this.query.set(s.label);
     this.open.set(false);
-    this.picked.emit({ city: s.city, state: s.state, country: s.country, lat: s.lat, lon: s.lon });
+    this.picked.emit(s);
   }
   activeId(): string | null { return this.active() >=0 ? 'loc-opt-'+this.active() : null; }
   onKey(ev: KeyboardEvent) {
@@ -86,5 +108,20 @@ export class LocationAutocompleteComponent implements OnInit, OnChanges {
     else if (ev.key==='ArrowUp') { ev.preventDefault(); this.active.set(Math.max(this.active()-1,0)); }
     else if (ev.key==='Enter') { if (this.active()>=0 && this.active()<list.length) { ev.preventDefault(); this.choose(list[this.active()]); } }
     else if (ev.key==='Escape') { this.open.set(false); }
+  }
+
+  badgeFor(s: GeoSuggestion): string | null {
+    if (s.kind === 'university') return 'University';
+    return null;
+  }
+
+  secondaryLine(s: GeoSuggestion): string | null {
+    if (s.description) return s.description;
+    const parts = [s.city, s.state, s.country].filter(Boolean).join(', ');
+    return parts || null;
+  }
+
+  private composeLabel(city?: string, state?: string): string {
+    return [city, state].filter(Boolean).join(', ');
   }
 }

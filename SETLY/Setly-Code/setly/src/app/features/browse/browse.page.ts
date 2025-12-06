@@ -1,6 +1,7 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, AfterViewInit, OnDestroy, ElementRef, ViewChild, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { RoomCardComponent } from '../../shared/ui/room-card.component';
 import { FiltersBarComponent } from '../../shared/ui/filters-bar.component';
 import { RoomStore } from '../../core/state/room.store';
@@ -15,10 +16,11 @@ import { RoomStore } from '../../core/state/room.store';
         <div class="max-w-7xl mx-auto px-4 py-6">
           <h1 class="text-2xl font-bold text-gray-900">Browse</h1>
           <!-- Category Tabs -->
-          <nav class="mt-4 flex items-center gap-4 text-sm font-medium" aria-label="Browse categories">
+          <nav #tabsNav class="mt-4 flex items-center gap-4 text-sm font-medium relative" aria-label="Browse categories">
+            <div class="tab-indicator" aria-hidden="true"></div>
             <a routerLink="/browse" routerLinkActive="active-tab" class="tab-link">Rooms</a>
-            <a routerLink="/ride" class="tab-link">Rides</a>
-            <a routerLink="/connect/marketplace" class="tab-link">Marketplace</a>
+            <a routerLink="/ride" routerLinkActive="active-tab" class="tab-link">Rides</a>
+            <a routerLink="/connect/marketplace" routerLinkActive="active-tab" class="tab-link">Marketplace</a>
           </nav>
         </div>
       </section>
@@ -91,13 +93,68 @@ import { RoomStore } from '../../core/state/room.store';
 export class BrowsePage {
   private roomStore = inject(RoomStore);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private renderer = inject(Renderer2);
+  private routerSub?: Subscription;
+  private resizeUnlisten: (() => void) | null = null;
+
+  @ViewChild('tabsNav', { static: true }) tabsNav!: ElementRef<HTMLElement>;
 
   loading = signal(true);
   filteredRooms = computed(() => this.roomStore.filteredRooms());
 
+  // Indicator state handled at runtime (positions computed)
+
   constructor() {
     this.loadRooms();
     this.handleQueryParams();
+  }
+
+  ngAfterViewInit(): void {
+    // Compute indicator initially and on navigation/resize
+    setTimeout(() => this.updateIndicator(), 0);
+    this.routerSub = this.router.events.subscribe(e => {
+      if (e instanceof NavigationEnd) {
+        // Delay so routerLinkActive classes update
+        setTimeout(() => this.updateIndicator(), 30);
+      }
+    });
+
+    this.resizeUnlisten = this.renderer.listen('window', 'resize', () => {
+      this.updateIndicator();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.routerSub) this.routerSub.unsubscribe();
+    if (this.resizeUnlisten) this.resizeUnlisten();
+  }
+
+  private updateIndicator(): void {
+    try {
+      const navEl = this.tabsNav?.nativeElement as HTMLElement;
+      if (!navEl) return;
+      const indicator = navEl.querySelector('.tab-indicator') as HTMLElement | null;
+      if (!indicator) return;
+
+      const active = navEl.querySelector('.active-tab') as HTMLElement | null;
+      if (!active) {
+        // hide
+        indicator.style.opacity = '0';
+        indicator.style.width = '0px';
+        return;
+      }
+
+      const left = active.offsetLeft;
+      const width = active.offsetWidth;
+      // position indicator (use left/width for pixel-perfect movement)
+      indicator.style.left = `${left}px`;
+      indicator.style.width = `${width}px`;
+      indicator.style.opacity = '1';
+    } catch (err) {
+      // safe guard -- if DOM not ready or SSR, ignore
+      // console.debug('tab indicator update failed', err);
+    }
   }
 
   private async loadRooms(): Promise<void> {

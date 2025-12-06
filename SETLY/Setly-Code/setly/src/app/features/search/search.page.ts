@@ -1,6 +1,5 @@
 import { Component, signal, computed, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { UnifiedSearchComponent } from './unified-search.component';
 import { FilterPanelComponent } from './components/filter-panel.component';
 import { RoomResultCardComponent } from './components/room-result-card.component';
@@ -11,17 +10,27 @@ import { RoomStore } from '../../core/state/room.store';
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, UnifiedSearchComponent, FilterPanelComponent, RoomResultCardComponent, RideResultCardComponent, MarketResultCardComponent],
+  imports: [CommonModule, UnifiedSearchComponent, FilterPanelComponent, RoomResultCardComponent, RideResultCardComponent, MarketResultCardComponent],
   template: `
-  <main class="explore-page min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f5f3ff_55%,#f6f8ff_100%)]">
-      <section class="max-w-7xl mx-auto px-6 pt-14 pb-10">
-        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 text-center mb-4">Explore Setly</h1>
-        <p class="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-10">Rooms, rides, and marketplace — all in one calm, unified experience.</p>
-        <app-unified-search (activeTabChange)="onTabChange($event)" (performedSearch)="onSearch($event)"></app-unified-search>
+  <main class="explore-page min-h-screen relative overflow-hidden">
+      <!-- soft floating background elements -->
+      <div class="floating-orb orb-1" aria-hidden="true"></div>
+      <div class="floating-orb orb-2" aria-hidden="true"></div>
+
+      <section class="hero-strip max-w-7xl mx-auto px-6 pt-10 pb-6">
+        <div class="hero-inner rounded-xl px-6 py-6">
+          <div class="text-center">
+            <h1 class="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900 mb-1">Explore Setly</h1>
+            <p class="text-sm md:text-base text-gray-600 max-w-2xl mx-auto">Rooms, rides, and marketplace — all in one calm, unified experience.</p>
+          </div>
+          <div class="mt-4">
+            <app-unified-search (activeTabChange)="onTabChange($event)" (performedSearch)="onSearch($event)"></app-unified-search>
+          </div>
+        </div>
       </section>
 
       <!-- Results / Filters layout -->
-      <section class="max-w-7xl mx-auto px-6 pb-24">
+    <section class="max-w-7xl mx-auto px-6 pb-24">
   <div class="flex gap-10" [class.filters-hidden]="filtersHidden()" [class.mobile-filters-open]="mobileFiltersOpen()">
           <!-- Sidebar -->
           <aside id="filtersPanel" class="w-72 shrink-0 md:sticky md:top-28" *ngIf="!filtersHidden()" aria-label="Filters" [class.mobile-panel]="mobileFiltersOpen()" [attr.role]="mobileFiltersOpen() ? 'dialog' : null" [attr.aria-modal]="mobileFiltersOpen() ? 'true' : null" tabindex="-1">
@@ -90,8 +99,17 @@ import { RoomStore } from '../../core/state/room.store';
         </div>
       </section>
     </main>
-  `,
-  styles: [`
+   `,
+   styles: [ `
+    /* page background + floating elements */
+    .explore-page { background: linear-gradient(180deg,#ffffff 0%, #fbfbff 35%, #f6f8ff 100%); }
+    .floating-orb { position:absolute; border-radius:9999px; filter: blur(28px); opacity:0.45; pointer-events:none; }
+    .orb-1 { width:420px; height:420px; background: radial-gradient(circle at 30% 30%, rgba(99,102,241,0.14), transparent 30%); top:-80px; left:-120px; }
+    .orb-2 { width:260px; height:260px; background: radial-gradient(circle at 70% 70%, rgba(99,102,241,0.08), transparent 30%); bottom:-60px; right:-80px; }
+
+    /* hero strip */
+    .hero-strip .hero-inner { background: linear-gradient(90deg, rgba(255,255,255,0.7), rgba(245,243,255,0.6)); border-radius:16px; border:1px solid rgba(255,255,255,0.6); box-shadow: 0 8px 30px -12px rgba(15,23,42,0.06); }
+
     .filters-hidden aside { display: none; }
     .filter-label { @apply block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1; }
   .filter-input { @apply w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400; }
@@ -101,10 +119,14 @@ import { RoomStore } from '../../core/state/room.store';
     .mobile-filters-open .mobile-panel { @apply fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 shadow-xl overflow-y-auto px-4 pt-5 pb-8; }
     .mobile-filters-open::before { content:''; @apply fixed inset-0 bg-black/30 z-30 md:hidden; }
     /* Explore scoped premium adjustments */
-    .explore-page .card-premium { @apply bg-white/90 backdrop-blur-sm border border-white/60 rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] p-5 transition; }
-    .explore-page .card-premium:hover { @apply shadow-[0_8px_32px_-4px_rgba(0,0,0,0.07)]; }
+    .explore-page .card-premium { background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.8)); border-radius: 16px; box-shadow: 0 10px 30px -10px rgba(15,23,42,0.06); overflow:hidden; transition: transform .22s, box-shadow .22s; }
+    .explore-page .card-premium:hover { transform: translateY(-4px); box-shadow: 0 14px 40px -14px rgba(15,23,42,0.08); }
     .explore-page .hover-lift:hover { transform:translateY(-3px); }
-  `]
+
+    @media (max-width: 768px) {
+      .orb-1, .orb-2 { display:none; }
+    }
+  ` ]
 })
 export class SearchPage {
   private roomStore = inject(RoomStore);
@@ -122,6 +144,7 @@ export class SearchPage {
   // Adapt /browse RoomStore data for Explore -> Rooms cards
   browseRoomItems = computed(() =>
     this.roomStore.filteredRooms().map(r => ({
+      id: r.id,
       title: r.title,
       location: r.city || r.universityName || r.address,
       price: `$${r.price}/mo`,
@@ -131,12 +154,42 @@ export class SearchPage {
     }))
   );
   rideResults = signal<any[]>([
-    { title: 'Boston → NYC', from: 'Boston', to: 'New York', location: 'Leaves Fri 6 PM', price: '$35/seat', priceNum: 35, seats: 3, rating: 4.6, image: '/assets/placeholder-room.jpg', badge: '3 seats left', driver: 'Eve' },
-    { title: 'Campus → Airport', from: 'Boston University', to: 'Logan Airport', location: 'Tomorrow 9 AM', price: '$15/seat', priceNum: 15, seats: 1, rating: 4.1, image: '/assets/placeholder-room.jpg', driver: 'Frank' }
+    {
+      id: 'ride1',
+      title: 'Boston → NYC',
+      from: 'Boston',
+      to: 'New York',
+      departureDate: 'Friday, January 28',
+      departureTime: '6:00 PM',
+      timeLeftPercent: 70, // percent until departure
+      distance: '215 miles',
+      duration: '3 hours 50 minutes',
+      weather: { city: 'NYC', temp: '75°', condition: 'Sunny' },
+      driver: { name: 'Evan', avatar: '', trustScore: 75 },
+      passengers: [ { name: 'Alice', initial: 'A' }, { name: 'Bob', initial: 'B' }, { name: 'Chris', initial: 'C' }, { name: 'Dana', initial: 'D' } ],
+      aiSummary: 'Evening ride with verified driver and low traffic.',
+      image: '/assets/placeholder-room.jpg'
+    },
+    {
+      id: 'ride2',
+      title: 'Campus → Airport',
+      from: 'Boston University',
+      to: 'Logan Airport',
+      departureDate: 'Tomorrow',
+      departureTime: '9:00 AM',
+      timeLeftPercent: 30,
+      distance: '7 miles',
+      duration: '20 minutes',
+      weather: { city: 'Boston', temp: '68°', condition: 'Cloudy' },
+      driver: { name: 'Frank', avatar: '', trustScore: 82 },
+      passengers: [ { name: 'Eve', initial: 'E' } ],
+      aiSummary: 'Morning airport run, verified driver.',
+      image: '/assets/placeholder-room.jpg'
+    }
   ]);
   marketResults = signal<any[]>([
-    { title: 'IKEA Desk - Like New', category: 'Furniture', location: 'Boston University', price: '$50', priceNum: 50, condition: 'Like new', place: 'Boston', seller: 'Student', image: '/assets/placeholder-room.jpg', badge: 'Furniture' },
-    { title: 'Physics Textbook', category: 'Books', location: 'Harvard', price: '$25', priceNum: 25, condition: 'Used', place: 'Cambridge', seller: 'Student', image: '/assets/placeholder-room.jpg', badge: 'Books' }
+    { id: 'market1', title: 'IKEA Desk - Like New', category: 'Furniture', location: 'Boston University', price: '$50', priceNum: 50, condition: 'Like new', place: 'Boston', seller: 'Student', image: '/assets/placeholder-room.jpg', badge: 'Furniture' },
+    { id: 'market2', title: 'Physics Textbook', category: 'Books', location: 'Harvard', price: '$25', priceNum: 25, condition: 'Used', place: 'Cambridge', seller: 'Student', image: '/assets/placeholder-room.jpg', badge: 'Books' }
   ]);
 
   results = computed(() => {
@@ -151,10 +204,7 @@ export class SearchPage {
       const f = this.ridesFilters;
       return this.rideResults().filter(r =>
         (!f.from || (r.from || '').toLowerCase().includes(f.from.toLowerCase())) &&
-        (!f.to || (r.to || '').toLowerCase().includes(f.to.toLowerCase())) &&
-        (!f.priceMax || r.priceNum <= f.priceMax) &&
-        (!f.seats || r.seats >= f.seats) &&
-        (!f.rating || r.rating >= (+f.rating[0] || 0))
+        (!f.to || (r.to || '').toLowerCase().includes(f.to.toLowerCase()))
       );
     }
     const f = this.marketFilters;
@@ -168,7 +218,13 @@ export class SearchPage {
   });
 
   onTabChange(tab: 'rooms'|'rides'|'market'){ this.activeTab.set(tab); this.loading.set(true); setTimeout(()=> this.loading.set(false), 150); }
-  onSearch(ev: any){ this.loading.set(true); setTimeout(() => { this.loading.set(false); }, 600); }
+  onSearch(ev: { tab: 'rooms' | 'rides' | 'market'; mode: 'search' | 'post'; payload: any }){
+    this.activeTab.set(ev.tab);
+    this.loading.set(true);
+    setTimeout(() => {
+      this.loading.set(false);
+    }, 600);
+  }
   toggleFilters(){ this.filtersHidden.set(!this.filtersHidden()); }
   toggleAmenity(a: string){ const idx = this.roomsFilters.amenities.indexOf(a); if (idx>=0) this.roomsFilters.amenities.splice(idx,1); else this.roomsFilters.amenities.push(a); }
   openMobileFilters(){ this.mobileFiltersOpen.set(true); }

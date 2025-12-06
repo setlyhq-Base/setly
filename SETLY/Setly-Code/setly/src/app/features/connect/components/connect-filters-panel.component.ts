@@ -184,27 +184,27 @@ import { ToastService } from '../../../core/services/toast.service';
       transition: box-shadow 0.2s, background 0.2s, transform 0.2s;
     }
     .chip-selected {
-      background: #EEF2FF;
-      border-color: #C7D2FE;
-      color: #635bff;
-      box-shadow: 0 2px 8px rgba(99,91,255,0.08);
+      background: #E8F4FF;
+      border-color: #BBD9FF;
+      color: #0F5FFF;
+      box-shadow: 0 2px 8px rgba(62,143,255,0.12);
       transform: translateY(-2px);
     }
     .saved-filters-block {
-      background: #f6f4ff;
+      background: #F4F8FF;
       border-radius: 16px;
       padding: 16px;
     }
     .saved-chip {
-      background: #edeaff;
-      color: #635bff;
-      border-color: #d1cfff;
+      background: #E8F4FF;
+      color: #0F5FFF;
+      border-color: #BBD9FF;
       font-weight: 500;
       transition: background 0.2s, color 0.2s;
     }
     .saved-chip:hover {
-      background: #d1cfff;
-      color: #4F46E5;
+      background: #D9E8FF;
+      color: #0F5FFF;
     }
     .manage-link {
       margin-top: 4px;
@@ -225,10 +225,10 @@ import { ToastService } from '../../../core/services/toast.service';
     .verified-toggle {
       min-width: 56px;
       font-weight: 600;
-      color: #635bff;
-      background: #eef2ff;
-      border-color: #c7d2fe;
-      box-shadow: 0 2px 8px rgba(99,91,255,0.08);
+      color: #0F5FFF;
+      background: #E8F4FF;
+      border-color: #BBD9FF;
+      box-shadow: 0 2px 8px rgba(62,143,255,0.12);
       transition: background 0.2s, color 0.2s, box-shadow 0.2s;
     }
     .apply-btn {
@@ -236,16 +236,16 @@ import { ToastService } from '../../../core/services/toast.service';
       font-size: 0.9rem;
       font-weight: 600;
       border-radius: 9999px;
-      background: linear-gradient(90deg,#635bff 0%,#7b73ff 100%);
+      background: var(--brand-gradient);
       color: #fff;
-      box-shadow: 0 4px 16px rgba(99,91,255,0.10);
+      box-shadow: 0 4px 16px rgba(15,95,255,0.18);
       border: none;
       transition: transform 0.2s, box-shadow 0.2s;
       height: 36px;
     }
     .apply-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(99,91,255,0.16);
+      box-shadow: 0 8px 24px rgba(15,95,255,0.24);
     }
     .close-btn {
       padding: 0.5rem 1rem;

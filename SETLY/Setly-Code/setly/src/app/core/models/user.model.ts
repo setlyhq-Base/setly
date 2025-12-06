@@ -13,6 +13,7 @@ export interface User {
   role: 'student' | 'professional';
   city?: string;
   state?: string;
+  country?: string;
   university?: string;
   program?: string;
   startDate?: string; // ISO date string
@@ -31,7 +32,8 @@ export interface User {
   phoneVerified?: boolean;
   languages?: string[];
   interests?: string[];
-  organization?: Organization;
+  organization?: Organization | string;
+  organizationName?: string;
   graduationYear?: number;
   jobTitle?: string;
   universityEmailVerified?: boolean;
@@ -51,6 +53,8 @@ export interface User {
   };
   /** Unified socials storage (subset may come from backend). */
   socials?: { linkedin?: string; instagram?: string; website?: string; whatsapp?: string };
+  lastLoginAt?: Date;
+  isProfileComplete?: boolean;
 }
 
 export interface Organization {

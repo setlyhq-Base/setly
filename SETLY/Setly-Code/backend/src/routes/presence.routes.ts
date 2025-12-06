@@ -16,21 +16,36 @@ router.post('/heartbeat', async (req: any, res) => {
     const user = req.user as { uid: string } | undefined;
     if (!user?.uid) return res.status(401).json({ error: 'not-authenticated' });
     const now = Date.now();
+    const debugRequested = process.env.PRESENCE_DEBUG === '1' || req.query.debug === '1' || req.headers['x-presence-debug'] === '1';
+    let firestoreStatus: 'ok' | 'fallback' | 'error' | 'disabled' = 'disabled';
   if (db && !FORCE_MEMORY) {
       try {
         await db.collection('presence').doc(user.uid).set({ lastSeen: firestore.Timestamp.fromMillis(now) }, { merge: true });
         // Also mirror in memory to enable TTL-based offline broadcast
         memoryPresence.set(user.uid, now);
+        firestoreStatus = 'ok';
       } catch (e) {
         logger.warnRate('presence_heartbeat_firestore_fail', 30_000, '[presence/heartbeat] firestore failed, using memory fallback:', (e as any)?.message || e);
         memoryPresence.set(user.uid, now);
+        firestoreStatus = 'fallback';
       }
     } else {
       memoryPresence.set(user.uid, now);
+      firestoreStatus = db ? 'disabled' : 'disabled';
     }
     // Broadcast presence update (online true)
     try { messagesHub.broadcast({ type: 'presence', userId: user.uid, online: true, lastSeen: now }); } catch {}
-    return res.json({ ok: true, lastSeen: now });
+    const payload: any = { ok: true, lastSeen: now };
+    if (debugRequested) {
+      payload.meta = {
+        forceMemory: FORCE_MEMORY,
+        firestore: firestoreStatus,
+        serverTime: now,
+        ttlMs: TTL_MS,
+        uid: user.uid
+      };
+    }
+    return res.json(payload);
   } catch (e: any) {
     logger.error('[presence/heartbeat] error', e?.message || e);
     return res.status(500).json({ error: 'heartbeat-failed' });

@@ -46,6 +46,7 @@ export interface PostRoomDraft {
     utilitiesIncluded: string[];
   };
   noteToTenants: string;
+  roomId?: string; // generated client-side for asset grouping
 }
 
 const DRAFT_KEY = 'postRoomDraft:v1';
@@ -84,7 +85,7 @@ export class PostRoomStore {
   });
 
   step2Valid = computed(() => {
-    const photos = this._draft().photos.filter(p => p.key && !p.error);
+    const photos = this._draft().photos.filter(p => !!p.url && !p.error);
     const hasCover = photos.some(p => p.isCover);
     return photos.length >= 3 && hasCover;
   });
@@ -136,6 +137,7 @@ export class PostRoomStore {
         utilitiesIncluded: []
       },
       noteToTenants: ''
+      ,roomId: undefined
     };
   }
 
@@ -227,6 +229,7 @@ export class PostRoomStore {
   addPhoto(photo: RoomPhoto): void {
     this._draft.update(d => ({
       ...d,
+      roomId: d.roomId || this.generateRoomId(),
       photos: [...d.photos, photo]
     }));
   }
@@ -259,5 +262,10 @@ export class PostRoomStore {
       photos.splice(toIndex, 0, moved);
       return { ...d, photos };
     });
+  }
+
+  private generateRoomId(): string {
+    // Simple deterministic-ish id; backend may still assign its own primary key, but we'll use this folder id for assets
+    return 'r_' + Math.random().toString(36).slice(2, 10);
   }
 }

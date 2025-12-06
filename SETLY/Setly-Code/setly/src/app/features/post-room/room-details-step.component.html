@@ -1,127 +1,71 @@
 <div class="space-y-6">
   <!-- Title -->
   <div class="form-group">
-    <label for="title" class="form-label">
-      Room Title <span class="text-red-500">*</span>
-    </label>
-    <input
-      id="title"
-      type="text"
-      placeholder="e.g., Cozy Room Near Campus"
-      class="form-input"
-      [(ngModel)]="title"
-      (ngModelChange)="onTitleChange($event)"
-      maxlength="80"
-      data-testid="pr-title"
-      [class.border-red-500]="titleError()"
-    />
+    <label for="title" class="form-label">Room Title <span class="text-red-500">*</span></label>
+    <input id="title" type="text" class="form-input" placeholder="e.g., Cozy Room Near Campus"
+      [(ngModel)]="title" (ngModelChange)="onTitleChange($event)" maxlength="80" data-testid="pr-title"
+      [class.border-red-500]="titleError()" />
     @if (titleError()) { <p class="form-error">{{ titleError() }}</p> }
   </div>
 
   <!-- Description -->
   <div class="form-group">
-    <label for="description" class="form-label">
-      Description <span class="text-red-500">*</span>
-    </label>
-    <textarea
-      id="description"
-      rows="6"
+    <label for="description" class="form-label">Description <span class="text-red-500">*</span></label>
+    <textarea id="description" rows="6" class="form-input resize-none"
       placeholder="Describe your room, amenities, neighborhood, and what makes it special..."
-      class="form-input resize-none"
-      [(ngModel)]="description"
-      (ngModelChange)="onDescriptionChange($event)"
-      maxlength="1200"
-      data-testid="pr-description"
-      [class.border-red-500]="descriptionError()"
-    ></textarea>
+      [(ngModel)]="description" (ngModelChange)="onDescriptionChange($event)" maxlength="1200"
+      data-testid="pr-description" [class.border-red-500]="descriptionError()"></textarea>
     @if (descriptionError()) { <p class="form-error">{{ descriptionError() }}</p> }
   </div>
 
-  <!-- Location -->
-  <div class="form-group" data-testid="pr-location">
-    <label class="form-label">Location <span class="text-red-500">*</span></label>
-    <div class="grid grid-cols-1 gap-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <input
-            id="city"
-            type="text"
-            placeholder="City"
-            class="form-input"
-            [(ngModel)]="city"
-            (ngModelChange)="onCityChange($event)"
-            [class.border-red-500]="cityError()"
-          />
-          @if (cityError()) {
-            <p class="form-error">{{ cityError() }}</p>
-          }
-        </div>
-        <div>
-          <select
-            id="state"
-            class="form-input"
-            [(ngModel)]="state"
-            (ngModelChange)="onStateChange($event)"
-            [class.border-red-500]="stateError()"
-          >
-            <option value="">Select State</option>
-            @for (st of usStates; track st.code) {
-              <option [value]="st.code">{{ st.name }}</option>
-            }
-          </select>
-          @if (stateError()) {
-            <p class="form-error">{{ stateError() }}</p>
-          }
-        </div>
-      </div>
-      <div>
-        <app-address-autocomplete
-          (picked)="onAddressPicked($event)"
-          [biasCity]="city"
-          [biasState]="state"
-          [biasLat]="lat"
-          [biasLon]="lon"
-          [disabled]="!(city && state)"
-          [placeholder]="(city && state) ? 'Street address' : 'Select city & state first'"
-        ></app-address-autocomplete>
-        @if (addressError()) { <p class="form-error mt-1">{{ addressError() }}</p> }
-      </div>
-    </div>
-  </div>
-
-  <!-- University -->
+  <!-- University (filtered by selected city if chosen) -->
   <div class="form-group">
-    <label for="university" class="form-label">
-      Near University <span class="text-red-500">*</span>
-    </label>
+    <label for="university" class="form-label">Near University <span class="text-red-500">*</span></label>
     <div class="relative">
-      <input
-        id="university"
-        type="text"
-        placeholder="Start typing university name..."
-        class="form-input"
-        [(ngModel)]="universityQuery"
-        (ngModelChange)="onUniversitySearch($event)"
-        (focus)="showUniSuggestions = true"
-        (blur)="onUniversityBlur()"
-        data-testid="pr-university"
-        [class.border-red-500]="universityError()"
-      />
+      <input id="university" type="text" class="form-input" placeholder="Start typing university name..."
+        [(ngModel)]="universityQuery" (ngModelChange)="onUniversitySearch($event)" (focus)="showUniSuggestions = true"
+        (blur)="onUniversityBlur()" data-testid="pr-university" [class.border-red-500]="universityError()" />
       @if (showUniSuggestions && universitySuggestions().length > 0) {
         <ul class="autocomplete-dropdown">
           @for (uni of universitySuggestions(); track uni.id) {
             <li (mousedown)="selectUniversity(uni)" class="autocomplete-item">
               <div class="font-medium">{{ uni.name }}</div>
-              <div class="text-sm text-gray-600">{{ uni.city }}, {{ uni.state }}</div>
+              <div class="text-xs text-gray-600" *ngIf="selectedCity()">Filtered: {{ selectedCity() }}</div>
+              <div class="text-sm text-gray-600" *ngIf="!selectedCity()">{{ uni.city }}, {{ uni.state }}</div>
             </li>
           }
         </ul>
       }
     </div>
-    
-    @if (universityError()) {
-      <p class="form-error">{{ universityError() }}</p>
-    }
+    @if (universityError()) { <p class="form-error">{{ universityError() }}</p> }
+  </div>
+
+  <!-- City (typeahead) -->
+  <div class="form-group" data-testid="pr-location">
+    <label class="form-label">City <span class="text-red-500">*</span></label>
+    <div class="relative">
+      <input id="city" type="text" class="form-input" [value]="cityQuery()"
+        (input)="onCityType($any($event.target).value)" placeholder="Start typing a US city..." />
+      @if (showCitySuggestions() && citySuggestions().length > 0) {
+        <ul class="autocomplete-dropdown mt-1">
+          @for (c of citySuggestions(); track c) {
+            <li (mousedown)="pickCity(c)" class="autocomplete-item">{{ c }}</li>
+          }
+        </ul>
+      }
+      @if (!selectedCity() && cityError()) { <p class="form-error mt-1">{{ cityError() }}</p> }
+      @if (selectedCity()) { <p class="text-xs text-green-600 mt-1">Selected city: {{ selectedCity() }}</p> }
+    </div>
+    <p class="text-xs text-gray-500 mt-1">Selecting a city narrows the university list above.</p>
+  </div>
+
+  <!-- Address (after city) -->
+  <div class="form-group">
+    <label class="form-label">Street Address</label>
+    <app-google-place-input (picked)="onAddressPicked($event)" [initialAddress]="address"
+      [disabled]="!selectedCity()" [placeholder]="selectedCity() ? 'Street address' : 'Select city first'">
+    </app-google-place-input>
+    @if (addressError()) { <p class="form-error mt-1">{{ addressError() }}</p> }
   </div>
 
   <!-- Room Type -->
@@ -130,77 +74,49 @@
       <legend class="form-label">Room Type <span class="text-red-500">*</span></legend>
       <div class="grid grid-cols-2 gap-4" data-testid="pr-room-type">
         <label class="radio-card" [class.selected]="roomType === 'private'">
-          <input
-            type="radio"
-            name="roomType"
-            value="private"
-            [(ngModel)]="roomType"
-            (ngModelChange)="onRoomTypeChange($event)"
-            class="sr-only"
-          />
+          <input type="radio" name="roomType" value="private" [(ngModel)]="roomType"
+            (ngModelChange)="onRoomTypeChange($event)" class="sr-only" />
           <div class="radio-card-content">
             <div class="text-lg font-semibold">Private Room</div>
             <div class="text-sm text-gray-600">Your own space</div>
           </div>
         </label>
         <label class="radio-card" [class.selected]="roomType === 'shared'">
-          <input
-            type="radio"
-            name="roomType"
-            value="shared"
-            [(ngModel)]="roomType"
-            (ngModelChange)="onRoomTypeChange($event)"
-            class="sr-only"
-          />
+          <input type="radio" name="roomType" value="shared" [(ngModel)]="roomType"
+            (ngModelChange)="onRoomTypeChange($event)" class="sr-only" />
           <div class="radio-card-content">
             <div class="text-lg font-semibold">Shared Room</div>
             <div class="text-sm text-gray-600">With roommates</div>
           </div>
         </label>
       </div>
-      @if (roomTypeError()) {
-        <p class="form-error">{{ roomTypeError() }}</p>
-      }
+      @if (roomTypeError()) { <p class="form-error">{{ roomTypeError() }}</p> }
     </fieldset>
   </div>
 
-  <!-- Bath -->
+  <!-- Bathroom -->
   <div class="form-group">
     <fieldset>
       <legend class="form-label">Bathroom <span class="text-red-500">*</span></legend>
       <div class="grid grid-cols-2 gap-4" data-testid="pr-bath">
         <label class="radio-card" [class.selected]="bath === 'private'">
-          <input
-            type="radio"
-            name="bath"
-            value="private"
-            [(ngModel)]="bath"
-            (ngModelChange)="onBathChange($event)"
-            class="sr-only"
-          />
+          <input type="radio" name="bath" value="private" [(ngModel)]="bath"
+            (ngModelChange)="onBathChange($event)" class="sr-only" />
           <div class="radio-card-content">
             <div class="text-base font-semibold">Private Bath</div>
             <div class="text-xs text-gray-600">Ensuite</div>
           </div>
         </label>
         <label class="radio-card" [class.selected]="bath === 'shared'">
-          <input
-            type="radio"
-            name="bath"
-            value="shared"
-            [(ngModel)]="bath"
-            (ngModelChange)="onBathChange($event)"
-            class="sr-only"
-          />
+          <input type="radio" name="bath" value="shared" [(ngModel)]="bath"
+            (ngModelChange)="onBathChange($event)" class="sr-only" />
           <div class="radio-card-content">
             <div class="text-base font-semibold">Shared Bath</div>
             <div class="text-xs text-gray-600">Common</div>
           </div>
         </label>
       </div>
-      @if (bathError()) {
-        <p class="form-error">{{ bathError() }}</p>
-      }
+      @if (bathError()) { <p class="form-error">{{ bathError() }}</p> }
     </fieldset>
   </div>
 
@@ -209,27 +125,18 @@
     <label class="flex items-center justify-between cursor-pointer" data-testid="pr-furnished">
       <span class="form-label mb-0">Furnished</span>
       <div class="relative">
-        <input
-          type="checkbox"
-          class="sr-only"
-          [(ngModel)]="furnished"
-          (ngModelChange)="onFurnishedChange($event)"
-        />
-        <div
-          class="toggle-bg w-14 h-8 rounded-full transition-colors"
-          [class.bg-blue-500]="furnished"
-          [class.bg-gray-300]="!furnished"
-        >
-          <div
-            class="toggle-dot absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform"
-            [class.translate-x-6]="furnished"
-          ></div>
+        <input type="checkbox" class="sr-only" [(ngModel)]="furnished"
+          (ngModelChange)="onFurnishedChange($event)" />
+        <div class="toggle-bg w-14 h-8 rounded-full transition-colors" [class.bg-blue-500]="furnished"
+          [class.bg-gray-300]="!furnished">
+          <div class="toggle-dot absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform"
+            [class.translate-x-6]="furnished"></div>
         </div>
       </div>
     </label>
   </div>
 
-  <!-- Rules (Progressive Disclosure) -->
+  <!-- Rules -->
   <div class="form-group">
     <div class="collapsible-header" (click)="toggleRules()" role="button" tabindex="0"
       (keydown.enter)="toggleRules()" (keydown.space)="$event.preventDefault(); toggleRules()">
@@ -237,7 +144,8 @@
         <span class="font-medium">House Rules</span>
         <div class="flex items-center gap-2 text-xs text-gray-500">
           <span *ngIf="selectedRulesCount() > 0">{{ selectedRulesCount() }} selected</span>
-          <svg class="w-3 h-3 transition-transform" [class.rotate-180]="showRules()" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+          <svg class="w-3 h-3 transition-transform" [class.rotate-180]="showRules()" viewBox="0 0 20 20" fill="none"
+            stroke="currentColor">
             <path d="M6 8l4 4 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </div>
@@ -267,49 +175,36 @@
   <!-- Distance -->
   <div class="form-group">
     <label for="distanceMi" class="form-label">Distance from Campus (miles)</label>
-    <input
-      id="distanceMi"
-      type="number"
-      step="0.1"
-      min="0"
-      max="50"
-      placeholder="1.5"
-      class="form-input"
-      [(ngModel)]="distanceMiles"
-      (ngModelChange)="onDistanceMilesChange($event)"
-      data-testid="pr-distance"
-    />
+    <input id="distanceMi" type="number" step="0.1" min="0" max="50" placeholder="1.5" class="form-input"
+      [(ngModel)]="distanceMiles" (ngModelChange)="onDistanceMilesChange($event)" data-testid="pr-distance" />
   </div>
 
   <!-- Availability -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="form-group">
-      <label for="availableFrom" class="form-label">
-        Available From <span class="text-red-500">*</span>
-      </label>
-      <input
-        id="availableFrom"
-        type="date"
-        class="form-input"
-        [(ngModel)]="availableFrom"
-        (ngModelChange)="onAvailableFromChange($event)"
-        [min]="minDate"
-        data-testid="pr-available-from"
-        [class.border-red-500]="availableFromError()"
-      />
+      <label for="availableFrom" class="form-label">Available From <span class="text-red-500">*</span></label>
+      <input id="availableFrom" type="date" class="form-input" [(ngModel)]="availableFrom"
+        (ngModelChange)="onAvailableFromChange($event)" [min]="minDate" data-testid="pr-available-from"
+        [class.border-red-500]="availableFromError()" />
       @if (availableFromError()) { <p class="form-error">{{ availableFromError() }}</p> }
     </div>
     <div class="form-group">
       <label for="availableTo" class="form-label">Available To</label>
-      <input
-        id="availableTo"
-        type="date"
-        class="form-input"
-        [(ngModel)]="availableTo"
-        (ngModelChange)="onAvailableToChange($event)"
-        [min]="availableFrom || minDate"
-        data-testid="pr-available-to"
-      />
+      <input id="availableTo" type="date" class="form-input" [(ngModel)]="availableTo"
+        (ngModelChange)="onAvailableToChange($event)" [min]="availableFrom || minDate" data-testid="pr-available-to" />
     </div>
+  </div>
+
+  <!-- Amenity Suggestions -->
+  <div class="form-group" *ngIf="environment.featureFlags.enableAmenitySuggestions">
+    <label class="form-label">Amenities <span class="text-red-500">*</span></label>
+    <div class="flex flex-wrap gap-2" data-testid="pr-amenity-suggestions">
+      <button type="button" *ngFor="let a of amenitySuggestions" (click)="toggleAmenity(a)"
+        class="px-2 py-1 rounded border text-xs transition"
+        [class.bg-blue-600]="hasAmenity(a)" [class.text-white]="hasAmenity(a)" [class.border-blue-600]="hasAmenity(a)"
+        [attr.aria-pressed]="hasAmenity(a)">{{ a }}</button>
+    </div>
+    @if (amenitiesError()) { <p class="form-error mt-1">{{ amenitiesError() }}</p> }
+    <p class="text-xs text-gray-500 mt-1">Select all that apply. Helps search relevance.</p>
   </div>
 </div>

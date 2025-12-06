@@ -69,7 +69,7 @@ import { RiderMatch } from '../../core/models/rider.model';
                 </span>
                 <span
                   *ngIf="match.acceptedTask === 'courier'"
-                  class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded"
+                  class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded"
                 >
                   Courier
                 </span>

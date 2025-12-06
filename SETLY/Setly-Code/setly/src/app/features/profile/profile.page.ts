@@ -1,10 +1,8 @@
 import { Component, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProfileSidebarComponent, ProfileSection } from './components/sidebar.component';
 import { ProfileHeaderCardComponent } from './components/profile-header-card.component';
 import { AboutMeComponent } from './components/about-me.component';
-// Removed carousel import (replaced by inline timeline rendering)
 import { ReviewsListComponent } from './components/reviews-list.component';
 import { InterestsGridComponent } from './components/interests-grid.component';
 import { VerificationStatusComponent } from './components/verification-status.component';
@@ -26,402 +24,439 @@ import { InViewDirective } from '../../shared/directives/in-view.directive';
 import { CountUpDirective } from '../../shared/directives/count-up.directive';
 import { ToastService } from '../../core/services/toast.service';
 
+// Profile section types
+export type ProfileSection = 'overview' | 'my-rooms' | 'past-rides' | 'connections' | 'verification' | 'preferences' | 'settings' | 'data';
+
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, InViewDirective, CountUpDirective, ProfileSidebarComponent, ProfileHeaderCardComponent, AboutMeComponent, ReviewsListComponent, InterestsGridComponent, VerificationStatusComponent, ConnectionsListComponent, ProfileEditFormComponent, MyListingsComponent],
+  imports: [CommonModule, FormsModule, ProfileHeaderCardComponent, MyListingsComponent, AboutMeComponent, ReviewsListComponent, InterestsGridComponent, VerificationStatusComponent, ConnectionsListComponent, ProfileEditFormComponent],
   template: `
-    <main class="min-h-screen bg-gray-50">
-      <div class="max-w-7xl mx-auto px-4 py-6 md:py-10">
-        <!-- Hero / Overview Header -->
-        <div class="mb-8 space-y-4" inView>
-          <div class="relative will-fade-up">
-            <app-profile-header-card [profile]="user()" [missingTips]="missingTips()" (edit)="openEdit()" [canEdit]="false">
-              <div header-actions class="flex items-center gap-4">
-                <button class="btn-primary text-xs" (click)="openEdit()" *ngIf="!publicView()">✏️ <span class="hidden sm:inline ml-1">Edit</span></button>
-                <button class="btn-secondary text-xs" (click)="togglePublicView()">{{ publicView() ? 'Exit Public View' : 'View as Public' }}</button>
-                <button class="btn-primary text-xs" (click)="shareProfile()" [disabled]="shareCooldown">{{ shareCooldown ? 'Copied!' : 'Share Profile' }}</button>
-              </div>
-            </app-profile-header-card>
+    <main class="profile-page-modern">
+      <div class="profile-container">
+        <!-- Instagram/LinkedIn-style header (NO white box) -->
+        <app-profile-header-card [profile]="user()" [missingTips]="missingTips()" (edit)="openEdit()" [canEdit]="false">
+          <div header-actions>
+            <button class="btn-primary" (click)="openEdit()" *ngIf="!publicView()">Edit Profile</button>
+            <button class="btn-secondary" (click)="togglePublicView()">{{ publicView() ? 'Exit Public View' : 'Public View' }}</button>
           </div>
-          <!-- Premium Quick Nav -->
-          <div class="premium-nav-wrapper will-fade-up" role="navigation" aria-label="Profile sections">
-            <ul class="premium-nav" [attr.data-active]="section()">
-              <li *ngFor="let nav of navSections; let i = index" >
-                <button type="button"
-                  class="nav-chip" [class.active]="section() === nav.id"
-                  (click)="section.set(nav.id); scrollToContent()" [attr.aria-current]="section()===nav.id? 'page': null">
-                  <span class="icon" aria-hidden="true">{{ nav.icon }}</span>
-                  <span class="label">{{ nav.label }}</span>
-                  <span *ngIf="nav.id==='verification'" class="badge" [class.complete]="verificationPercent()===100">{{ verificationPercent() }}%</span>
-                </button>
-              </li>
-            </ul>
+        </app-profile-header-card>
+
+        <!-- Explore-style pill tabs (sticky, centered, blue active) -->
+        <div class="tabs-container">
+          <div class="tabs-bar">
+            <button 
+              *ngFor="let nav of navSections" 
+              type="button"
+              class="tab-pill" 
+              [class.active]="section() === nav.id"
+              (click)="section.set(nav.id); scrollToContent()">
+              {{ nav.label }}
+              <span *ngIf="nav.id==='verification'" class="tab-badge">{{ verificationPercent() }}%</span>
+            </button>
           </div>
         </div>
 
-  <div class="flex gap-6 items-start">
-          <!-- Desktop sidebar -->
-          <app-profile-sidebar class="hidden xl:block shrink-0" [active]="section()" (sectionChange)="section.set($event)"></app-profile-sidebar>
+        <!-- Content sections -->
+        <div class="content-wrapper">
+          <!-- Section: Overview (Two-column layout like LinkedIn) -->
+          <div *ngIf="section() === 'overview'" class="two-column-layout">
+            <!-- Left Column: About, Profession, Languages, Interests -->
+            <div class="left-column">
+              <app-about-me *ngIf="isVisible('about')" [profile]="user()" (edit)="openEdit()"></app-about-me>
 
-          <div class="flex-1 space-y-8" id="profile-content-root">
-            <!-- Section: Overview -->
-            <div *ngIf="section() === 'overview'" class="space-y-10 animate-fade-in">
-              <!-- At-a-glance metrics + actions -->
-              <div class="panel-grid mb-6 bg-white border border-gray-200 rounded-2xl shadow-sm" aria-label="Profile overview metrics">
-                <div class="metric-card hover-premium" *ngFor="let m of metrics">
-                  <div class="metric-value text-gray-900"><span [countUp]="m.value" [duration]="900"></span></div>
-                  <div class="metric-label">{{ m.label }}</div>
+              <div class="profile-card">
+                <div class="card-header-row">
+                  <h3 class="card-title">Profession / Field of Study</h3>
+                  <button class="edit-btn" (click)="openEdit()">Edit</button>
                 </div>
-                <div class="metric-card focusable" (click)="openEdit()" role="button" tabindex="0">
-                  <div class="metric-value text-indigo-600">✏️</div>
-                  <div class="metric-label">Edit Profile</div>
+                <p class="empty-text" *ngIf="!user().profession">Not set</p>
+                <p *ngIf="user().profession" class="content-text">{{ user().profession }}</p>
+              </div>
+
+              <div class="profile-card">
+                <div class="card-header-row">
+                  <h3 class="card-title">Languages</h3>
+                  <button class="edit-btn" (click)="openEdit()">Edit</button>
+                </div>
+                <p class="empty-text" *ngIf="!user().languages?.length">Not set</p>
+                <div class="tags-wrap" *ngIf="user().languages?.length">
+                  <span class="tag" *ngFor="let l of user().languages">{{ l }}</span>
                 </div>
               </div>
 
-              <!-- About / Bio -->
-              <div class="grid gap-8 md:grid-cols-3 auto-rows-fr">
-                <div class="md:col-span-2 flex flex-col gap-8">
-                  <app-about-me *ngIf="isVisible('about')" [profile]="user()" (edit)="openEdit()"></app-about-me>
-
-                  <!-- Profession / Field / Languages / Interests -->
-                  <div class="card-stack">
-                    <div class="stack-card">
-                      <header><h3>Profession / Field of Study</h3><button class="mini-btn" (click)="openEdit()">Edit</button></header>
-                      <p class="placeholder" *ngIf="!user().profession">Not set</p>
-                      <p *ngIf="user().profession" class="body-text">{{ user().profession }}</p>
-                    </div>
-                    <div class="stack-card">
-                      <header><h3>Languages</h3><button class="mini-btn" (click)="openEdit()">Edit</button></header>
-                      <p class="placeholder" *ngIf="!user().languages?.length">Not set</p>
-                      <ul class="tag-row" *ngIf="user().languages?.length">
-                        <li *ngFor="let l of user().languages">{{ l }}</li>
-                      </ul>
-                    </div>
-                    <div class="stack-card">
-                      <header><h3>Interests</h3><button class="mini-btn" (click)="openEdit()">Edit</button></header>
-                      <app-interests-grid *ngIf="isVisible('interests')" [chips]="interestChips" [(selected)]="selectedInterests"></app-interests-grid>
-                    </div>
-                  </div>
-
-                  <!-- Activity Feed -->
-                  <div class="card" *ngIf="activityFeed.length" aria-label="Recent profile activity">
-                    <header class="section-head"><h3>Activity</h3><button class="mini-btn" (click)="refreshActivity()">Refresh</button></header>
-                    <ul class="flex flex-col gap-2 mt-2">
-                      <li *ngFor="let act of activityFeed" class="flex items-start gap-3 text-[13px]">
-                        <span class="text-indigo-600">{{ act.icon }}</span>
-                        <div>
-                          <p class="font-medium text-slate-700">{{ act.text }}</p>
-                          <p class="text-[11px] uppercase tracking-wide text-slate-400">{{ act.at | date:'short' }}</p>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                  <div class="card text-center text-slate-500 py-10" *ngIf="!activityFeed.length">
-                    <p class="text-sm mb-3">No activity yet. Interactions you make will appear here.</p>
-                    <button class="px-3 py-1.5 text-xs rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200" (click)="seedActivity()">Seed Sample Activity</button>
-                  </div>
-
-                  <!-- Reviews -->
-                  <app-reviews-list *ngIf="isVisible('reviews')" [reviews]="reviews" [canWriteReview]="!publicView()" (write)="openReviewModal()"></app-reviews-list>
+              <div class="profile-card">
+                <div class="card-header-row">
+                  <h3 class="card-title">Interests</h3>
+                  <button class="edit-btn" (click)="openEdit()">Edit</button>
                 </div>
-                <!-- Right column -->
-                <div class="flex flex-col gap-8"> 
-                  <!-- Where I've Been -->
-                  <div class="card">
-                    <header class="section-head">
-                      <h3>Where I've Been</h3>
-                      <button class="mini-btn" (click)="openEdit()">Add stay</button>
-                    </header>
-                    <ul class="timeline">
-                      <li *ngFor="let h of travelHistory" class="time-item">
-                        <div class="dot"></div>
-                        <div class="content">
-                          <p class="title">{{ h.city }}, {{ h.state }}</p>
-                          <p class="sub">🏫 {{ h.university }}</p>
-                          <p class="range">Stayed {{ h.startDate | date:'MMM yyyy' }} – {{ h.endDate | date:'MMM yyyy' }}</p>
-                          <div class="map-ph" aria-hidden="true"></div>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <!-- Connections -->
-                  <div class="card flow-vertical" *ngIf="isVisible('connections')">
-                    <header class="section-head"><h3>Connections</h3><a routerLink="/browse" class="mini-link">Find more</a></header>
-                    <app-connections-list [connections]="connections"></app-connections-list>
-                  </div>
-
-                  <!-- Verification Progress -->
-                  <div class="card flow-vertical tight" *ngIf="isVisible('verification')">
-                    <header class="section-head"><h3>Verification</h3></header>
-                    <div class="verif-progress">
-                      <div class="verification-ring" [style.--p]="verificationPercent()"></div>
-                      <div class="details">
-                        <p class="score">{{ verificationPercent() }}%</p>
-                        <p class="hint">Complete steps to build trust.</p>
-                        <ul class="steps">
-                          <li *ngFor="let step of verificationSteps" [class.done]="step.done">
-                            <span class="chk">{{ step.done ? '✅' : '⏺' }}</span>{{ step.label }}
-                            <button *ngIf="!step.done" class="mini-link" (click)="onVerify(step.key)">Verify</button>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                    <div *ngIf="verificationPercent() === 100" class="confetti" aria-hidden="true">
-                      <span *ngFor="let i of confettiSpan" class="c"></span>
-                    </div>
-                  </div>
-                </div>
+                <app-interests-grid *ngIf="isVisible('interests')" [chips]="interestChips" [(selected)]="selectedInterests"></app-interests-grid>
               </div>
             </div>
 
-            <!-- Section: My Rooms & Listings -->
-            <div *ngIf="section() === 'my-rooms'" class="animate-fade-in">
-              <app-my-listings [items]="listings"></app-my-listings>
-            </div>
+            <!-- Right Column: Connections, Verification, Reviews -->
+            <div class="right-column">
+              <div class="profile-card" *ngIf="isVisible('connections')">
+                <div class="card-header-row">
+                  <h3 class="card-title">Connections</h3>
+                  <a routerLink="/browse" class="link-btn">Find more</a>
+                </div>
+                <app-connections-list [connections]="connections"></app-connections-list>
+              </div>
 
-            <!-- Section: Past Rides -->
-            <div *ngIf="section() === 'past-rides'" class="card text-center py-16 text-gray-600">
-              No rides yet. Try <a routerLink="/ride" class="text-blue-600 hover:text-blue-800 font-medium">booking a ride</a>.
-            </div>
+              <div class="profile-card" *ngIf="isVisible('verification')">
+                <div class="card-header-row">
+                  <h3 class="card-title">Verification</h3>
+                </div>
+                <div class="verification-progress">
+                  <div class="progress-ring" [style.--progress]="verificationPercent()"></div>
+                  <div class="verification-details">
+                    <p class="progress-score">{{ verificationPercent() }}%</p>
+                    <p class="progress-hint">Complete steps to build trust</p>
+                    <ul class="verification-steps">
+                      <li *ngFor="let step of verificationSteps" [class.verified]="step.done">
+                        <span class="step-icon">{{ step.done ? '✓' : '○' }}</span>
+                        {{ step.label }}
+                        <button *ngIf="!step.done" class="verify-link" (click)="onVerify(step.key)">Verify</button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
 
-            <!-- Section: Connections (dedicated) -->
-            <div *ngIf="section() === 'connections'" class="animate-fade-in">
+              <app-reviews-list *ngIf="isVisible('reviews')" [reviews]="reviews" [canWriteReview]="!publicView()" (write)="openReviewModal()"></app-reviews-list>
+            </div>
+          </div>
+
+          <!-- Section: My Rooms (Use Explore card grid) -->
+          <div *ngIf="section() === 'my-rooms'" class="section-content">
+            <app-my-listings [items]="listings"></app-my-listings>
+          </div>
+
+          <!-- Section: Past Rides -->
+          <div *ngIf="section() === 'past-rides'" class="section-content">
+            <div class="empty-state-card">
+              <p>No rides yet. Try <a routerLink="/ride" class="text-link">booking a ride</a>.</p>
+            </div>
+          </div>
+
+          <!-- Section: Connections (dedicated) -->
+          <div *ngIf="section() === 'connections'" class="section-content">
+            <div class="profile-card">
+              <h3 class="card-title">My Connections</h3>
               <app-connections-list [connections]="connections"></app-connections-list>
             </div>
+          </div>
 
-            <!-- Section: Verification (dedicated) -->
-            <div *ngIf="section() === 'verification'" class="animate-fade-in">
-              <app-verification-status [state]="user().verifications" (action)="onVerify($event)"></app-verification-status>
-            </div>
+          <!-- Section: Verification (dedicated) -->
+          <div *ngIf="section() === 'verification'" class="section-content">
+            <app-verification-status [state]="user().verifications" (action)="onVerify($event)"></app-verification-status>
+          </div>
 
-            <!-- Section: Preferences -->
-            <div *ngIf="section() === 'preferences'" class="card space-y-6">
-              <div>
-                <h2 class="text-lg font-semibold mb-2">Edit Profile</h2>
-              <!-- Edit Modal -->
-              <div *ngIf="showEdit()" class="fixed inset-0 z-50 flex items-center justify-center">
-                <div class="absolute inset-0 bg-black/40" (click)="closeEdit()"></div>
-                <div class="relative bg-white w-[92vw] max-w-2xl max-h-[85vh] rounded-2xl shadow-xl overflow-auto p-6 animate-fade-in">
-                  <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Edit Profile</h3>
-                    <button class="text-gray-500 hover:text-gray-700" (click)="closeEdit()">✕</button>
-                  </div>
-                  <app-profile-edit-form (saved)="onProfileSaved(); closeEdit()" (dirtyChange)="onDirty($event)"></app-profile-edit-form>
-                </div>
-              </div>
-
-              <!-- Write Review Modal (stub) -->
-              <div *ngIf="showReview()" class="fixed inset-0 z-50 flex items-center justify-center">
-                <div class="absolute inset-0 bg-black/40" (click)="closeReview()"></div>
-                <div class="relative bg-white w-[92vw] max-w-lg rounded-2xl shadow-xl overflow-auto p-6 animate-fade-in">
-                  <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Write a Review</h3>
-                    <button class="text-gray-500 hover:text-gray-700" (click)="closeReview()">✕</button>
-                  </div>
-                  <form class="space-y-4" (submit)="submitReview($event)">
-                    <div>
-                      <label class="block text-sm font-medium mb-1">Rating</label>
-                      <select class="w-full border rounded-lg px-3 py-2" [(ngModel)]="newReview.rating" name="rating">
-                        <option [ngValue]="5">5 - Excellent</option>
-                        <option [ngValue]="4">4 - Good</option>
-                        <option [ngValue]="3">3 - Okay</option>
-                        <option [ngValue]="2">2 - Poor</option>
-                        <option [ngValue]="1">1 - Terrible</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium mb-1">Comment</label>
-                      <textarea class="w-full border rounded-lg px-3 py-2" rows="4" [(ngModel)]="newReview.comment" name="comment" placeholder="Share your experience..."></textarea>
-                    </div>
-                    <div class="flex justify-end gap-2">
-                      <button type="button" class="px-4 py-2 rounded-lg bg-gray-100" (click)="closeReview()">Cancel</button>
-                      <button type="submit" class="px-4 py-2 rounded-lg text-white bg-blue-500 hover:bg-blue-600">Submit</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-                <p class="text-gray-600 text-sm">Update how you appear across Setly. More fields coming soon.</p>
-              </div>
+          <!-- Section: Preferences -->
+          <div *ngIf="section() === 'preferences'" class="section-content">
+            <div class="profile-card">
+              <h2 class="section-title">Edit Profile</h2>
+              <p class="section-subtitle">Update how you appear across Setly</p>
               <app-profile-edit-form (saved)="onProfileSaved()" (dirtyChange)="onDirty($event)"></app-profile-edit-form>
             </div>
+          </div>
 
-            <!-- Section: Your Data (consolidated saved data) -->
-            <div *ngIf="section() === 'data'" class="card space-y-4 animate-fade-in">
-              <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold">Your Saved Data</h2>
-                <div class="flex items-center gap-2">
-                  <button class="btn" (click)="copyAll()">Copy JSON</button>
-                  <button class="btn" (click)="refreshData()">Refresh</button>
+          <!-- Section: Settings -->
+          <div *ngIf="section() === 'settings'" class="section-content">
+            <div class="profile-card">
+              <h2 class="section-title">Settings</h2>
+              <div class="settings-grid">
+                <div>
+                  <h3 class="settings-group-title">Account</h3>
+                  <div class="settings-inputs">
+                    <label class="input-group">
+                      <span class="input-label">Email</span>
+                      <input type="email" class="modern-input" placeholder="you@example.com" [(ngModel)]="settings.email" name="settingsEmail" />
+                    </label>
+                    <label class="input-group">
+                      <span class="input-label">Phone</span>
+                      <input type="tel" class="modern-input" placeholder="(555) 555-5555" [(ngModel)]="settings.phone" name="settingsPhone" />
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <h3 class="settings-group-title">Notifications</h3>
+                  <div class="settings-toggles">
+                    <label class="toggle-row">
+                      <span class="toggle-label">Room booking updates</span>
+                      <input type="checkbox" class="toggle-input" [(ngModel)]="settings.notifyBooking" name="notifyBooking" />
+                    </label>
+                    <label class="toggle-row">
+                      <span class="toggle-label">Product announcements</span>
+                      <input type="checkbox" class="toggle-input" [(ngModel)]="settings.notifyProduct" name="notifyProduct" />
+                    </label>
+                  </div>
                 </div>
               </div>
-              <p class="text-sm text-gray-600">This view shows the data currently stored in your profile stores. It helps confirm what’s saved and visible to you in the app.</p>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h3 class="font-medium mb-2">ProfileSpec (ProfileStore)</h3>
-                  <pre class="bg-gray-50 border border-gray-200 rounded-xl p-3 overflow-auto text-xs leading-relaxed" style="max-height: 380px;">{{ profileJson() }}</pre>
-                </div>
-                <div>
-                  <h3 class="font-medium mb-2">User (UserStore)</h3>
-                  <pre class="bg-gray-50 border border-gray-200 rounded-xl p-3 overflow-auto text-xs leading-relaxed" style="max-height: 380px;">{{ userJson() }}</pre>
-                </div>
+              <div class="settings-actions">
+                <button class="btn-primary" (click)="saveSettings()" [disabled]="saving">{{ saving ? 'Saving…' : 'Save Settings' }}</button>
               </div>
             </div>
+          </div>
 
-            <!-- Section: Settings -->
-            <div *ngIf="section() === 'settings'" class="card space-y-6 animate-fade-in">
-              <h2 class="text-lg font-semibold">Settings</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="font-medium mb-3">Account</h3>
-                  <div class="space-y-3">
-                    <label class="block">
-                      <span class="text-sm text-gray-700">Email</span>
-                      <input type="email" class="input-premium mt-1" placeholder="you@example.com" [(ngModel)]="settings.email" name="settingsEmail" />
-                    </label>
-                    <label class="block">
-                      <span class="text-sm text-gray-700">Phone</span>
-                      <input type="tel" class="input-premium mt-1" placeholder="(555) 555‑5555" [(ngModel)]="settings.phone" name="settingsPhone" />
-                    </label>
-                  </div>
-                  <div class="privacy mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200 text-[13px] text-slate-700">
-                    We use your email and phone for account recovery and security notifications. You control who can see your contact info in the Privacy section.
-                  </div>
-                </div>
-                <div>
-                  <h3 class="font-medium mb-3">Notifications</h3>
-                  <div class="space-y-3">
-                    <label class="toggle">
-                      <input type="checkbox" [(ngModel)]="settings.notifyBooking" name="notifyBooking" />
-                      <span class="track"><span class="thumb"></span></span>
-                      <span class="lbl">Room booking updates</span>
-                    </label>
-                    <label class="toggle">
-                      <input type="checkbox" [(ngModel)]="settings.notifyProduct" name="notifyProduct" />
-                      <span class="track"><span class="thumb"></span></span>
-                      <span class="lbl">Product announcements</span>
-                    </label>
-                  </div>
-                  <div class="danger mt-6">
-                    <button class="danger-btn ripple" type="button">Delete Account</button>
-                  </div>
+          <!-- Section: Your Data -->
+          <div *ngIf="section() === 'data'" class="section-content">
+            <div class="profile-card">
+              <div class="card-header-row">
+                <h2 class="section-title">Your Saved Data</h2>
+                <div class="button-group">
+                  <button class="btn-secondary" (click)="copyAll()">Copy JSON</button>
+                  <button class="btn-secondary" (click)="refreshData()">Refresh</button>
                 </div>
               </div>
-              <div class="flex justify-end items-center gap-4">
-                <p *ngIf="savedFlash" class="text-sm text-green-600">Saved ✓</p>
-                <button class="btn" (click)="saveSettings()" [disabled]="saving">{{ saving ? 'Saving…' : 'Save Settings' }}</button>
+              <p class="section-subtitle">This view shows the data currently stored in your profile stores.</p>
+              <div class="data-grid">
+                <div>
+                  <h3 class="data-label">ProfileSpec (ProfileStore)</h3>
+                  <pre class="data-code">{{ profileJson() }}</pre>
+                </div>
+                <div>
+                  <h3 class="data-label">User (UserStore)</h3>
+                  <pre class="data-code">{{ userJson() }}</pre>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-  <!-- Sticky FAB on mobile -->
-  <button class="fixed lg:hidden bottom-5 right-5 z-40 btn-primary" (click)="openEdit()">Edit Profile</button>
-
-  <!-- Mobile bottom nav -->
-  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 backdrop-blur border-t border-gray-200">
-    <ul class="flex justify-around items-center py-2 text-xs">
-      <li *ngFor="let nav of navSections">
-        <button class="flex flex-col items-center gap-0.5 px-2 py-1" [class.text-indigo-600]="section()===nav.id" (click)="section.set(nav.id); scrollToContent()">
-          <span class="text-base">{{ nav.icon }}</span>
-          <span>{{ nav.label.split(' ')[0] }}</span>
-        </button>
-      </li>
-    </ul>
-  </nav>
-
-  <!-- Footer -->
-        <footer class="mt-12 text-center text-sm text-gray-500">
-          <nav class="flex flex-wrap gap-4 justify-center mb-2">
-            <a class="hover:text-gray-700" href="#">About</a>
-            <a class="hover:text-gray-700" href="#">Help</a>
-            <a class="hover:text-gray-700" href="#">Terms</a>
-            <a class="hover:text-gray-700" href="#">Privacy</a>
-            <a class="hover:text-gray-700" href="#">Feedback</a>
-          </nav>
-          <div>© 2025 Setly</div>
-        </footer>
       </div>
+
+      <!-- Edit Modal -->
+      <div *ngIf="showEdit()" class="modal-overlay" (click)="closeEdit()">
+        <div class="modal-panel" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3 class="modal-title">Edit Profile</h3>
+            <button class="modal-close" (click)="closeEdit()">✕</button>
+          </div>
+          <app-profile-edit-form (saved)="onProfileSaved(); closeEdit()" (dirtyChange)="onDirty($event)"></app-profile-edit-form>
+        </div>
+      </div>
+
+      <!-- Review Modal -->
+      <div *ngIf="showReview()" class="modal-overlay" (click)="closeReview()">
+        <div class="modal-panel modal-sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3 class="modal-title">Write a Review</h3>
+            <button class="modal-close" (click)="closeReview()">✕</button>
+          </div>
+          <form class="review-form" (submit)="submitReview($event)">
+            <div class="form-group">
+              <label class="form-label">Rating</label>
+              <select class="form-select" [(ngModel)]="newReview.rating" name="rating">
+                <option [ngValue]="5">5 - Excellent</option>
+                <option [ngValue]="4">4 - Good</option>
+                <option [ngValue]="3">3 - Okay</option>
+                <option [ngValue]="2">2 - Poor</option>
+                <option [ngValue]="1">1 - Terrible</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Comment</label>
+              <textarea class="form-textarea" rows="4" [(ngModel)]="newReview.comment" name="comment" placeholder="Share your experience..."></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" (click)="closeReview()">Cancel</button>
+              <button type="submit" class="btn-primary">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="profile-footer">
+        <nav class="footer-links">
+          <a href="#">About</a>
+          <a href="#">Help</a>
+          <a href="#">Terms</a>
+          <a href="#">Privacy</a>
+          <a href="#">Feedback</a>
+        </nav>
+        <div class="footer-copy">© 2025 Setly</div>
+      </footer>
     </main>
   `,
   styles: [`
-    .card { @apply bg-white rounded-2xl shadow-sm border border-gray-200 p-6; }
-    .glass { backdrop-filter: blur(12px) saturate(1.25); background:linear-gradient(145deg,rgba(255,255,255,0.85),rgba(255,255,255,0.55)); }
-    .subtle-border { border:1px solid rgba(0,0,0,0.06); box-shadow:0 4px 14px -6px rgba(0,0,0,0.08),0 2px 4px -2px rgba(0,0,0,0.04); }
-    .animate-fade-in { animation: fadeIn .35s ease; }
-    .will-fade-up { animation: fadeUp .55s cubic-bezier(.16,.8,.3,1); }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeUp { from { opacity:0; transform: translateY(22px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
-    .premium-nav-wrapper { position:relative; }
-  .premium-nav { display:flex; gap:16px; overflow-x:auto; padding:.35rem .25rem .5rem; scrollbar-width:none; }
-    .premium-nav::-webkit-scrollbar{ display:none; }
-    .nav-chip { display:flex; align-items:center; gap:.5rem; background:linear-gradient(120deg,#f8f9fb,#f1f5f9); border:1px solid #e5e7eb; padding:.55rem .9rem .55rem .7rem; border-radius:1rem; font-size:.7rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:#475569; position:relative; transition: all .35s cubic-bezier(.4,.7,.2,1); }
-    .nav-chip .icon { font-size:1rem; filter:grayscale(.15); }
-  .nav-chip.active { background:#5A4FF3; color:#fff; border-color:transparent; box-shadow:0 6px 16px -6px rgba(90,79,243,.35); }
-    .nav-chip.active .icon { filter:none; }
-    .nav-chip .badge { background:#fff; color:#6366f1; font-size:.55rem; padding:.15rem .4rem; border-radius:.65rem; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.12); }
-    .nav-chip .badge.complete { background:linear-gradient(90deg,#10b981,#34d399); color:#fff; }
-  .panel-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:16px; padding:12px 16px; border:1px solid rgba(0,0,0,0.05); border-radius:1.35rem; box-shadow:0 8px 26px -12px rgba(0,0,0,.12); }
-  .metric { display:flex; flex-direction:column; gap:12px; padding:12px; border-radius:12px; position:relative; background:linear-gradient(160deg,#ffffff 0%,#f5f7fa 100%); border:1px solid rgba(0,0,0,0.04); }
-  .metric-value { font-size:1.35rem; font-weight:600; letter-spacing:-0.02em; }
-    .metric-label { font-size:.6rem; font-weight:600; text-transform:uppercase; letter-spacing:.09em; color:#64748b; }
-    .metric.focusable { cursor:pointer; transition:.3s; }
-    .metric.focusable:hover { background:linear-gradient(160deg,#f5f7ff,#eef2ff); }
-    .card-stack { display:flex; flex-direction:column; gap:1rem; }
-    .stack-card { background:#fff; border:1px solid #e2e8f0; border-radius:1.25rem; padding:1.1rem 1.25rem 1.2rem; box-shadow:0 4px 18px -8px rgba(0,0,0,.08); display:flex; flex-direction:column; gap:.75rem; }
-    .stack-card header { display:flex; align-items:center; justify-content:space-between; }
-  .stack-card h3 { font-size:22px; font-weight:600; color:#111827; letter-spacing:.02em; }
-    .mini-btn { font-size:.65rem; font-weight:600; letter-spacing:.08em; background:#f1f5f9; border:1px solid #e2e8f0; padding:.4rem .6rem; border-radius:.6rem; text-transform:uppercase; color:#475569; transition:.25s; }
-    .mini-btn:hover { background:#e2e8f0; }
-    .mini-link { font-size:.65rem; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:#6366f1; }
-    .mini-link:hover { text-decoration:underline; }
-  .placeholder { font-size:15px; font-weight:500; color:#94a3b8; }
-  .body-text { font-size:15px; line-height:1.6; color:#334155; }
-    .tag-row { display:flex; flex-wrap:wrap; gap:.5rem; }
-    .tag-row li { background:linear-gradient(90deg,#6366f1,#818cf8); font-size:.6rem; font-weight:600; letter-spacing:.08em; padding:.35rem .55rem; border-radius:.55rem; color:#fff; box-shadow:0 4px 10px -5px rgba(99,102,241,.55); }
-    .timeline { position:relative; display:flex; flex-direction:column; gap:1.35rem; margin-top:.5rem; }
-    .time-item { display:flex; gap:.9rem; position:relative; }
-    .time-item .dot { width:.9rem; height:.9rem; background:linear-gradient(90deg,var(--gradient-start),var(--gradient-end)); border-radius:50%; box-shadow:0 0 0 4px #fff,0 4px 14px -6px rgba(90,79,243,.7); flex-shrink:0; margin-top:.25rem; }
-    .time-item .content { flex:1; }
-    .time-item .title { font-size:.8rem; font-weight:600; }
-    .time-item .sub { font-size:.7rem; color:#6366f1; font-weight:500; margin-top:.15rem; }
-  .time-item .range { font-size:.6rem; text-transform:uppercase; letter-spacing:.08em; color:#94a3b8; margin-top:.35rem; }
-  .map-ph { margin-top:.5rem; height:72px; border-radius:.75rem; background:linear-gradient(135deg,#eef2ff,#f8fafc); border:1px solid #e2e8f0; box-shadow:inset 0 1px 0 rgba(255,255,255,.7); transition:transform .35s ease, box-shadow .35s ease; }
-  .time-item:hover .map-ph { transform:scale(1.02); box-shadow:0 10px 26px -12px rgba(15,23,42,.35), inset 0 1px 0 rgba(255,255,255,.7); }
-    .section-head { display:flex; align-items:center; justify-content:space-between; }
-  .section-head h3 { font-size:22px; font-weight:600; color:#111827; letter-spacing:.02em; }
-  .verif-progress { display:flex; gap:1.1rem; align-items:flex-start; }
-    /* ring styles moved to global .verification-ring utility */
-    .verif-progress .details { flex:1; display:flex; flex-direction:column; gap:.4rem; }
-    .verif-progress .score { font-size:1.05rem; font-weight:600; }
-    .verif-progress .hint { font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; font-weight:600; color:#64748b; }
-    .verif-progress .steps { list-style:none; display:flex; flex-direction:column; gap:.35rem; margin-top:.2rem; }
-    .verif-progress .steps li { font-size:.65rem; display:flex; align-items:center; gap:.45rem; font-weight:600; letter-spacing:.04em; color:#475569; }
-    .verif-progress .steps li.done { color:#10b981; }
-    .verif-progress .steps .chk { width:1rem; text-align:center; }
-  .primary-fab { display:none; }
-  .toggle { display:flex; align-items:center; gap:.6rem; }
-  .toggle input { position:absolute; opacity:0; width:1px; height:1px; }
-  .toggle .track { position:relative; width:44px; height:24px; background:#e5e7eb; border-radius:999px; transition:background .25s; box-shadow:inset 0 1px 0 rgba(255,255,255,.5); }
-  .toggle .thumb { position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,.15); transition:left .25s; }
-  .toggle input:checked + .track { background:linear-gradient(90deg,var(--gradient-start),var(--gradient-end)); }
-  .toggle input:checked + .track .thumb { left:23px; }
-  .toggle .lbl { font-size:.9rem; color:#0f172a; }
-  .danger-btn { padding:.55rem 1rem; border-radius:.7rem; background:linear-gradient(90deg,#f43f5e,#ef4444); color:#fff; font-weight:700; letter-spacing:.05em; box-shadow:0 10px 24px -12px rgba(239,68,68,.6); }
-  .confetti { position:relative; height:0; }
-  .confetti .c { position:absolute; width:6px; height:10px; background:linear-gradient(180deg,#f59e0b,#f43f5e); top:-10px; left:50%; transform:translateX(-50%); animation: fall 1.2s ease forwards; border-radius:2px; }
-  .confetti .c:nth-child(2){ left:40%; animation-delay:.05s; background:linear-gradient(180deg,#10b981,#22d3ee); }
-  .confetti .c:nth-child(3){ left:60%; animation-delay:.1s; background:linear-gradient(180deg,#6366f1,#8b5cf6); }
-  .confetti .c:nth-child(4){ left:30%; animation-delay:.15s; background:linear-gradient(180deg,#ef4444,#f97316); }
-  .confetti .c:nth-child(5){ left:70%; animation-delay:.2s; background:linear-gradient(180deg,#06b6d4,#14b8a6); }
-  @keyframes fall { from { opacity:0; transform:translate(-50%,-10px) rotate(0); } to { opacity:1; transform:translate(-50%,36px) rotate(240deg); } }
-    @media (max-width: 860px){
-      .panel-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    /* Modern Profile Page Layout - Instagram/LinkedIn style */
+    .profile-page-modern {
+      @apply min-h-screen bg-gray-50;
     }
-    @media (max-width:640px){
-      .stack-card { padding:1rem .95rem 1.05rem; }
-      .premium-nav { padding-right:.5rem; }
+    
+    .profile-container {
+      @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+    }
+
+    /* Sticky tabs bar */
+    .tabs-container {
+      @apply sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-200 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-8;
+    }
+
+    .tabs-bar {
+      @apply flex gap-2 overflow-x-auto py-4;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+
+    .tabs-bar::-webkit-scrollbar {
+      display: none; /* Chrome/Safari */
+    }
+
+    .tab-pill {
+      @apply flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all;
+      @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+    }
+
+    .tab-pill.active {
+      @apply bg-brand-azure text-white shadow-md;
+    }
+
+    /* Two-column layout for Overview section */
+    .two-column-layout {
+      @apply grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8;
+    }
+
+    .left-column, .right-column {
+      @apply flex flex-col gap-6;
+    }
+
+    /* Profile cards matching Explore style */
+    .profile-card {
+      @apply bg-white rounded-2xl shadow-sm border border-gray-200 p-6;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: box-shadow .25s ease;
+    }
+
+    .profile-card:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .profile-card-header {
+      @apply flex items-center justify-between mb-4;
+    }
+
+    .profile-card-title {
+      @apply text-lg font-semibold text-gray-900;
+    }
+
+    .profile-card-action {
+      @apply text-sm font-medium text-brand-azure hover:text-brand-midnight cursor-pointer;
+    }
+
+    /* Edit and Review modals */
+    .modal-overlay {
+      @apply fixed inset-0 z-50 flex items-center justify-center;
+    }
+
+    .modal-backdrop {
+      @apply absolute inset-0 bg-black/40;
+    }
+
+    .modal-content {
+      @apply relative bg-white w-[92vw] max-w-2xl max-h-[85vh] rounded-2xl shadow-xl overflow-auto p-6;
+      animation: fadeIn .35s ease;
+    }
+
+    .modal-header {
+      @apply flex items-center justify-between mb-4;
+    }
+
+    .modal-title {
+      @apply text-lg font-semibold;
+    }
+
+    .modal-close {
+      @apply text-gray-500 hover:text-gray-700 text-xl leading-none;
+    }
+
+    /* Footer */
+    .profile-footer {
+      @apply mt-16 py-8 border-t border-gray-200;
+    }
+
+    .footer-links {
+      @apply flex flex-wrap gap-4 justify-center mb-2 text-sm;
+    }
+
+    .footer-links a {
+      @apply text-gray-600 hover:text-gray-900;
+    }
+
+    .footer-copy {
+      @apply text-center text-sm text-gray-500;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn .35s ease;
+    }
+
+    /* Premium elements from old design */
+    .card {
+      @apply profile-card;
+    }
+
+    /* Toggle switch */
+    .toggle {
+      @apply flex items-center gap-3;
+    }
+
+    .toggle input {
+      @apply sr-only;
+    }
+
+    .toggle .track {
+      @apply relative w-11 h-6 bg-gray-200 rounded-full transition-colors;
+    }
+
+    .toggle .thumb {
+      @apply absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform;
+    }
+
+    .toggle input:checked + .track {
+      @apply bg-brand-azure;
+    }
+
+    .toggle input:checked + .track .thumb {
+      @apply translate-x-5;
+    }
+
+    .toggle .lbl {
+      @apply text-sm text-gray-700;
+    }
+
+    /* Danger button */
+    .danger-btn {
+      @apply px-4 py-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold shadow-md hover:shadow-lg transition-shadow;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 640px) {
+      .profile-container {
+        @apply px-3 py-4;
+      }
+      
+      .tabs-container {
+        @apply -mx-3 px-3;
+      }
+      
+      .profile-card {
+        @apply p-4;
+      }
     }
   `]
 })
@@ -449,7 +484,7 @@ export class ProfilePage {
       id: basic?.id || prof?.userId || 'unknown',
       firstName,
       lastName,
-      avatarUrl: prof?.avatarUrl || basic?.photoUrl || '/assets/avatar-placeholder.png',
+  avatarUrl: prof?.avatarUrl || basic?.photoUrl || '/assets/avatar-placeholder.svg',
       coverImageUrl: basic?.coverImageUrl,
       headline: prof?.headline || basic?.headline,
       location: prof?.location,

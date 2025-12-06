@@ -1,0 +1,970 @@
+import { Component, signal, computed, HostListener, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { UnifiedSearchComponent } from './unified-search.component';
+import { FilterPanelComponent } from './components/filter-panel.component';
+import { RoomResultCardComponent } from './components/room-result-card.component';
+import { RideResultCardComponent } from './components/ride-result-card.component';
+import { MarketResultCardComponent } from './components/market-result-card.component';
+import { RideDetailModalComponent } from './components/ride-detail-modal.component';
+import { RoomStore } from '../../core/state/room.store';
+import { ActiveTabService } from '../../core/services/active-tab.service';
+import { SharedDataService } from '../../core/services/shared-data.service';
+
+// Search page with Airbnb-style card interactions
+@Component({
+  selector: 'app-search-page',
+  standalone: true,
+  imports: [CommonModule, UnifiedSearchComponent, FilterPanelComponent, RoomResultCardComponent, RideResultCardComponent, MarketResultCardComponent, RideDetailModalComponent],
+  template: `
+  <main class="explore-page min-h-screen relative">
+      <!-- soft floating background elements -->
+      <div class="floating-orb orb-1" aria-hidden="true"></div>
+      <div class="floating-orb orb-2" aria-hidden="true"></div>
+
+      <section class="hero-strip max-w-7xl mx-auto px-6 pt-8 pb-8">
+        <div class="hero-inner rounded-xl px-6 py-5">
+          <app-unified-search (activeTabChange)="onTabChange($event)" (performedSearch)="onSearch($event)"></app-unified-search>
+        </div>
+      </section>
+
+      <!-- Results / Filters layout -->
+    <section class="max-w-7xl mx-auto px-6 pb-24">
+  <div class="layout-container" [class.filters-visible]="!filtersHidden()" [class.mobile-filters-open]="mobileFiltersOpen()">
+          <!-- Left Sidebar - Sticky Filter Panel (Desktop Only) -->
+          <aside id="filtersPanel" class="filter-sidebar" [class.visible]="!filtersHidden()" [class.mobile-panel]="mobileFiltersOpen()" aria-label="Filters" [attr.role]="mobileFiltersOpen() ? 'dialog' : null" [attr.aria-modal]="mobileFiltersOpen() ? 'true' : null" tabindex="-1">
+            <app-filter-panel
+              [activeTab]="activeTab()"
+              [roomsFilters]="roomsFilters()"
+              [ridesFilters]="ridesFilters()"
+              [marketFilters]="marketFilters()"
+              [amenities]="amenities"
+              [showClose]="mobileFiltersOpen()"
+              (hide)="toggleFilters()"
+              (close)="closeMobileFilters()"
+              (filtersChange)="onFiltersChange()"
+            />
+          </aside>
+
+          <!-- Right Content - Scrollable Results -->
+          <div class="results-container">
+            <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+              <div class="flex items-center gap-3">
+                <button *ngIf="filtersHidden()" class="text-sm px-5 py-2.5 rounded-xl bg-[#3E8FFF] text-white font-semibold shadow-lg shadow-[#3E8FFF]/25 hover:shadow-xl hover:shadow-[#3E8FFF]/35 hover:scale-105 transition-all duration-200" (click)="toggleFilters()" aria-controls="filtersPanel" [attr.aria-expanded]="!filtersHidden()">
+                  <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                  </svg>
+                  Show Filters
+                </button>
+                <button *ngIf="!filtersHidden()" class="md:hidden text-sm px-5 py-2.5 rounded-xl bg-[#3E8FFF] text-white font-semibold shadow-lg shadow-[#3E8FFF]/25 hover:shadow-xl hover:shadow-[#3E8FFF]/35 hover:scale-105 transition-all duration-200" (click)="openMobileFilters()" aria-controls="filtersPanel" [attr.aria-expanded]="mobileFiltersOpen()">
+                  <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                  </svg>
+                  Filters
+                </button>
+              </div>
+              <div class="text-sm text-[#6F7785]">Showing <span class="font-semibold text-[#0A1A3F]">{{ results().length }}</span> {{ activeTab() }}</div>
+              <div class="flex items-center gap-2">
+                <select class="text-sm rounded-xl px-4 py-2.5 bg-white backdrop-blur-sm border border-[#ECECEC] text-[#0A1A3F] font-medium shadow-sm hover:shadow-md hover:border-[#3E8FFF] focus:outline-none focus:border-[#3E8FFF] focus:ring-4 focus:ring-[#3E8FFF]/10 transition-all cursor-pointer">
+                  <option>Most relevant</option>
+                  <option>Newest</option>
+                  <option>Price low-high</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Grid -->
+            <div *ngIf="!loading() && results().length > 0" class="results-grid" [class.filters-visible]="!filtersHidden()">
+              <ng-container [ngSwitch]="activeTab()">
+                <ng-container *ngSwitchCase="'rooms'">
+                  <app-room-result-card 
+                    *ngFor="let item of results()" 
+                    [item]="item"
+                    [isSelected]="selectedCardId() === item.id"
+                    (cardClick)="onRoomCardClick(item)">
+                  </app-room-result-card>
+                </ng-container>
+                <ng-container *ngSwitchCase="'rides'">
+                  <app-ride-result-card 
+                    *ngFor="let item of results()" 
+                    [item]="item"
+                    [isSelected]="selectedCardId() === item.id"
+                    (cardClick)="openRideModal(item)">
+                  </app-ride-result-card>
+                </ng-container>
+                <ng-container *ngSwitchCase="'market'">
+                  <app-market-result-card 
+                    *ngFor="let item of results()" 
+                    [item]="item"
+                    [isSelected]="selectedCardId() === item.id"
+                    (cardClick)="onMarketCardClick(item)">
+                  </app-market-result-card>
+                </ng-container>
+              </ng-container>
+            </div>
+
+            <!-- Loading skeleton -->
+            <div *ngIf="loading()" class="results-grid" [class.filters-visible]="!filtersHidden()">
+              <div *ngFor="let i of skeleton" class="card-result animate-pulse">
+                <div class="thumb bg-gray-200"></div>
+                <div class="p-3 space-y-2">
+                  <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div class="h-4 bg-gray-200 rounded w-2/5"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div *ngIf="!loading() && results().length === 0" class="text-center py-24">
+              <h3 class="text-xl font-semibold text-gray-900 mb-3">No {{ activeTab() }} found</h3>
+              <p class="text-sm text-gray-600 max-w-sm mx-auto">Try adjusting your search or filters for a broader match.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ride Detail Modal -->
+      <app-ride-detail-modal
+        [ride]="selectedRide()"
+        [isOpen]="isRideModalOpen()"
+        (closeModal)="closeRideModal()">
+      </app-ride-detail-modal>
+    </main>
+   `,
+   styles: [ `
+    /* CSS Variables for sticky positioning 
+       --sticky-filter-offset: Distance from top when filters become sticky
+       --filter-max-height-offset: Used to calculate max height of filter panel
+       
+       To adjust if filter gets cut off:
+       1. Increase --sticky-filter-offset (e.g., 200px, 220px)
+       2. Increase --filter-max-height-offset by same amount
+       
+       Current calculation:
+       - Header: ~64px
+       - Hero strip padding (pt-8 + pb-8): ~64px  
+       - Search component: ~60-80px
+       - Spacing: ~20px
+       Total: ~180-200px
+    */
+    :host {
+      --sticky-filter-offset: 160px;
+      --filter-max-height-offset: 180px;
+    }
+
+    /* Smooth scrolling for the entire page */
+    * {
+      scroll-behavior: smooth;
+    }
+
+    /* Clean white background for Explore page */
+    .explore-page { 
+      background: #FFFFFF;
+      position: relative;
+    }
+    
+    /* Subtle decorative orbs - minimal and neutral */
+    .floating-orb { 
+      display: none; /* Hidden for clean white background */
+    }
+
+    /* Hero strip - clean white card with soft shadow */
+    .hero-strip .hero-inner { 
+      background: #FFFFFF; 
+      border-radius: 20px; 
+      border: 1px solid #ECECEC; 
+      box-shadow: 0 4px 20px -8px rgba(10, 26, 63, 0.08), 0 2px 10px -4px rgba(0, 0, 0, 0.04); 
+    }
+
+    /* Layout Container - Flexbox for filters + results */
+    .layout-container {
+      display: flex;
+      gap: 40px;
+      position: relative;
+      align-items: flex-start; /* Align items to top for sticky to work */
+      transition: all 0.3s ease;
+    }
+
+    /* Filter Sidebar - Sticky on Desktop */
+    .filter-sidebar {
+      width: 0;
+      flex-shrink: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: width 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .filter-sidebar.visible {
+      width: 288px; /* 18rem / w-72 */
+      opacity: 1;
+      transform: translateX(0);
+      position: sticky;
+      top: var(--sticky-filter-offset); /* Use CSS variable for easy adjustment */
+      align-self: flex-start; /* Critical for sticky positioning */
+      max-height: calc(100vh - var(--filter-max-height-offset)); /* Prevents overflow, allows internal scrolling */
+      overflow-y: auto; /* Allow scrolling if filter content is tall */
+      /* Ensure sticky works properly */
+      will-change: transform;
+      z-index: 10;
+      /* Hide scrollbar but keep functionality */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(62, 143, 255, 0.3) transparent;
+      /* Ensure content doesn't get cut off */
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Ensure filter panel content scrolls internally */
+    .filter-sidebar.visible > * {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    /* Webkit scrollbar styling for filter panel */
+    .filter-sidebar.visible::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .filter-sidebar.visible::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .filter-sidebar.visible::-webkit-scrollbar-thumb {
+      background: rgba(62, 143, 255, 0.3);
+      border-radius: 3px;
+    }
+
+    .filter-sidebar.visible::-webkit-scrollbar-thumb:hover {
+      background: rgba(62, 143, 255, 0.5);
+    }
+
+    /* Results Container - Scrolls Normally */
+    .results-container {
+      flex: 1;
+      min-width: 0;
+      transition: all 0.3s ease;
+    }
+
+    /* Results Grid - Dynamic columns based on filter state */
+    .results-grid {
+      display: grid;
+      gap: 28px;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      transition: grid-template-columns 0.3s ease, gap 0.3s ease;
+    }
+
+    /* Small screens */
+    @media (min-width: 640px) {
+      .results-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    /* Medium screens - 3 columns when filters shown, 3 columns default */
+    @media (min-width: 768px) {
+      .results-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    /* Large screens - 4 columns when filters hidden, 3 when shown */
+    @media (min-width: 1024px) {
+      .results-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      
+      .results-grid.filters-visible {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    /* Extra large screens - maintain proper spacing */
+    @media (min-width: 1280px) {
+      .results-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 32px;
+      }
+      
+      .results-grid.filters-visible {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px;
+      }
+    }
+    
+    .filter-label { @apply block text-xs font-semibold uppercase tracking-wide mb-1; color: #0A1A3F; }
+    .filter-input { @apply w-full border rounded-md px-2 py-1 text-sm focus:outline-none; border-color: #ECECEC; color: #1B1C1E; }
+    .filter-input:focus { border-color: #3E8FFF; box-shadow: 0 0 0 2px rgba(62,143,255,0.1); }
+    .pill { @apply px-3 py-1 text-xs rounded-full border bg-white focus:outline-none; border-color: #ECECEC; color: #0A1A3F; }
+    .pill.on { border-color: #3E8FFF; background: rgba(62,143,255,0.08); color: #0A1A3F; font-weight: 600; }
+    
+    /* Mobile filters overlay */
+    .mobile-filters-open .mobile-panel { 
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 40;
+      width: 288px;
+      background: white;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      overflow-y: auto;
+      padding: 20px 16px 32px;
+      border-right: 1px solid #ECECEC;
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    .mobile-filters-open::before { 
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 30;
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      .filter-sidebar.visible {
+        position: relative; /* Not sticky on mobile */
+        width: 0;
+        opacity: 0;
+        transform: translateX(-20px);
+        top: auto; /* Remove sticky positioning */
+        max-height: none; /* Remove height constraint */
+        z-index: auto;
+      }
+
+      .mobile-filters-open::before {
+        display: block;
+      }
+    }
+
+    /* Tablet - sticky with adjusted offset */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      :host {
+        --sticky-filter-offset: 140px;
+        --filter-max-height-offset: 160px;
+      }
+      
+      .filter-sidebar.visible {
+        position: sticky;
+        top: var(--sticky-filter-offset);
+        max-height: calc(100vh - var(--filter-max-height-offset));
+      }
+    }
+
+    /* Desktop - optimal sticky behavior */
+    @media (min-width: 1024px) {
+      :host {
+        --sticky-filter-offset: 160px;
+        --filter-max-height-offset: 180px;
+      }
+      
+      .filter-sidebar.visible {
+        position: sticky;
+        top: var(--sticky-filter-offset);
+        max-height: calc(100vh - var(--filter-max-height-offset));
+      }
+    }
+    
+    /* Clean white cards with soft shadows */
+    .explore-page .card-premium { 
+      background: #FFFFFF; 
+      border-radius: 20px; 
+      border: 1px solid #ECECEC;
+      box-shadow: 0 4px 16px -4px rgba(10, 26, 63, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04); 
+      overflow: hidden; 
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease; 
+    }
+    .explore-page .card-premium:hover { 
+      transform: translateY(-6px); 
+      box-shadow: 0 12px 40px -8px rgba(10, 26, 63, 0.12), 0 8px 24px -4px rgba(62, 143, 255, 0.12); 
+      border-color: #3E8FFF;
+    }
+    .explore-page .hover-lift:hover { 
+      transform: translateY(-6px); 
+    }
+
+    @media (max-width: 768px) {
+      .orb-1, .orb-2 { display:none; }
+    }
+  ` ]
+})
+export class SearchPage {
+  private roomStore = inject(RoomStore);
+  private activeTabService = inject(ActiveTabService);
+  private sharedData = inject(SharedDataService);
+  activeTab = signal<'rooms'|'rides'|'market'>('rooms');
+  filtersHidden = signal(false);
+  loading = signal(false);
+  mobileFiltersOpen = signal(false);
+  skeleton = Array.from({ length: 8 }, (_, i) => i);
+
+  // Ride modal state
+  isRideModalOpen = signal(false);
+  selectedRide = signal<any>(null);
+  
+  // Selected card state for visual highlighting
+  selectedCardId = signal<string | null>(null);
+
+  // Convert filters to signals for reactive updates
+  roomsFilters = signal({ price: 1500, place: '', type: '', property: '', amenities: [] as string[], studentVerified: false, rating: '' });
+  ridesFilters = signal({ from: '', to: '', date: '', time: '', priceMax: 0, seats: 1, radius: 0, rating: '' });
+  marketFilters = signal({ category: '', maxPrice: 0, condition: '', place: '', seller: '' });
+  amenities = ['Wi-Fi','Laundry','Parking','Kitchen','AC'];
+
+  // Use shared data service instead of local dummy data
+  browseRoomItems = this.sharedData.rooms;
+  rideResults = this.sharedData.rides;
+  marketResults = this.sharedData.marketplace;
+
+  results = computed(() => {
+    if (this.activeTab() === 'rooms') {
+      title: 'Campus → Airport',
+      from: 'Boston University',
+      fromLine1: 'Boston University',
+      fromLine2: 'Commonwealth Ave - Main Gate',
+      to: 'Logan Airport',
+      toLine1: 'Logan Airport',
+      toLine2: 'Terminal B - Departures',
+      departureDate: 'Tomorrow',
+      departureTime: '9:00 AM',
+      timeLeftPercent: 30,
+      distance: '7 miles',
+      duration: '20 min',
+      price: '$15',
+      priceNum: 15,
+      seatsAvailable: 1,
+      totalSeats: 2,
+      rating: 5,
+      tripsCompleted: 85,
+      weather: { city: 'Boston', temp: '68°', condition: 'Cloudy' },
+      driver: { 
+        name: 'Frank Chen', 
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80',
+        trustScore: 92, 
+        verified: true,
+        studentVerified: true
+      },
+      car: {
+        make: 'Honda Civic',
+        color: 'Blue',
+        year: 2020,
+        image: 'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=400&q=80'
+      },
+      passengers: [ { name: 'Eve', initial: 'E' } ],
+      aiSummary: 'Morning airport run, verified driver.',
+      image: 'https://images.unsplash.com/photo-1511527844068-006b95d162c2?w=800&q=80'
+    },
+    {
+      id: 'ride3',
+      title: 'Cambridge → Providence',
+      from: 'Harvard',
+      fromLine1: 'Harvard Square',
+      fromLine2: 'Cambridge, MA - Red Line',
+      to: 'Providence',
+      toLine1: 'Providence, RI',
+      toLine2: 'Downtown - Kennedy Plaza',
+      departureDate: 'Saturday, Jan 11',
+      departureTime: '2:00 PM',
+      timeLeftPercent: 50,
+      distance: '50 miles',
+      duration: '1h 10min',
+      price: '$20',
+      priceNum: 20,
+      seatsAvailable: 3,
+      totalSeats: 4,
+      rating: 4,
+      tripsCompleted: 45,
+      weather: { city: 'Providence', temp: '70°', condition: 'Partly cloudy' },
+      driver: { 
+        name: 'Grace Thompson', 
+        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80',
+        trustScore: 78, 
+        verified: false,
+        studentVerified: true
+      },
+      car: {
+        make: 'Mazda 3',
+        color: 'Red',
+        year: 2019,
+        image: 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&q=80'
+      },
+      passengers: [],
+      aiSummary: 'Afternoon ride to Providence, plenty of seats.',
+      image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80'
+    },
+    {
+      id: 'ride4',
+      title: 'Boston → Philadelphia',
+      from: 'Boston',
+      fromLine1: 'Boston, MA',
+      fromLine2: 'South Station',
+      to: 'Philadelphia',
+      toLine1: 'Philadelphia, PA',
+      toLine2: 'Center City - 30th Street',
+      departureDate: 'Sunday, Jan 12',
+      departureTime: '10:00 AM',
+      timeLeftPercent: 80,
+      distance: '310 miles',
+      duration: '5h 30min',
+      price: '$55',
+      priceNum: 55,
+      seatsAvailable: 1,
+      totalSeats: 2,
+      rating: 5,
+      tripsCompleted: 200,
+      weather: { city: 'Philadelphia', temp: '72°', condition: 'Sunny' },
+      driver: { 
+        name: 'Hiro Tanaka', 
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
+        trustScore: 95, 
+        verified: true,
+        studentVerified: false
+      },
+      car: {
+        make: 'Tesla Model 3',
+        color: 'White',
+        year: 2022,
+        image: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=400&q=80'
+      },
+      passengers: [ { name: 'Charlie', initial: 'C' } ],
+      aiSummary: 'Long distance ride with experienced driver.',
+      image: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80'
+    },
+    {
+      id: 'ride5',
+      title: 'MIT → Downtown',
+      from: 'MIT',
+      fromLine1: 'MIT Campus',
+      fromLine2: 'Cambridge, MA - Kendall Square',
+      to: 'Downtown Boston',
+      toLine1: 'Downtown Boston',
+      toLine2: 'Financial District',
+      departureDate: 'Today',
+      departureTime: '5:30 PM',
+      timeLeftPercent: 20,
+      distance: '3 miles',
+      duration: '15 min',
+      price: 'Free',
+      priceNum: 0,
+      seatsAvailable: 2,
+      totalSeats: 3,
+      rating: 4,
+      tripsCompleted: 35,
+      weather: { city: 'Boston', temp: '65°', condition: 'Clear' },
+      driver: { 
+        name: 'Jamal Washington', 
+        avatar: 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=400&q=80',
+        trustScore: 80, 
+        verified: true,
+        studentVerified: true
+      },
+      car: {
+        make: 'Hyundai Elantra',
+        color: 'Black',
+        year: 2020,
+        image: 'https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=400&q=80'
+      },
+      passengers: [],
+      aiSummary: 'Quick evening commute to downtown.',
+      image: 'https://images.unsplash.com/photo-1485463611174-f302f6a5c1c9?w=400&q=80'
+    },
+    {
+      id: 'ride6',
+      title: 'Boston → Cape Cod',
+      from: 'Boston',
+      fromLine1: 'Boston, MA',
+      fromLine2: 'Back Bay Station',
+      to: 'Cape Cod',
+      toLine1: 'Cape Cod, MA',
+      toLine2: 'Hyannis - Main Street',
+      departureDate: 'Next Friday',
+      departureTime: '3:00 PM',
+      timeLeftPercent: 60,
+      distance: '75 miles',
+      duration: '1h 45min',
+      price: '$30',
+      priceNum: 30,
+      seatsAvailable: 2,
+      totalSeats: 4,
+      rating: 5,
+      tripsCompleted: 150,
+      weather: { city: 'Cape Cod', temp: '73°', condition: 'Sunny' },
+      driver: { 
+        name: 'Kevin O\'Brien', 
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80',
+        trustScore: 88, 
+        verified: true,
+        studentVerified: true
+      },
+      car: {
+        make: 'Jeep Wrangler',
+        color: 'Green',
+        year: 2021,
+        image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400&q=80'
+      },
+      passengers: [ { name: 'Diana', initial: 'D' }, { name: 'Farah', initial: 'F' } ],
+      aiSummary: 'Weekend beach trip, friendly group.',
+      image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80'
+    },
+    {
+      id: 'ride7',
+      title: 'Northeastern → South Station',
+      from: 'Northeastern University',
+      fromLine1: 'Northeastern University',
+      fromLine2: 'Huntington Ave',
+      to: 'South Station',
+      toLine1: 'South Station',
+      toLine2: 'Boston, MA - Bus Terminal',
+      departureDate: 'Today',
+      departureTime: '7:00 PM',
+      timeLeftPercent: 25,
+      distance: '2 miles',
+      duration: '10 min',
+      price: '$5',
+      priceNum: 5,
+      seatsAvailable: 1,
+      totalSeats: 1,
+      rating: 4,
+      tripsCompleted: 28,
+      weather: { city: 'Boston', temp: '66°', condition: 'Clear' },
+      driver: { 
+        name: 'Naomi Kim', 
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
+        trustScore: 75, 
+        verified: false,
+        studentVerified: true
+      },
+      car: {
+        make: 'Kia Forte',
+        color: 'Gray',
+        year: 2018,
+        image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=80'
+      },
+      passengers: [],
+      aiSummary: 'Quick train station drop-off.',
+      image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80'
+    },
+    {
+      id: 'ride8',
+      title: 'Boston → New Haven',
+      from: 'Boston',
+      fromLine1: 'Boston, MA',
+      fromLine2: 'Fenway - Lansdowne St',
+      to: 'New Haven',
+      toLine1: 'New Haven, CT',
+      toLine2: 'Yale University - Old Campus',
+      departureDate: 'Next Monday',
+      departureTime: '8:00 AM',
+      timeLeftPercent: 75,
+      distance: '135 miles',
+      duration: '2h 30min',
+      price: '$35',
+      priceNum: 35,
+      seatsAvailable: 2,
+      totalSeats: 3,
+      rating: 5,
+      tripsCompleted: 95,
+      weather: { city: 'New Haven', temp: '69°', condition: 'Partly cloudy' },
+      driver: { 
+        name: 'Olivia Martinez', 
+        avatar: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=400&q=80',
+        trustScore: 90, 
+        verified: true,
+        studentVerified: true
+      },
+      car: {
+        make: 'Volkswagen Jetta',
+        color: 'Silver',
+        year: 2021,
+        image: 'https://images.unsplash.com/photo-1619405399517-d7fce0f13302?w=400&q=80'
+      },
+      passengers: [ { name: 'Paul', initial: 'P' } ],
+      aiSummary: 'Early morning commute to Yale area.',
+      image: 'https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=800&q=80'
+    }
+  ]);
+
+  // Dummy marketplace listings - 8 varied items for testing
+  marketResults = signal<any[]>([
+    { 
+      id: 'market1', 
+      title: 'IKEA Desk - Like New', 
+      category: 'Furniture', 
+      location: 'Boston University', 
+      place: 'Boston',
+      price: '$50', 
+      priceNum: 50, 
+      condition: 'Like new', 
+      seller: 'Student', 
+      image: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=800&q=80', 
+      badge: 'Furniture',
+      description: 'Sturdy IKEA desk in excellent condition, barely used.'
+    },
+    { 
+      id: 'market2', 
+      title: 'Physics Textbook', 
+      category: 'Books', 
+      location: 'Harvard', 
+      place: 'Cambridge',
+      price: '$25', 
+      priceNum: 25, 
+      condition: 'Used', 
+      seller: 'Student', 
+      image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=800&q=80', 
+      badge: 'Books',
+      description: 'University Physics with Modern Physics, 14th Edition.'
+    },
+    { 
+      id: 'market3', 
+      title: 'MacBook Pro 2020', 
+      category: 'Electronics', 
+      location: 'MIT', 
+      place: 'Cambridge',
+      price: '$800', 
+      priceNum: 800, 
+      condition: 'Used', 
+      seller: 'Student', 
+      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80', 
+      badge: 'Electronics',
+      description: '13" MacBook Pro, 8GB RAM, 256GB SSD, works perfectly.'
+    },
+    { 
+      id: 'market4', 
+      title: 'Mini Fridge', 
+      category: 'Furniture', 
+      location: 'Northeastern', 
+      place: 'Boston',
+      price: '$75', 
+      priceNum: 75, 
+      condition: 'Like new', 
+      seller: 'Student', 
+      image: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=800&q=80', 
+      badge: 'Furniture',
+      description: 'Compact fridge perfect for dorm rooms.'
+    },
+    { 
+      id: 'market5', 
+      title: 'Calculus Tutoring', 
+      category: 'Tutoring', 
+      location: 'Boston College', 
+      place: 'Chestnut Hill',
+      price: '$30', 
+      priceNum: 30, 
+      condition: 'New', 
+      seller: 'Student', 
+      image: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800&q=80', 
+      badge: 'Tutoring',
+      description: 'PhD student offering calculus tutoring, all levels.'
+    },
+    { 
+      id: 'market6', 
+      title: 'Gaming Chair', 
+      category: 'Furniture', 
+      location: 'Tufts', 
+      place: 'Medford',
+      price: '$120', 
+      priceNum: 120, 
+      condition: 'Used', 
+      seller: 'Other', 
+      image: 'https://images.unsplash.com/photo-1598550476439-6847785fcea6?w=800&q=80', 
+      badge: 'Furniture',
+      description: 'Comfortable gaming/office chair with lumbar support.'
+    },
+    { 
+      id: 'market7', 
+      title: 'iPhone 13', 
+      category: 'Electronics', 
+      location: 'Emerson', 
+      place: 'Boston',
+      price: '$450', 
+      priceNum: 450, 
+      condition: 'Like new', 
+      seller: 'Student', 
+      image: 'https://images.unsplash.com/photo-1592286927505-f0e2fe45f78b?w=800&q=80', 
+      badge: 'Electronics',
+      description: '128GB, unlocked, perfect condition with case.'
+    },
+    { 
+      id: 'market8', 
+      title: 'Chemistry Study Guide', 
+      category: 'Books', 
+      location: 'Suffolk', 
+      place: 'Boston',
+      price: '$15', 
+      priceNum: 15, 
+      condition: 'Used', 
+      seller: 'Student', 
+      image: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=800&q=80', 
+      badge: 'Books',
+      description: 'Complete chemistry notes and practice problems.'
+    }
+  ]);
+
+  results = computed(() => {
+    if (this.activeTab() === 'rooms') {
+      const f = this.roomsFilters(); // Access signal value
+      return this.browseRoomItems().filter(r => {
+        // Price filter
+        if (r.priceNum > (f.price || 99999)) return false;
+        
+        // Location filter
+        if (f.place && !(r.location || '').toLowerCase().includes(f.place.toLowerCase()) &&
+            !(r.city || '').toLowerCase().includes(f.place.toLowerCase()) &&
+            !(r.university || '').toLowerCase().includes(f.place.toLowerCase())) {
+          return false;
+        }
+        
+        // Room type filter (shared/private)
+        if (f.type && r.roomType !== f.type) return false;
+        
+        // Property type filter (Apartment/House/Dorm/Studio)
+        if (f.property && r.propertyType !== f.property) return false;
+        
+        // Amenities filter - all selected amenities must be present
+        if (f.amenities && f.amenities.length > 0) {
+          const hasAllAmenities = f.amenities.every((a: string) => 
+            (r.amenities || []).includes(a)
+          );
+          if (!hasAllAmenities) return false;
+        }
+        
+        // Verification filter
+        if (f.studentVerified && !r.verified) return false;
+        
+        // Rating filter
+        if (f.rating && r.rating < parseInt(f.rating)) return false;
+        
+        return true;
+      });
+    }
+    
+    if (this.activeTab() === 'rides') {
+      const f = this.ridesFilters(); // Access signal value
+      return this.rideResults().filter(r => {
+        // Route filters
+        if (f.from && !(r.from || '').toLowerCase().includes(f.from.toLowerCase())) {
+          return false;
+        }
+        if (f.to && !(r.to || '').toLowerCase().includes(f.to.toLowerCase())) {
+          return false;
+        }
+        
+        // Price filter
+        if (f.priceMax && f.priceMax > 0 && r.priceNum > f.priceMax) {
+          return false;
+        }
+        
+        // Seats filter - check available seats
+        if (f.seats && r.seatsAvailable < f.seats) return false;
+        
+        // Rating filter
+        if (f.rating && r.rating < parseInt(f.rating)) return false;
+        
+        return true;
+      });
+    }
+    
+    // Marketplace filters
+    const f = this.marketFilters(); // Access signal value
+    return this.marketResults().filter(m => {
+      // Category filter
+      if (f.category && m.category !== f.category) return false;
+      
+      // Price filter
+      if (f.maxPrice && f.maxPrice > 0 && m.priceNum > f.maxPrice) {
+        return false;
+      }
+      
+      // Condition filter
+      if (f.condition && m.condition !== f.condition) return false;
+      
+      // Location filter
+      if (f.place && !(m.place || m.location || '').toLowerCase().includes(f.place.toLowerCase())) {
+        return false;
+      }
+      
+      // Seller filter
+      if (f.seller && !(m.seller || '').toLowerCase().includes(f.seller.toLowerCase())) {
+        return false;
+      }
+      
+      return true;
+    });
+  });
+
+  onTabChange(tab: 'rooms'|'rides'|'market'){ 
+    this.activeTab.set(tab); 
+    this.activeTabService.setActiveTab(tab); // Update global service
+    this.loading.set(true); 
+    setTimeout(()=> this.loading.set(false), 150); 
+  }
+  onSearch(ev: { tab: 'rooms' | 'rides' | 'market'; mode: 'search' | 'post'; payload: any }){
+    this.activeTab.set(ev.tab);
+    this.activeTabService.setActiveTab(ev.tab); // Update global service
+    this.loading.set(true);
+    setTimeout(() => {
+      this.loading.set(false);
+    }, 600);
+  }
+  toggleFilters(){ this.filtersHidden.set(!this.filtersHidden()); }
+  
+  onFiltersChange() {
+    // Trigger signal updates by creating new object references
+    this.roomsFilters.set({ ...this.roomsFilters() });
+    this.ridesFilters.set({ ...this.ridesFilters() });
+    this.marketFilters.set({ ...this.marketFilters() });
+  }
+  
+  toggleAmenity(a: string){ 
+    const current = this.roomsFilters();
+    const idx = current.amenities.indexOf(a);
+    if (idx >= 0) {
+      current.amenities.splice(idx, 1);
+    } else {
+      current.amenities.push(a);
+    }
+    // Trigger signal update
+    this.roomsFilters.set({ ...current });
+  }
+  
+  openMobileFilters(){ this.mobileFiltersOpen.set(true); }
+  closeMobileFilters(){ this.mobileFiltersOpen.set(false); }
+
+  // Ride modal methods
+  openRideModal(ride: any) {
+    this.selectedCardId.set(ride.id);
+    this.selectedRide.set(ride);
+    this.isRideModalOpen.set(true);
+  }
+
+  closeRideModal() {
+    this.isRideModalOpen.set(false);
+    // Clear selected card after animation completes
+    setTimeout(() => {
+      this.selectedRide.set(null);
+      this.selectedCardId.set(null);
+    }, 200);
+  }
+  
+  // Room card click handler
+  onRoomCardClick(room: any) {
+    this.selectedCardId.set(room.id);
+    // TODO: Implement room detail modal similar to ride modal
+    console.log('Room card clicked:', room);
+  }
+  
+  // Market card click handler
+  onMarketCardClick(item: any) {
+    this.selectedCardId.set(item.id);
+    // TODO: Implement market detail modal
+    console.log('Market card clicked:', item);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(){ 
+    if (this.mobileFiltersOpen()) this.mobileFiltersOpen.set(false);
+    if (this.isRideModalOpen()) this.closeRideModal();
+  }
+}

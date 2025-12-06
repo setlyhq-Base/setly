@@ -53,7 +53,7 @@ import { AssistantService } from '../../assistant/assistant.service';
           <p class="text-sm text-gray-600 mb-4">Follow universities, explore rooms, and connect with people who share your journey.</p>
           <div class="mb-4">
             <button (click)="askAssistant()" class="px-4 py-2 rounded-md text-sm inline-flex items-center gap-2 border focus-ring">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 100 18 9 9 0 000-18zm-1 5h2v6h-2V8zm1 9a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" stroke="#5A4FF3" stroke-width="1.2"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 100 18 9 9 0 000-18zm-1 5h2v6h-2V8zm1 9a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" stroke="#3E8FFF" stroke-width="1.2"/></svg>
               Ask Setly Assistant
             </button>
           </div>
@@ -103,17 +103,17 @@ import { AssistantService } from '../../assistant/assistant.service';
         All transactions happen directly — verify before meeting.
       </div>
 
-      <!-- Manual pagination instead of infinite scroll -->
-      <div class="py-6 text-center" *ngIf="feed.nextCursor">
-        <button (click)="requestMore.emit()" [disabled]="loading" class="px-6 py-3 rounded-full btn-brand text-base font-semibold shadow focus-ring transition inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" [attr.aria-busy]="loading">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/></svg>
+      <!-- Manual pagination instead of infinite scroll - Matching Explore Style -->
+      <div class="py-8 text-center" *ngIf="feed.nextCursor">
+        <button (click)="requestMore.emit()" [disabled]="loading" class="px-8 py-3.5 rounded-xl bg-[#3E8FFF] text-white text-base font-semibold shadow-lg shadow-[#3E8FFF]/25 hover:shadow-xl hover:shadow-[#3E8FFF]/35 hover:scale-105 transition-all duration-200 inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" [attr.aria-busy]="loading">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
           {{ loading ? 'Loading…' : 'Load More' }}
         </button>
       </div>
     </div>
   `,
   styles: [`
-    .market-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .market-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
     @media (max-width: 767px) { .market-grid { grid-template-columns: 1fr; } }
   `]
 })

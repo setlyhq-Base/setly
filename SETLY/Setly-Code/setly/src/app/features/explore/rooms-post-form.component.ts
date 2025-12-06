@@ -1,15 +1,17 @@
-import { Component, ElementRef, HostListener, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { AddressAutocompleteComponent } from '../../shared/ui/address-autocomplete.component';
+import { GooglePlaceInputComponent } from '../../shared/ui/google-place-input.component';
+import { UploadsService } from '../../core/services/uploads.service';
+import { environment } from '../../../environments/environment';
 import { ImageUploaderComponent } from '../../shared/ui/image-uploader.component';
 import { LocationAutocompleteComponent } from '../../shared/ui/location-autocomplete.component';
-import { AddressSuggestion, GeoSuggestion } from '../../core/services/geocoding.service';
+import { GeoSuggestion } from '../../core/services/geocoding.service';
 
 @Component({
   selector: 'app-rooms-post-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LocationAutocompleteComponent, AddressAutocompleteComponent, ImageUploaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, LocationAutocompleteComponent, GooglePlaceInputComponent, ImageUploaderComponent],
   template: `
     <div [formGroup]="form" class="form-layout">
       <div class="form-row two-cols">
@@ -25,15 +27,11 @@ import { AddressSuggestion, GeoSuggestion } from '../../core/services/geocoding.
         </div>
         <div class="field-block">
           <label class="field-label">Room address</label>
-          <app-address-autocomplete
+          <app-google-place-input
             [initialAddress]="form.controls['address']?.value || ''"
-            [placeholder]="'Enter full address'"
-            [biasCity]="form.controls['city']?.value || ''"
-            [biasState]="form.controls['state']?.value || ''"
-            [biasLat]="form.controls['cityLat']?.value"
-            [biasLon]="form.controls['cityLon']?.value"
             (picked)="onAddressPicked($event)"
-          ></app-address-autocomplete>
+            placeholder="Enter full address"
+          ></app-google-place-input>
           <p *ngIf="showError('address')" class="field-error">Please enter the full address.</p>
         </div>
       </div>
@@ -86,6 +84,16 @@ import { AddressSuggestion, GeoSuggestion } from '../../core/services/geocoding.
             [helperSecondary]="'Max 10 • JPG, PNG, WebP'"
           ></app-image-uploader>
           <p *ngIf="showError('photos')" class="field-error">Please add at least 3 photos.</p>
+          <div *ngIf="featureVideo" class="mt-4 space-y-2">
+            <label class="field-label">Optional room video</label>
+            <input #videoInput type="file" accept="video/*" (change)="onVideoSelected($event)" class="input-premium" />
+            <div class="flex flex-wrap gap-3" *ngIf="videos.length">
+              <div class="relative" *ngFor="let v of videos; let i = index">
+                <video [src]="v.url" class="w-32 h-20 object-cover rounded-lg" muted playsinline></video>
+                <button type="button" class="absolute top-1 right-1 bg-black/50 text-white text-xs rounded px-1" (click)="removeVideo(i)">✕</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -161,6 +169,40 @@ export class RoomsPostFormComponent {
     { value: 'furnished', label: 'Furnished' },
     { value: 'utilities', label: 'Utilities included' }
   ];
+
+  featureVideo = (environment as any)?.featureFlags?.enableRoomVideo === true;
+  private uploads = inject(UploadsService);
+  videos: { url: string }[] = [];
+
+  onVideoSelected(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+  this.uploads.uploadRoomMedia('room-video', file, this.form.controls['roomId']?.value).then((up: { url: string }) => {
+      this.videos.push({ url: up.url });
+      // Store in form if control exists
+      const ctrl = this.form.controls['videos'];
+      if (ctrl) {
+        const current = Array.isArray(ctrl.value) ? [...ctrl.value] : [];
+        current.push(up.url);
+        ctrl.setValue(current);
+        ctrl.markAsDirty();
+      }
+  }).catch((err: any) => {
+      console.warn('[rooms-post-form] video upload failed', err);
+    });
+  }
+
+  removeVideo(i: number) {
+    this.videos.splice(i,1);
+    const ctrl = this.form.controls['videos'];
+    if (ctrl) {
+      const current = Array.isArray(ctrl.value) ? [...ctrl.value] : [];
+      current.splice(i,1);
+      ctrl.setValue(current);
+      ctrl.markAsDirty();
+    }
+  }
   amenitiesDropdownOpen = false;
 
   onCityPicked(event: GeoSuggestion) {
@@ -191,24 +233,34 @@ export class RoomsPostFormComponent {
     if (addressLonControl) addressLonControl.setValue(null);
   }
 
-  onAddressPicked(event: AddressSuggestion) {
+  onAddressPicked(event: { address: string; lat?: number; lng?: number; components?: any }) {
     if (!this.form) return;
-    const addressLabel = event?.address || event?.label;
     const addressControl = this.form.controls['address'];
-    if (addressLabel !== undefined && addressControl) {
-      addressControl.setValue(addressLabel);
+    if (addressControl) {
+      addressControl.setValue(event.address);
       addressControl.markAsDirty();
       addressControl.markAsTouched();
     }
     const latControl = this.form.controls['addressLat'];
-    if (latControl) latControl.setValue(event?.lat ?? null);
+    if (latControl) latControl.setValue(event.lat ?? null);
     const lonControl = this.form.controls['addressLon'];
-    if (lonControl) lonControl.setValue(event?.lon ?? null);
-    if (!this.form.controls['city']?.value && event?.city) {
-      this.form.patchValue({
-        city: event.city,
-        state: event?.state || ''
-      });
+    if (lonControl) lonControl.setValue(event.lng ?? null);
+    
+    // Auto-populate city and state from address components if not already set
+    if (!this.form.controls['city']?.value && event.components) {
+      const cityComponent = event.components.find((c: any) => 
+        c.types?.includes('locality') || c.types?.includes('postal_town')
+      );
+      const stateComponent = event.components.find((c: any) => 
+        c.types?.includes('administrative_area_level_1')
+      );
+      
+      if (cityComponent) {
+        this.form.patchValue({
+          city: cityComponent.long_name,
+          state: stateComponent?.short_name || ''
+        });
+      }
     }
   }
 

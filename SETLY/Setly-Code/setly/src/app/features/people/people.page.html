@@ -1,0 +1,608 @@
+<div class="min-h-screen bg-gradient-to-b from-[#EBF1FF] to-white" aria-label="People discovery page">
+    
+  <!-- ✨ Explore Around You - Compact Premium Carousels -->
+  <section class="bg-white border-b border-gray-100 py-5">
+    <div class="mx-auto max-w-[1680px] px-6">
+      <!-- Section Header -->
+      <div class="mb-5">
+        <h2 class="text-2xl font-bold text-gray-900 mb-1">✨ Explore Around You</h2>
+        <p class="text-sm text-gray-600">Rides, marketplace deals, and upcoming events near your campus.</p>
+      </div>
+
+      <!-- (1) Rides Available Carousel -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <span class="text-xl">🚗</span>
+            Rides Available
+            <span class="text-sm font-normal text-gray-500">({{ getRideItems().length }})</span>
+          </h3>
+          <button 
+            class="text-sm text-[#4E7BFD] hover:text-[#3D6AEC] font-semibold transition-all hover:gap-2 flex items-center gap-1"
+            (click)="navigateToCategory('rides')">
+            View All
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="relative group/carousel">
+          <!-- Navigation Buttons -->
+          <button
+            *ngIf="canScrollLeft(0)"
+            class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 hover:scale-110 hover:bg-[#4E7BFD] focus:outline-none focus:ring-2 focus:ring-[#4E7BFD] group"
+            (click)="scrollCarousel(0, 'left')"
+            aria-label="Scroll rides left">
+            <svg class="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <button
+            *ngIf="canScrollRight(0)"
+            class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 hover:scale-110 hover:bg-[#4E7BFD] focus:outline-none focus:ring-2 focus:ring-[#4E7BFD] group"
+            (click)="scrollCarousel(0, 'right')"
+            aria-label="Scroll rides right">
+            <svg class="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+
+          <!-- Gradient Fades -->
+          <div *ngIf="canScrollLeft(0)" class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-[5] pointer-events-none"></div>
+          <div *ngIf="canScrollRight(0)" class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-[5] pointer-events-none"></div>
+          
+          <!-- Scrollable Container -->
+          <div 
+            #carouselContainer
+            class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth cursor-grab active:cursor-grabbing pb-2"
+            [attr.data-category-index]="0"
+            (mousedown)="onDragStart($event, 0)"
+            (mousemove)="onDragMove($event, 0)"
+            (mouseup)="onDragEnd(0)"
+            (mouseleave)="onDragEnd(0)"
+            (touchstart)="onTouchStart($event, 0)"
+            (touchmove)="onTouchMove($event, 0)"
+            (touchend)="onTouchEnd(0)"
+            (scroll)="onCarouselScroll(0, $event)">
+            
+            <div 
+              *ngFor="let ride of getRideItems(); trackBy: trackByCarouselItem" 
+              class="carousel-card-compact flex-shrink-0 w-[270px] bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 hover:border-[#4E7BFD] transition-all duration-300 cursor-pointer group/card"
+              (click)="onCarouselCardClick(ride)">
+              <div class="p-3.5">
+                <div class="flex items-center gap-2.5 mb-3">
+                  <img [src]="ride.image" loading="lazy" class="w-11 h-11 rounded-full object-cover ring-2 ring-gray-100 group-hover/card:ring-[#4E7BFD] transition-all" [alt]="ride.title"/>
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-gray-900 text-sm truncate group-hover/card:text-[#4E7BFD] transition-colors">{{ ride.title }}</h4>
+                    <p class="text-xs text-gray-500">Driver</p>
+                  </div>
+                  <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs font-semibold">Active</span>
+                </div>
+                <div class="space-y-1.5 text-xs">
+                  <div class="flex items-center gap-1.5 text-gray-700">
+                    <svg class="w-3.5 h-3.5 text-[#4E7BFD] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    </svg>
+                    <span class="truncate font-medium">{{ ride.destination }}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-gray-600 flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      {{ ride.time }}
+                    </span>
+                    <span class="font-semibold text-gray-900">{{ ride.seats }} seats</span>
+                  </div>
+                  <div class="pt-1.5 border-t border-gray-100 flex items-center justify-between">
+                    <span class="text-[#4E7BFD] font-bold text-sm">{{ ride.price || 'Free' }}</span>
+                    <span class="text-gray-500">{{ ride.distance || '2.5 mi' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- (2) Trending Marketplace Carousel -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <span class="text-xl">📦</span>
+            Trending Marketplace
+            <span class="text-sm font-normal text-gray-500">({{ getMarketplaceItems().length }})</span>
+          </h3>
+          <button 
+            class="text-sm text-[#4E7BFD] hover:text-[#3D6AEC] font-semibold transition-all hover:gap-2 flex items-center gap-1"
+            (click)="navigateToCategory('marketplace')">
+            View All
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="relative group/carousel">
+          <!-- Navigation Buttons -->
+          <button
+            *ngIf="canScrollLeft(1)"
+            class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 hover:scale-110 hover:bg-[#4E7BFD] focus:outline-none focus:ring-2 focus:ring-[#4E7BFD] group"
+            (click)="scrollCarousel(1, 'left')"
+            aria-label="Scroll marketplace left">
+            <svg class="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <button
+            *ngIf="canScrollRight(1)"
+            class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 hover:scale-110 hover:bg-[#4E7BFD] focus:outline-none focus:ring-2 focus:ring-[#4E7BFD] group"
+            (click)="scrollCarousel(1, 'right')"
+            aria-label="Scroll marketplace right">
+            <svg class="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+
+          <!-- Gradient Fades -->
+          <div *ngIf="canScrollLeft(1)" class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-[5] pointer-events-none"></div>
+          <div *ngIf="canScrollRight(1)" class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-[5] pointer-events-none"></div>
+          
+          <!-- Scrollable Container -->
+          <div 
+            #carouselContainer
+            class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth cursor-grab active:cursor-grabbing pb-2"
+            [attr.data-category-index]="1"
+            (mousedown)="onDragStart($event, 1)"
+            (mousemove)="onDragMove($event, 1)"
+            (mouseup)="onDragEnd(1)"
+            (mouseleave)="onDragEnd(1)"
+            (touchstart)="onTouchStart($event, 1)"
+            (touchmove)="onTouchMove($event, 1)"
+            (touchend)="onTouchEnd(1)"
+            (scroll)="onCarouselScroll(1, $event)">
+            
+            <div 
+              *ngFor="let item of getMarketplaceItems(); trackBy: trackByCarouselItem" 
+              class="carousel-card-compact flex-shrink-0 w-[220px] bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 hover:border-[#4E7BFD] transition-all duration-300 cursor-pointer group/card"
+              (click)="onCarouselCardClick(item)">
+              <div class="relative h-32 bg-gray-100 overflow-hidden">
+                <img [src]="item.image" loading="lazy" class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" [alt]="item.title"/>
+                <div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 px-2 py-0.5 rounded-full text-xs font-bold shadow-md">
+                  {{ item.condition }}
+                </div>
+              </div>
+              <div class="p-3">
+                <h4 class="font-bold text-gray-900 text-sm mb-2 line-clamp-2 h-10 group-hover/card:text-[#4E7BFD] transition-colors">{{ item.title }}</h4>
+                <div class="flex items-center justify-between">
+                  <span class="text-[#4E7BFD] font-bold text-base">{{ item.price }}</span>
+                  <span class="text-xs text-gray-600">{{ item.distance }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- (3) Upcoming Events Carousel -->
+      <div class="mb-2">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <span class="text-xl">🎉</span>
+            Upcoming Events
+            <span class="text-sm font-normal text-gray-500">({{ getEventItems().length }})</span>
+          </h3>
+          <button 
+            class="text-sm text-[#4E7BFD] hover:text-[#3D6AEC] font-semibold transition-all hover:gap-2 flex items-center gap-1"
+            (click)="navigateToCategory('events')">
+            View All
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="relative group/carousel">
+          <!-- Navigation Buttons -->
+          <button
+            *ngIf="canScrollLeft(2)"
+            class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 hover:scale-110 hover:bg-[#4E7BFD] focus:outline-none focus:ring-2 focus:ring-[#4E7BFD] group"
+            (click)="scrollCarousel(2, 'left')"
+            aria-label="Scroll events left">
+            <svg class="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <button
+            *ngIf="canScrollRight(2)"
+            class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 hover:scale-110 hover:bg-[#4E7BFD] focus:outline-none focus:ring-2 focus:ring-[#4E7BFD] group"
+            (click)="scrollCarousel(2, 'right')"
+            aria-label="Scroll events right">
+            <svg class="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+
+          <!-- Gradient Fades -->
+          <div *ngIf="canScrollLeft(2)" class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-[5] pointer-events-none"></div>
+          <div *ngIf="canScrollRight(2)" class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-[5] pointer-events-none"></div>
+          
+          <!-- Scrollable Container -->
+          <div 
+            #carouselContainer
+            class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth cursor-grab active:cursor-grabbing pb-2"
+            [attr.data-category-index]="2"
+            (mousedown)="onDragStart($event, 2)"
+            (mousemove)="onDragMove($event, 2)"
+            (mouseup)="onDragEnd(2)"
+            (mouseleave)="onDragEnd(2)"
+            (touchstart)="onTouchStart($event, 2)"
+            (touchmove)="onTouchMove($event, 2)"
+            (touchend)="onTouchEnd(2)"
+            (scroll)="onCarouselScroll(2, $event)">
+            
+            <div 
+              *ngFor="let event of getEventItems(); trackBy: trackByCarouselItem" 
+              class="carousel-card-compact flex-shrink-0 w-[240px] bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 hover:border-[#4E7BFD] transition-all duration-300 cursor-pointer group/card"
+              (click)="onCarouselCardClick(event)">
+              <div class="relative h-32 bg-gradient-to-br from-purple-100 to-pink-100 overflow-hidden">
+                <img [src]="event.image" loading="lazy" class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" [alt]="event.title"/>
+              </div>
+              <div class="p-3">
+                <h4 class="font-bold text-gray-900 text-sm mb-2 line-clamp-2 h-10 group-hover/card:text-[#4E7BFD] transition-colors">{{ event.title }}</h4>
+                <div class="space-y-1 text-xs text-gray-600">
+                  <p class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#4E7BFD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="font-medium">{{ event.date }}</span>
+                  </p>
+                  <p class="flex items-center gap-1" *ngIf="event.location">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#4E7BFD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    </svg>
+                    <span class="truncate">{{ event.location }}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main 3-Column Layout -->
+  <div class="mx-auto max-w-[1680px] px-6 py-6">
+    <div class="flex gap-6">
+      
+      <!-- LEFT COLUMN: Premium Facebook-Style Filter Panel -->
+      <aside class="w-80 flex-shrink-0">
+        <div class="sticky top-24 bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden">
+          <!-- Header -->
+          <div class="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-[#EBF1FF] to-white">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <svg class="w-5 h-5 text-[#4E7BFD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                </svg>
+                Filters
+              </h3>
+              <button class="text-xs text-[#4E7BFD] hover:text-[#3D6AEC] font-semibold transition" (click)="clear()">
+                Clear All
+              </button>
+            </div>
+          </div>
+          
+          <!-- Filter Content -->
+          <div class="px-5 py-4">
+            <app-people-filters-panel (changed)="apply($event)"></app-people-filters-panel>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MIDDLE COLUMN: All People Section -->
+      <main class="flex-1 min-w-0">
+        <!-- Section Header -->
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <span class="text-2xl">👥</span>
+            All People
+            <span class="text-sm font-normal text-gray-500">({{ filtered().length }})</span>
+          </h2>
+          <select class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-brand-azure focus:border-transparent" (change)="onSort($event)">
+            <option value="recent">Recent Activity</option>
+            <option value="university">University</option>
+            <option value="active">Most Active</option>
+            <option value="nearby">Nearby</option>
+          </select>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="filtered().length === 0 && !loading()" class="text-center py-16 bg-white rounded-2xl border border-gray-200">
+          <div class="text-6xl mb-4">🔍</div>
+          <h3 class="text-lg font-semibold mb-2 text-gray-900">No matches found</h3>
+          <p class="text-gray-600 mb-4 max-w-sm mx-auto">Try adjusting your filters to discover more people</p>
+          <button class="btn-primary" (click)="clear()">Clear Filters</button>
+        </div>
+
+        <!-- People Cards Grid - Premium 3 Column Layout -->
+        <div class="grid grid-cols-3 gap-5 transition-all duration-500" [class.animate-fade-in]="animate()">
+          <div *ngFor="let u of paginatedUsers(); let i = index" 
+               class="group bg-white rounded-2xl border border-gray-100 hover:border-[#4E7BFD] p-5 cursor-pointer transition-all duration-300 hover:shadow-[0_8px_30px_rgba(78,123,253,0.15)] hover:-translate-y-1.5 relative"
+               [attr.aria-label]="'View profile ' + u.name"
+               (mouseenter)="hoveredUser.set(u); onCardHover(u)"
+               (mouseleave)="hoveredUser.set(null); onCardLeave()"
+               (click)="openProfilePreview(u)">
+            
+            <!-- Premium Card Design -->
+            <div class="flex items-center gap-4 mb-4">
+              <!-- Larger Avatar with Verification Badge -->
+              <div class="relative flex-shrink-0">
+                <img [src]="u.avatarUrl || '/assets/default-avatar.svg'" 
+                     class="w-16 h-16 rounded-full object-cover ring-3 ring-gray-100 group-hover:ring-[#4E7BFD] transition-all duration-300"/>
+                
+                <!-- Verification Badge -->
+                <div *ngIf="u.badges?.email || u.badges?.university" 
+                     class="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                
+                <!-- Online Status -->
+                <span *ngIf="u.lastSeen"
+                      class="absolute top-0 right-0 w-4 h-4 rounded-full ring-3 ring-white transition-all"
+                      [class.bg-green-500]="isOnline(u)"
+                      [class.bg-blue-500]="!isOnline(u) && isActive(u)"
+                      [class.bg-gray-400]="!isOnline(u) && !isActive(u)"
+                      [ngClass]="{'shadow-[0_0_12px_rgba(34,197,94,0.8)]': isOnline(u)}"></span>
+              </div>
+              
+              <div class="min-w-0 flex-1">
+                <!-- Name with 2-line truncation -->
+                <h3 class="font-bold text-gray-900 text-base leading-snug group-hover:text-[#4E7BFD] transition line-clamp-2 mb-1">
+                  {{ u.name }}
+                </h3>
+                
+                <!-- University Badge -->
+                <div class="flex items-center gap-1.5 text-xs text-gray-600">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                  </svg>
+                  <span class="truncate">{{ u.organization }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mutual Interests as Colored Pills -->
+            <div class="flex flex-wrap gap-1.5 mb-3" *ngIf="u.interests && u.interests.length > 0">
+              <span *ngFor="let interest of u.interests.slice(0, 3)" 
+                    class="px-2.5 py-1 text-[11px] font-medium rounded-full transition-all"
+                    [ngClass]="getInterestPillClass(interest)">
+                {{ interest }}
+              </span>
+              <span *ngIf="u.interests.length > 3" 
+                    class="px-2.5 py-1 text-[11px] font-medium bg-gray-100 text-gray-600 rounded-full">
+                +{{ u.interests.length - 3 }}
+              </span>
+            </div>
+
+            <!-- Trust Score with Percentage -->
+            <div class="mb-4">
+              <div class="flex items-center justify-between text-xs text-gray-600 mb-1.5">
+                <span class="font-medium">Trust Score</span>
+                <span class="font-bold text-[#4E7BFD]">{{ getTrustScore(u) }}%</span>
+              </div>
+              <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-[#4E7BFD] to-[#7B9EFD] rounded-full transition-all duration-700 ease-out"
+                     [style.width.%]="getTrustScore(u)"></div>
+              </div>
+            </div>
+
+            <!-- Action Buttons - Premium Style -->
+            <div class="flex gap-2">
+              <button class="flex-1 px-3 py-2 text-sm font-semibold bg-[#4E7BFD] hover:bg-[#3D6AEC] text-white rounded-xl transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#4E7BFD] focus:ring-offset-2" 
+                      (click)="connect(u, $event)">
+                Connect
+              </button>
+              <button class="px-3 py-2 text-sm border-2 border-gray-200 hover:border-[#4E7BFD] rounded-xl hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#4E7BFD] focus:ring-offset-2" 
+                      (click)="toggleSave(u, $event)"
+                      [attr.title]="'Save ' + u.name">
+                <svg class="w-5 h-5 transition-colors" 
+                     [class.text-[#4E7BFD]]="isSaved(u)" 
+                     [class.text-gray-400]="!isSaved(u)"
+                     [class.fill-current]="isSaved(u)" 
+                     fill="none" 
+                     stroke="currentColor" 
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Enhanced Hover Popover - Fixed z-index -->
+            <div *ngIf="hoveredUser() === u" 
+                 class="absolute left-full ml-3 top-0 w-72 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-gray-100 p-5 z-[100] animate-scale-in"
+                 (click)="$event.stopPropagation()">
+              <div class="text-xs text-gray-600 mb-3 flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                </svg>
+                {{ u.location }}
+              </div>
+              <div class="text-xs font-bold text-gray-900 mb-2">All Interests:</div>
+              <div class="flex flex-wrap gap-1.5 mb-4">
+                <span *ngFor="let interest of u.interests" 
+                      class="px-2.5 py-1 text-[10px] font-medium rounded-full"
+                      [ngClass]="getInterestPillClass(interest)">
+                  {{ interest }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2 mb-4 p-3 bg-green-50 rounded-xl">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="flex-1">
+                  <div class="text-xs text-gray-600">Trust Score</div>
+                  <div class="text-sm font-bold text-green-600">{{ getTrustScore(u) }}% Verified</div>
+                </div>
+              </div>
+              <button class="w-full text-sm font-semibold py-2.5 bg-[#4E7BFD] hover:bg-[#3D6AEC] text-white rounded-xl transition-all duration-200" 
+                      (click)="openProfilePreview(u); $event.stopPropagation()">
+                View Full Profile →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Load More / Pagination -->
+        <div class="mt-6 text-center" *ngIf="hasMoreToLoad()">
+          <button class="btn-secondary px-8 py-3" (click)="loadMoreUsers()">
+            Load More People
+          </button>
+        </div>
+      </main>
+
+      <!-- RIGHT COLUMN: Enhanced Map Section -->
+      <aside class="w-[420px] flex-shrink-0">
+        <div class="sticky top-24">
+          <!-- Enhanced Map Card with Background Gradient -->
+          <div class="relative">
+            <!-- Gradient Background -->
+            <div class="absolute -inset-2 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-3xl opacity-60"></div>
+            
+            <!-- Map Card -->
+            <div class="relative bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
+              <!-- Map Header -->
+              <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-transparent">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                    <span class="text-xl">🗺️</span>
+                    People Nearby
+                  </h3>
+                  <button class="text-xs text-brand-azure hover:text-brand-midnight font-medium">Expand</button>
+                </div>
+                <div class="text-sm text-gray-600">
+                  <span class="font-bold text-green-600">{{ onlineCount() }}</span> active now
+                </div>
+              </div>
+
+              <!-- Map Display Area -->
+              <div class="h-[400px] relative bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50">
+                <!-- Map Placeholder with Dummy Pins -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <div class="text-center text-gray-400">
+                    <svg class="w-20 h-20 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                    <p class="text-xs">Map View</p>
+                  </div>
+                </div>
+
+                <!-- Dummy User Pins - Positioned Absolutely -->
+                <div *ngFor="let pin of getMapPins(); let i = index" 
+                     class="absolute cursor-pointer group"
+                     [style.left.%]="pin.x"
+                     [style.top.%]="pin.y"
+                     (click)="openProfilePreview(pin.user)">
+                  <!-- Pin with Avatar -->
+                  <div class="relative animate-bounce-subtle">
+                    <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-lg group-hover:scale-125 transition-transform">
+                      <img [src]="pin.user.avatarUrl || '/assets/default-avatar.svg'" 
+                           class="w-full h-full object-cover" />
+                    </div>
+                    <!-- Online Status Dot -->
+                    <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white"
+                          [class.bg-green-500]="isOnline(pin.user)"
+                          [class.shadow-[0_0_8px_rgba(34,197,94,0.8)]]="isOnline(pin.user)"
+                          [class.bg-blue-500]="!isOnline(pin.user) && isActive(pin.user)"
+                          [class.bg-gray-400]="!isOnline(pin.user) && !isActive(pin.user)"></span>
+                  </div>
+                  
+                  <!-- Hover Tooltip -->
+                  <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <div class="bg-white px-3 py-2 rounded-lg shadow-xl border border-gray-200 text-xs whitespace-nowrap">
+                      <div class="font-semibold text-gray-900">{{ pin.user.name }}</div>
+                      <div class="text-gray-600">{{ pin.user.organization }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Map Controls -->
+                <div class="absolute top-3 right-3 flex flex-col gap-2">
+                  <button class="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition" title="Zoom in">
+                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                  </button>
+                  <button class="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition" title="Zoom out">
+                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                    </svg>
+                  </button>
+                  <button class="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition" title="Re-center">
+                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Map Legend -->
+              <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                <div class="flex items-center gap-4 text-xs">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                    <span class="text-gray-700 font-medium">Online</span>
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    <span class="text-gray-700 font-medium">Active Today</span>
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
+                    <span class="text-gray-700 font-medium">Offline</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Card Below Map -->
+          <div class="mt-4 bg-white rounded-2xl border border-gray-200 shadow-md p-4">
+            <h4 class="text-sm font-bold text-gray-900 mb-3">Quick Actions</h4>
+            <div class="space-y-2">
+              <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 text-sm">
+                <span class="text-lg">👤</span>
+                <span class="text-gray-700">View My Profile</span>
+              </button>
+              <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 text-sm">
+                <span class="text-lg">✉️</span>
+                <span class="text-gray-700">My Messages</span>
+              </button>
+              <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 text-sm">
+                <span class="text-lg">⭐</span>
+                <span class="text-gray-700">Saved People</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</div>
+
+<!-- Profile Preview Modal -->
+<app-profile-preview-modal
+  *ngIf="showProfileModal()"
+  [user]="selectedUser()!"
+  [isSaved]="isSaved(selectedUser()!)"
+  (close)="closeProfileModal()"
+  (connect)="onModalConnect($event)"
+  (message)="onModalMessage($event)"
+  (save)="onModalSave($event)">
+</app-profile-preview-modal>

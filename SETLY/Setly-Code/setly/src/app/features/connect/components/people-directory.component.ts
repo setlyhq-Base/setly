@@ -1,8 +1,9 @@
-import { Component, Input, OnDestroy, OnInit, Signal, inject } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, Signal, EffectRef, effect, inject, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PeopleDirectoryService, DirectoryUser } from '../../../core/services/people-directory.service';
 import { PresenceService } from '../../../core/services/presence.service';
 import { RouterModule } from '@angular/router';
+import { AuthStore } from '../../../core/state/auth.store';
 
 @Component({
   selector: 'app-people-directory',
@@ -22,17 +23,19 @@ import { RouterModule } from '@angular/router';
         <span class="relative inline-block">
           <img *ngIf="u.avatarUrl; else init" [src]="u.avatarUrl" alt="{{u.name}} avatar" class="w-12 h-12 rounded-full object-cover border" loading="lazy"/>
           <ng-template #init>
-            <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center">{{ (u.name||'S').slice(0,1) }}</div>
+            <div class="w-12 h-12 rounded-full bg-brand-deep text-white flex items-center justify-center">{{ (u.name||'S').slice(0,1) }}</div>
           </ng-template>
           <span *ngIf="isOnline(u.id)" class="absolute -bottom-0.5 -right-0.5 block w-3 h-3 rounded-full ring-2 ring-white bg-green-500" title="Online"></span>
         </span>
         <div class="min-w-0">
           <div class="font-medium text-gray-900 truncate">{{u.name}}</div>
-          <div class="text-xs text-gray-600 truncate">
-            <span *ngIf="u.universityId">{{u.universityId}}</span>
-            <span *ngIf="u.location">• {{u.location}}</span>
+          <div class="text-xs text-gray-600 truncate flex items-center gap-1">
+            <span *ngIf="u.role" class="truncate">{{u.role}}</span>
+            <span *ngIf="u.role && (u.organization || u.location)" aria-hidden="true">•</span>
+            <span *ngIf="u.organization" class="truncate">{{u.organization}}</span>
           </div>
-          <div class="text-[11px] text-gray-500" *ngIf="u.lastSeen" [title]="formatLocal(u.lastSeen)">Active {{ timeAgo(u.lastSeen) }} · {{ formatLocal(u.lastSeen) }}</div>
+          <div class="text-xs text-gray-500 truncate" *ngIf="u.location">{{u.location}}</div>
+          <div class="text-[11px] text-gray-500" *ngIf="activityLabel(u)" [title]="activityTitle(u)">{{ activityLabel(u) }}</div>
           <div class="mt-1 flex items-center gap-1.5 text-[11px] text-gray-600 flex-wrap">
             <span class="px-1.5 py-0.5 rounded-full border" [class.text-green-700]="u.badges.email" [class.bg-green-50]="u.badges.email" [class.border-green-200]="u.badges.email">Email</span>
             <span class="px-1.5 py-0.5 rounded-full border" [class.text-green-700]="u.badges.phone" [class.bg-green-50]="u.badges.phone" [class.border-green-200]="u.badges.phone">Phone</span>
@@ -54,38 +57,60 @@ import { RouterModule } from '@angular/router';
 export class PeopleDirectoryComponent implements OnInit, OnDestroy {
   private service = inject(PeopleDirectoryService);
   private presence = inject(PresenceService);
+  private authStore = inject(AuthStore);
+  private injector = inject(Injector);
 
   users: Signal<DirectoryUser[]> = this.service.users;
   loading = this.service.loading;
   nextCursor = this.service.nextCursor;
   error = this.service.error;
 
-  @Input() includeIncomplete = true;
+  @Input() includeIncomplete = false;
   private pollHandle: any;
   private presenceHandle: any;
+  private authEffect?: EffectRef;
 
   ngOnInit(): void {
     this.service.reset();
-    this.service.list({ includeIncomplete: this.includeIncomplete });
-    this.pollHandle = setInterval(() => {
-      // Refresh first page to pick up new users dynamically
-      this.service.list({ includeIncomplete: this.includeIncomplete });
-    }, 30000);
-
-    // Poll presence
-    this.presence.fetchOnline();
-    this.presenceHandle = setInterval(() => this.presence.fetchOnline(), 15000);
+    this.authEffect = effect(() => {
+      const auth = this.authStore.user();
+      if (auth.isAuthenticated) {
+        this.service.reset();
+        this.service.list({ includeIncomplete: this.includeIncomplete });
+        this.startDataPolling();
+        this.startPresencePolling();
+      } else {
+        this.stopDataPolling();
+        this.stopPresencePolling();
+        this.service.reset();
+      }
+    }, { injector: this.injector });
   }
 
   loadMore() { this.service.loadMore(); }
 
   ngOnDestroy(): void {
-    try { clearInterval(this.pollHandle); } catch {}
-    try { clearInterval(this.presenceHandle); } catch {}
+    this.stopDataPolling();
+    this.stopPresencePolling();
+    this.authEffect?.destroy();
   }
 
   isOnline(uid: string): boolean {
     return this.presence.online().has(uid);
+  }
+
+  activityLabel(user: DirectoryUser): string {
+    const iso = this.activityIso(user);
+    if (!iso) return '';
+    if (this.isOnline(user.id)) return 'Online now';
+    const summary = this.timeAgo(iso);
+    if (!summary) return '';
+    return summary === 'just now' ? 'Active just now' : `Active ${summary}`;
+  }
+
+  activityTitle(user: DirectoryUser): string {
+    const iso = this.activityIso(user);
+    return iso ? this.formatLocal(iso) : 'No activity yet';
   }
 
   timeAgo(iso: string): string {
@@ -109,6 +134,39 @@ export class PeopleDirectoryComponent implements OnInit, OnDestroy {
       return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(dt);
     } catch {
       return iso;
+    }
+  }
+
+  private activityIso(user: DirectoryUser): string | undefined {
+    return user.lastSeen || user.lastLoginAt || undefined;
+  }
+
+  private startDataPolling(){
+    if (!this.pollHandle) {
+      this.pollHandle = setInterval(() => {
+        this.service.list({ includeIncomplete: this.includeIncomplete });
+      }, 30000);
+    }
+  }
+
+  private stopDataPolling(){
+    if (this.pollHandle) {
+      try { clearInterval(this.pollHandle); } catch {}
+      this.pollHandle = null;
+    }
+  }
+
+  private startPresencePolling(){
+    if (!this.presenceHandle) {
+      this.presence.fetchOnline();
+      this.presenceHandle = setInterval(() => this.presence.fetchOnline(), 15000);
+    }
+  }
+
+  private stopPresencePolling(){
+    if (this.presenceHandle) {
+      try { clearInterval(this.presenceHandle); } catch {}
+      this.presenceHandle = null;
     }
   }
 }

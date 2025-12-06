@@ -71,8 +71,10 @@ class UploadsController {
     // POST /api/uploads/presign { type: 'avatar'|'room-photo'|'room-video'|'room-video-thumb', ext: 'jpg|png|webp|mp4|webm' }
     static async presignAvatar(req, res) {
         try {
-            // Provide dev fallback when AWS not configured: store file locally
-            const devMode = !aws_1.AWS_ENABLED;
+            // Provide dev fallback when AWS not configured OR when explicitly forced (for local dev CORS avoidance)
+            const forceLocal = Boolean((req.body || {}).local) || process.env.UPLOADS_FORCE_LOCAL === 'true';
+            const isProd = process.env.NODE_ENV === 'production';
+            const devMode = !aws_1.AWS_ENABLED || (forceLocal && !isProd);
             if (!req.user)
                 return res.status(401).json({ error: 'Not authenticated' });
             const { type, ext } = req.body || {};

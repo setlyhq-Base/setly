@@ -25,21 +25,21 @@ import { CurrencyCompactPipe } from '../pipes/currency-compact.pipe';
       <!-- Content -->
       <div class="p-4">
         <h3 class="font-semibold text-lg text-gray-900 mb-1">{{ listing.title }}</h3>
-        <p class="text-brand-blue font-bold text-xl mb-2">{{ listing.price | currencyCompact }}</p>
+  <p class="text-brand-primary font-bold text-xl mb-2">{{ listing.price | currencyCompact }}</p>
         <p class="text-gray-600 text-sm mb-3">{{ listing.address }}</p>
 
         <!-- Rules chips -->
         <div class="flex flex-wrap gap-2 mb-3">
           <span *ngIf="listing.rules.veg" class="chip bg-green-100 text-green-800">Vegetarian</span>
           <span *ngIf="!listing.rules.smoke" class="chip bg-blue-100 text-blue-800">No smoking</span>
-          <span *ngIf="listing.rules.pets" class="chip bg-purple-100 text-purple-800">Pets ok</span>
+          <span *ngIf="listing.rules.pets" class="chip bg-blue-50 text-blue-700 border border-blue-200">Pets ok</span>
           <span *ngIf="listing.roomType === 'private'" class="chip bg-gray-100 text-gray-800">Private room</span>
         </div>
 
         <!-- Distance placeholder -->
         <p class="text-gray-500 text-sm mb-4">• 0.8 mi to campus</p>
 
-        <a [routerLink]="['/listing', listing.id]" class="text-brand-blue hover:text-brand-blue/80 font-medium">
+  <a [routerLink]="['/listing', listing.id]" class="text-brand-primary hover:text-brand-primary/80 font-medium">
           View Details →
         </a>
       </div>

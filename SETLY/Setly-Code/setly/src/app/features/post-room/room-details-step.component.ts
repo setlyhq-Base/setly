@@ -1,22 +1,22 @@
 import { Component, inject, signal, effect } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { UniversityService, University } from '../../core/services/university.service';
+import { UniversityLookupService, UniversityLite } from '../../core/services/university-lookup.service';
 import { PostRoomStore } from './post-room.store';
 import { US_STATES } from '../../shared/constants/us-states';
-import { AddressAutocompleteComponent } from '../../shared/ui/address-autocomplete.component';
-import { LocationAutocompleteComponent } from '../../shared/ui/location-autocomplete.component';
+import { GooglePlaceInputComponent } from '../../shared/ui/google-place-input.component';
 import { GeoSuggestion } from '../../core/services/geocoding.service';
 
 @Component({
   selector: 'app-room-details-step',
   standalone: true,
-  imports: [FormsModule, CommonModule, AddressAutocompleteComponent, LocationAutocompleteComponent],
+  imports: [FormsModule, CommonModule, GooglePlaceInputComponent],
   templateUrl: './room-details-step.component.html',
   styleUrls: ['./room-details-step.component.css']
 })
 export class RoomDetailsStepComponent {
-  private universityService = inject(UniversityService);
+  private uniLookup = inject(UniversityLookupService);
   store = inject(PostRoomStore);
 
   title = '';
@@ -36,10 +36,17 @@ export class RoomDetailsStepComponent {
   lat: number | undefined;
   lon: number | undefined;
   showRules = signal<boolean>(false);
+  amenitySuggestions = ['High-speed Wi‑Fi','Heating','Study lamp','Closet space','In-unit laundry','Smart lock'];
+  amenitiesError = signal('');
+  environment = environment;
 
   showUniSuggestions = false;
-  selectedUniversity = signal<University | null>(null);
-  universitySuggestions = signal<University[]>([]);
+  selectedUniversity = signal<UniversityLite | null>(null);
+  universitySuggestions = signal<UniversityLite[]>([]);
+  cityQuery = signal('');
+  citySuggestions = signal<string[]>([]);
+  selectedCity = signal<string>('');
+  showCitySuggestions = signal(false);
   minDate = new Date().toISOString().split('T')[0];
 
   titleError = signal('');
@@ -79,13 +86,7 @@ export class RoomDetailsStepComponent {
   // Keep address error in sync if user clears it elsewhere
   this.addressError.set(this.address && this.address.trim() ? '' : 'Address is required');
 
-      if (draft.nearUniversityId) {
-        const uni = this.universityService.getById(draft.nearUniversityId);
-        if (uni) {
-          this.selectedUniversity.set(uni);
-          this.universityQuery = uni.name;
-        }
-      }
+      // University prefill skipped (dynamic list depends on selectedCity)
     }, { allowSignalWrites: true });
   }
 
@@ -123,36 +124,72 @@ export class RoomDetailsStepComponent {
     this.store.updateDraft({ city: this.city, state: this.state, lat: loc.lat, lon: loc.lon });
   }
 
-  onAddressPicked(addr: { address: string; city?: string; state?: string; postcode?: string; lat?: number; lon?: number }) {
+  onAddressPicked(addr: { address: string; lat?: number; lng?: number; components?: any }) {
     this.address = addr.address;
     this.lat = typeof addr.lat === 'number' ? addr.lat : this.lat;
-    this.lon = typeof addr.lon === 'number' ? addr.lon : this.lon;
+    this.lon = typeof addr.lng === 'number' ? addr.lng : this.lon;
     this.store.updateDraft({ address: this.address, lat: this.lat, lon: this.lon });
     this.addressError.set(this.address && this.address.trim() ? '' : 'Address is required');
-    if (addr.city) { this.city = addr.city; this.store.updateDraft({ city: this.city }); }
-    if (addr.state) { this.state = addr.state; this.store.updateDraft({ state: this.state }); }
+    
+    // Extract city and state from address_components if available
+    if (addr.components && Array.isArray(addr.components)) {
+      const cityComp = addr.components.find((c: any) => c.types?.includes('locality'));
+      const stateComp = addr.components.find((c: any) => c.types?.includes('administrative_area_level_1'));
+      if (cityComp?.long_name) { this.city = cityComp.long_name; this.store.updateDraft({ city: this.city }); }
+      if (stateComp?.short_name) { this.state = stateComp.short_name; this.store.updateDraft({ state: this.state }); }
+    }
   }
 
   onUniversitySearch(query: string): void {
-    if (query.length >= 2) {
-      const results = this.universityService.search(query);
-      this.universitySuggestions.set(results);
+    this.universityQuery = query;
+    if (query.trim().length < 2) { this.universitySuggestions.set([]); return; }
+    const city = this.selectedCity();
+    this.uniLookup.fetch(city || null, query.trim()).subscribe(list => {
+      this.universitySuggestions.set(list);
       this.showUniSuggestions = true;
-    } else {
-      this.universitySuggestions.set([]);
-    }
+    });
   }
 
   onUniversityBlur(): void {
     setTimeout(() => this.showUniSuggestions = false, 200);
   }
 
-  selectUniversity(uni: University): void {
+  selectUniversity(uni: UniversityLite): void {
     this.selectedUniversity.set(uni);
     this.universityQuery = uni.name;
     this.showUniSuggestions = false;
     this.validateUniversity();
     this.store.updateDraft({ nearUniversityId: uni.id });
+  }
+
+  // City typeahead ---------------------------------------------------------
+  onCityType(query: string): void {
+    this.cityQuery.set(query);
+    this.selectedCity.set('');
+    if (query.trim().length < 2) { this.citySuggestions.set([]); return; }
+    // Reuse geocoding service via fetch to backend geo endpoint for cities only
+    fetch(`/api/geo/search?q=${encodeURIComponent(query.trim())}`).then(r => r.json()).then((data: any) => {
+      const items: any[] = Array.isArray(data.items) ? data.items : [];
+      const cities: string[] = items
+        .filter(x => x && x.kind === 'city' && /US|United States/i.test(String(x.country || '')))
+        .map(x => (x.city || x.label || '').trim())
+        .filter((v: string) => !!v);
+      const dedup: string[] = Array.from(new Set(cities)).slice(0, 8);
+      this.citySuggestions.set(dedup);
+      this.showCitySuggestions.set(true);
+    }).catch(()=>{});
+  }
+
+  pickCity(city: string): void {
+    this.selectedCity.set(city);
+    this.cityQuery.set(city);
+    this.showCitySuggestions.set(false);
+    // Update draft city (state unknown here; user may still pick address later)
+    this.city = city;
+    this.store.updateDraft({ city: city });
+    // Clear university selection to force re-filter
+    this.selectedUniversity.set(null);
+    this.store.updateDraft({ nearUniversityId: '' });
   }
 
   onRoomTypeChange(value: 'private' | 'shared'): void {
@@ -167,6 +204,23 @@ export class RoomDetailsStepComponent {
 
   onFurnishedChange(value: boolean): void {
     this.store.updateDraft({ furnished: value });
+  }
+
+  hasAmenity(a: string): boolean {
+    return this.store.draft().price.utilitiesIncluded.includes(a);
+  }
+
+  toggleAmenity(a: string): void {
+    const list = [...this.store.draft().price.utilitiesIncluded];
+    const idx = list.indexOf(a);
+    if (idx >= 0) list.splice(idx,1); else list.push(a);
+    this.store.updateDraftDeep('price', { ...this.store.draft().price, utilitiesIncluded: list });
+    this.validateAmenities();
+  }
+
+  private validateAmenities(): void {
+    const list = this.store.draft().price.utilitiesIncluded;
+    this.amenitiesError.set(list.length ? '' : 'Please select at least one amenity');
   }
 
   onRulesChange(): void {

@@ -1,31 +1,31 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { AddressAutocompleteComponent } from '../../shared/ui/address-autocomplete.component';
+import { GooglePlaceInputComponent } from '../../shared/ui/google-place-input.component';
 
 @Component({
   selector: 'app-rides-post-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AddressAutocompleteComponent],
+  imports: [CommonModule, ReactiveFormsModule, GooglePlaceInputComponent],
   template: `
     <div [formGroup]="form" class="form-layout">
       <div class="form-row two-cols">
         <div class="field-block">
           <label class="field-label">Pickup location</label>
-          <app-address-autocomplete
+          <app-google-place-input
             [initialAddress]="form.controls['pickup']?.value || ''"
-            (picked)="setControl('pickup', $event.address)"
-            [placeholder]="'Enter pickup location'"
-          ></app-address-autocomplete>
+            (picked)="onPicked('pickup', $event)"
+            placeholder="Enter pickup location"
+          ></app-google-place-input>
           <p *ngIf="showError('pickup')" class="field-error">Pickup location is required.</p>
         </div>
         <div class="field-block">
           <label class="field-label">Destination</label>
-          <app-address-autocomplete
+          <app-google-place-input
             [initialAddress]="form.controls['destination']?.value || ''"
-            (picked)="setControl('destination', $event.address)"
-            [placeholder]="'Enter destination'"
-          ></app-address-autocomplete>
+            (picked)="onPicked('destination', $event)"
+            placeholder="Enter destination"
+          ></app-google-place-input>
           <p *ngIf="showError('destination')" class="field-error">Destination is required.</p>
         </div>
       </div>
@@ -87,6 +87,19 @@ export class RidesPostFormComponent {
 
   setControl(control: 'pickup' | 'destination', value: string) {
     this.form.controls[control]?.setValue(value);
+  }
+
+  onPicked(control: 'pickup' | 'destination', evt: { address: string; lat?: number; lng?: number }) {
+    this.setControl(control, evt.address);
+    // Optional: if form has lat/lng controls, populate them
+    const latKey = control + 'Lat';
+    const lngKey = control + 'Lng';
+    if (evt.lat != null && this.form.controls[latKey]) {
+      this.form.controls[latKey].setValue(evt.lat);
+    }
+    if (evt.lng != null && this.form.controls[lngKey]) {
+      this.form.controls[lngKey].setValue(evt.lng);
+    }
   }
 
   showError(control: string) {

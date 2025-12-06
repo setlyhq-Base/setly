@@ -1,0 +1,4 @@
+- [x] Investigate S3 upload flow and confirm local fallback is functioning
+- [x] Update frontend service to suppress repeated S3 attempts after fallback
+- [x] Ensure backend presign endpoint can flag local uploads when CORS misconfigured
+- [x] Provide instructions or automation to apply S3 CORS fix

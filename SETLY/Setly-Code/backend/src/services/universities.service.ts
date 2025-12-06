@@ -69,13 +69,18 @@ export const UniversitiesService = {
     const list = await this.getAll();
     const query = (q || '').trim().toLowerCase();
     if (!query) return [];
-    const scored = list
+    return this.searchInList(list, query, limit);
+  },
+
+  searchInList(list: UniversityRecord[], q: string, limit = 15): UniversityRecord[] {
+    const query = (q || '').trim().toLowerCase();
+    if (!query) return list.slice(0, limit);
+    return list
       .map(u => ({ u, s: score(query, u) }))
       .filter(x => x.s > 0)
       .sort((a, b) => b.s - a.s)
       .slice(0, limit)
       .map(x => x.u);
-    return scored;
   }
 };
 

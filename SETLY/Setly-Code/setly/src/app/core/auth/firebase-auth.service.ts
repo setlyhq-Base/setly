@@ -18,7 +18,6 @@ import {
   signOut as firebaseSignOut,
   User as FirebaseUser,
   onAuthStateChanged,
-  getIdToken,
   ActionCodeSettings
 } from '@angular/fire/auth';
 import { environment } from '../../../environments/environment';
@@ -63,32 +62,22 @@ export class FirebaseAuthService {
     // Hint Google to show account chooser consistently
     provider.setCustomParameters({ prompt: 'select_account' });
 
-    // Heuristic: prefer redirect on iOS/Safari and in embedded browsers
-    const ua = navigator.userAgent || '';
-    const isIOS = /iPad|iPhone|iPod/.test(ua);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-    const isEmbedded = (window as any).navigator?.standalone === true || /FBAN|FBAV|Instagram|Line|Twitter/i.test(ua);
-
-    if (isIOS || isSafari || isEmbedded) {
-      // Use redirect to avoid popup/cookie restrictions
-      await signInWithRedirect(this.auth, provider);
-      // The page will reload; onAuthStateChanged will handle post-login
-      // Return a never-resolving Promise to satisfy the signature but avoid further UI handling
-      return new Promise<FirebaseUser>(() => {});
-    }
-
     try {
       const result = await signInWithPopup(this.auth, provider);
       return result.user;
     } catch (err: any) {
       const code = err?.code || '';
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPad|iPhone|iPod/.test(ua);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+      const isEmbedded = (window as any).navigator?.standalone === true || /FBAN|FBAV|Instagram|Line|Twitter/i.test(ua);
       // Known cases where popup fails due to environment restrictions -> fallback to redirect
       const shouldRedirect = [
         'auth/popup-blocked',
         'auth/operation-not-supported-in-this-environment',
         'auth/cookie-not-supported',
         'auth/internal-error'
-      ].some(c => code.includes(c));
+      ].some(c => code.includes(c)) || isIOS || isSafari || isEmbedded;
       if (shouldRedirect) {
         try {
           await signInWithRedirect(this.auth, provider);
@@ -267,6 +256,6 @@ export class FirebaseAuthService {
     // so that real Firebase tokens are sent to the backend for verification.
     if (this.mockEnabled) return 'e2e-mock-token';
     const user = this.auth.currentUser;
-    return user ? await getIdToken(user) : null;
+    return user ? await user.getIdToken() : null;
   }
 }

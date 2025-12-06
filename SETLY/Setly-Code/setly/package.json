@@ -8,7 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "fetch:universities": "node --experimental-fetch ./scripts/fetch-universities.mjs",
-    "generate:universities": "ts-node ./scripts/generate-universities.ts"
+    "generate:universities": "ts-node ./scripts/generate-universities.ts",
+    "lint:deprecated": "node ./scripts/check-deprecated-classes.mjs"
   },
   "prettier": {
     "printWidth": 100,

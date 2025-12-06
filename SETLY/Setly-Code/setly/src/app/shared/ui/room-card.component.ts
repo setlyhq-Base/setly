@@ -42,10 +42,10 @@ import { CurrencyCompactPipe } from '../pipes/currency-compact.pipe';
       <!-- Content -->
       <div class="p-4">
         <div class="flex items-start justify-between mb-2">
-          <h3 class="font-semibold text-lg text-gray-900 group-hover:text-brand-blue transition-colors line-clamp-2">
+          <h3 class="font-semibold text-lg text-gray-900 group-hover:text-brand-primary transition-colors line-clamp-2">
             {{ room.title }}
           </h3>
-          <span class="text-brand-blue font-bold text-lg ml-2 flex-shrink-0">
+          <span class="text-brand-primary font-bold text-lg ml-2 flex-shrink-0">
             {{ room.price | currencyCompact }}
           </span>
         </div>
@@ -65,10 +65,10 @@ import { CurrencyCompactPipe } from '../pipes/currency-compact.pipe';
 
         <!-- CTA -->
         <div class="flex items-center justify-between">
-          <span class="text-brand-blue font-medium text-sm group-hover:underline">
+          <span class="text-brand-primary font-medium text-sm group-hover:underline">
             View Details →
           </span>
-          <svg class="w-4 h-4 text-brand-blue group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-brand-primary group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
           </svg>
         </div>

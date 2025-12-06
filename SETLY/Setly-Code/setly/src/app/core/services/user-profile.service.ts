@@ -1,17 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { UsersService } from './users.service';
-
-export interface PublicProfileVM {
-  id: string;
-  name: string;
-  avatarUrl?: string;
-  location?: string;
-  universityId?: string;
-  badges: { email: boolean; phone: boolean; university: boolean; photo: boolean };
-  joinedAt?: string;
-}
+import { UsersService, PublicUserDetail } from './users.service';
 
 export interface ListingCardVM {
   id: string;
@@ -27,15 +17,15 @@ export class UserProfileService {
   private http = inject(HttpClient);
   private users = inject(UsersService);
 
-  getPublicProfile(id: string): Observable<PublicProfileVM | null> {
+  getPublicProfile(id: string): Observable<PublicUserDetail | null> {
     return this.users.getUserDetail(id);
   }
 
   getRoomsByOwner(id: string): Observable<ListingCardVM[]> {
-    return this.http.get<any>('/api/rooms').pipe(
+    return this.http.get<any>('/api/rooms', { params: { ownerId: id } }).pipe(
       map((res: any) => {
-        const items = Array.isArray(res?.items) ? res.items : [];
-        const owned = items.filter((r: any) => r?.ownerId === id);
+        const items = Array.isArray(res?.items) ? res.items : Array.isArray(res) ? res : [];
+        const owned = items.filter((r: any) => (r?.ownerId || r?.owner_id) === id || !id);
         return owned.slice(0, 6).map((r: any) => ({
           id: r.id,
           title: r.title,

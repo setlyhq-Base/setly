@@ -34,7 +34,7 @@ import { LocationAutocompleteComponent } from '../../../shared/ui/location-autoc
       <div>
         <label class="label">Avatar</label>
         <div class="flex items-center gap-4">
-          <img [src]="previewUrl || userStore.user()?.photoUrl || '/assets/avatar-placeholder.png'" class="w-16 h-16 rounded-full object-cover border" alt="avatar preview"/>
+          <img [src]="previewUrl || userStore.user()?.photoUrl || '/assets/avatar-placeholder.svg'" class="w-16 h-16 rounded-full object-cover border" alt="avatar preview"/>
           <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onFileChange($event)"/>
         </div>
         <p class="text-xs text-gray-500 mt-1">PNG/JPG/WebP up to 8MB</p>
@@ -128,7 +128,7 @@ import { LocationAutocompleteComponent } from '../../../shared/ui/location-autoc
               (picked)="onCityPicked($event)"
             ></app-location-autocomplete>
             <p class="text-xs text-gray-500 mt-1" *ngIf="form.get('city')?.value">
-              Selected: {{ [form.get('city')?.value, form.get('state')?.value].filter(Boolean).join(', ') }}
+              Selected: {{ formatLocation(form.get('city')?.value, form.get('state')?.value) }}
             </p>
           </div>
           <div>
@@ -374,6 +374,13 @@ export class ProfileEditFormComponent {
       return candidate;
     }
     return '';
+  }
+
+  formatLocation(city: unknown, state: unknown): string {
+    return [city, state]
+      .map(value => typeof value === 'string' ? value.trim() : '')
+      .filter((value): value is string => value.length > 0)
+      .join(', ');
   }
 
   // Basic E.164 validation: must start with + and contain 10-15 digits total

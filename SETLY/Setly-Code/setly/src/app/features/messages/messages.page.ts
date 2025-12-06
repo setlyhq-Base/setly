@@ -12,8 +12,8 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
   imports: [CommonModule, FormsModule],
   template: `
   <style>
-    .typing-dots { display: inline-block; }
-    .typing-dots span { display:inline-block; width:3px; height:3px; margin:0 1px; border-radius:50%; background:#6366f1; opacity:0.6; animation: tdots 1.1s infinite; }
+  .typing-dots { display: inline-block; }
+  .typing-dots span { display:inline-block; width:3px; height:3px; margin:0 1px; border-radius:50%; background: var(--brand-azure); opacity:0.6; animation: tdots 1.1s infinite; }
     .typing-dots span:nth-child(2){ animation-delay: .2s; }
     .typing-dots span:nth-child(3){ animation-delay: .4s; }
     @keyframes tdots { 0%, 80%, 100% { transform: translateY(0); opacity:.4 } 40% { transform: translateY(-2px); opacity:1 } }
@@ -38,10 +38,10 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
       transition: all .2s;
     }
     .mobile-pane-btn--active {
-      background: linear-gradient(90deg, #3A7AFE, #7A5CFF);
+      background: var(--brand-gradient);
       color: #fff;
       border-color: transparent;
-      box-shadow: 0 12px 24px -18px rgba(58,122,254,0.6);
+      box-shadow: 0 12px 24px -18px rgba(62,143,255,0.28);
     }
     .mobile-pane-badge {
       display: inline-flex;
@@ -74,18 +74,18 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
             <div class="mb-2 flex items-center justify-between gap-2">
               <h2 class="text-lg font-semibold text-gray-900 sm:text-xl">Chats</h2>
               <div class="flex items-center gap-2">
-                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600" title="New message">
+                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-[#BBD9FF] hover:bg-[#E8F4FF] hover:text-brand-azure" title="New message">
                   ✉️
                 </button>
-                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600" title="Options">
+                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-[#BBD9FF] hover:bg-[#E8F4FF] hover:text-brand-azure" title="Options">
                   ⋯
                 </button>
               </div>
             </div>
-            <input type="search" [(ngModel)]="inboxQuery" (input)="noop()" class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-200" placeholder="Search messages…" />
+            <input type="search" [(ngModel)]="inboxQuery" (input)="noop()" class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[rgba(245,199,93,0.45)]" placeholder="Search messages…" />
             <div class="mt-3 flex items-center gap-2 overflow-x-auto pb-1 text-sm">
-              <button type="button" *ngFor="let f of filtersList" (click)="currentFilter.set(f)" class="rounded-full border border-gray-200 px-3 py-1 text-xs font-medium uppercase tracking-[0.08em] text-gray-600 transition hover:border-indigo-200 hover:bg-indigo-50"
-                      [class.text-indigo-700]="currentFilter()==f" [class.border-indigo-200]="currentFilter()==f" [class.bg-indigo-50]="currentFilter()==f">
+        <button type="button" *ngFor="let f of filtersList" (click)="currentFilter.set(f)" class="rounded-full border border-gray-200 px-3 py-1 text-xs font-medium uppercase tracking-[0.08em] text-gray-600 transition hover:border-[#BBD9FF] hover:bg-[#E8F4FF]"
+          [ngStyle]="currentFilter()==f ? { color:'#0F5FFF', borderColor:'#BBD9FF', background:'#E8F4FF' } : null">
                 {{ f }}
               </button>
             </div>
@@ -93,12 +93,12 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
 
           <div class="flex-1 overflow-y-auto px-2 py-2">
             <button type="button" *ngFor="let c of filteredConversations()" (click)="select(c.id)"
-                    class="relative flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-gray-50"
-                    [class.bg-indigo-50]="activeId===c.id">
-              <span class="absolute inset-y-0 left-0 w-1 rounded-l-2xl" [class.bg-indigo-500]="activeId===c.id"></span>
+        class="relative flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-gray-50"
+        [ngStyle]="activeId===c.id ? { background: '#E8F4FF' } : null">
+      <span class="absolute inset-y-0 left-0 w-1 rounded-l-2xl" [ngStyle]="activeId===c.id ? { background: '#0F5FFF' } : null"></span>
               <span class="relative inline-block">
                 <img *ngIf="c.avatarUrl; else init" [src]="c.avatarUrl" alt="avatar" class="h-10 w-10 rounded-full border object-cover"/>
-                <ng-template #init><div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white">{{(c.label||'S').slice(0,1)}}</div></ng-template>
+                <ng-template #init><div class="flex h-10 w-10 items-center justify-center rounded-full text-white" style="background: var(--brand-azure)">{{(c.label||'S').slice(0,1)}}</div></ng-template>
                 <span *ngIf="(c.unread||0)>0" class="absolute -top-1 -right-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold text-white ring-2 ring-white">{{ c.unread }}</span>
                 <span *ngIf="c.online" class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white"></span>
               </span>
@@ -122,10 +122,10 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
         <section class="flex min-h-[320px] flex-col bg-white lg:min-h-0 lg:flex" [class.hidden]="mobilePane()==='list'">
           <div class="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 sm:px-5">
             <div class="flex min-w-0 items-center gap-3" *ngIf="active() as conv; else empty">
-              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 lg:hidden" (click)="setMobilePane('list')" aria-label="Back to conversations">
+              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:border-[#BBD9FF] hover:bg-[#E8F4FF] hover:text-brand-azure lg:hidden" (click)="setMobilePane('list')" aria-label="Back to conversations">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m15 19-7-7 7-7"/></svg>
               </button>
-              <img [src]="conv.avatarUrl || '/assets/avatar-placeholder.png'" class="h-10 w-10 rounded-full border object-cover" alt="avatar"/>
+              <img [src]="conv.avatarUrl || '/assets/avatar-placeholder.svg'" class="h-10 w-10 rounded-full border object-cover" alt="avatar"/>
               <div class="min-w-0">
                 <div class="truncate text-sm font-semibold text-gray-900 sm:text-base">{{ conv.label }}</div>
                 <div class="truncate text-xs text-gray-600">
@@ -139,12 +139,12 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
             <ng-template #empty>
               <div class="flex w-full items-center justify-between gap-3">
                 <div class="text-sm text-gray-500">Select a conversation to start chatting.</div>
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 lg:hidden" (click)="setMobilePane('list')" aria-label="Back to conversations">
+                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:border-[#BBD9FF] hover:bg-[#E8F4FF] hover:text-brand-azure lg:hidden" (click)="setMobilePane('list')" aria-label="Back to conversations">
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m15 19-7-7 7-7"/></svg>
                 </button>
               </div>
             </ng-template>
-            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600" title="Conversation info">ℹ️</button>
+            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-[#BBD9FF] hover:bg-[#E8F4FF] hover:text-brand-azure" title="Conversation info">ℹ️</button>
           </div>
 
           <div class="flex-1 overflow-y-auto px-4 py-4 sm:px-5" #scrollArea>
@@ -152,9 +152,9 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
               <div *ngFor="let m of conv3.messages; let i=index">
                 <div class="my-2 text-center text-[11px] text-gray-400" *ngIf="showTimestamp(conv3.messages, i)">{{ formatDateTime(m.at) }}</div>
                 <div class="flex items-end gap-2" [class.justify-end]="m.from==='me'">
-                  <div class="relative max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm" [ngClass]="m.from==='me' ? 'bg-gradient-to-r from-[#3A7AFE] to-[#7A5CFF] text-white' : 'bg-[#F0F2F7] text-gray-900'" [ngStyle]="m.from==='me' ? { borderTopRightRadius: '8px' } : { borderTopLeftRadius: '8px' }">
+                  <div class="relative max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm" [ngStyle]="m.from==='me' ? { background: 'var(--brand-gradient)', color: '#fff', borderTopRightRadius: '8px' } : { background: '#F0F2F7', color: '#111827', borderTopLeftRadius: '8px' }">
                     {{ m.text }}
-                    <span *ngIf="m.from==='me'" class="absolute -bottom-3 right-1 select-none text-[11px] leading-none" [class.text-blue-100]="m.status==='read'" [class.text-white/80]="m.status!=='read'" [title]="statusTitle(m)">{{ statusTicks(m) }}</span>
+                    <span *ngIf="m.from==='me'" class="absolute -bottom-3 right-1 select-none text-[11px] leading-none" [style.color]="m.status==='read' ? '#BBD9FF' : 'rgba(255,255,255,0.8)'" [title]="statusTitle(m)">{{ statusTicks(m) }}</span>
                   </div>
                   <div *ngIf="m.from==='me'" class="min-w-[28px] select-none text-right text-[11px] leading-none text-gray-400 lg:hidden">
                     <span [ngClass]="statusColor(m)" [title]="statusTitle(m)">{{ statusTicks(m) }}</span>
@@ -169,8 +169,8 @@ import { ConversationStoreService, Conversation, Message } from './conversation-
 
           <div class="border-t border-gray-100 bg-white px-4 py-3 sm:px-5">
             <div class="flex items-end gap-2 sm:gap-3">
-              <textarea #inputEl rows="1" [(ngModel)]="messageText" (input)="onInput()" (keydown.enter)="sendMessage()" placeholder="Type a message" class="flex-1 resize-none rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-200"></textarea>
-              <button type="button" (click)="sendMessage()" class="rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition" [ngStyle]="{ background: 'linear-gradient(90deg,#3A7AFE,#7A5CFF)' }" [disabled]="!messageText.trim()">Send</button>
+              <textarea #inputEl rows="1" [(ngModel)]="messageText" (input)="onInput()" (keydown.enter)="sendMessage()" placeholder="Type a message" class="flex-1 resize-none rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[rgba(245,199,93,0.45)]"></textarea>
+              <button type="button" (click)="sendMessage()" class="rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition" [ngStyle]="{ background: 'var(--brand-gradient)' }" [disabled]="!messageText.trim()">Send</button>
             </div>
           </div>
         </section>

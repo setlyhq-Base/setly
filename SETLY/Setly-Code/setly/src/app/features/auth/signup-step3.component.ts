@@ -25,7 +25,7 @@ import { OrgsService } from '../../core/services/orgs.service';
             id="graduationYear"
             formControlName="graduationYear"
             data-testid="signup-graduation-year"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
           >
             <option value="">Select year</option>
             <option *ngFor="let year of graduationYears" [value]="year">{{ year }}</option>
@@ -46,7 +46,7 @@ import { OrgsService } from '../../core/services/orgs.service';
                 type="text"
                 formControlName="jobTitle"
                 data-testid="signup-job-title"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                 placeholder="e.g. Software Engineer"
               >
               <div *ngIf="profileForm.get('jobTitle')?.invalid && profileForm.get('jobTitle')?.touched" class="mt-1 text-sm text-red-600">
@@ -63,7 +63,7 @@ import { OrgsService } from '../../core/services/orgs.service';
                 type="text"
                 formControlName="company"
                 data-testid="signup-company"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                 placeholder="e.g. Google"
               >
               <div *ngIf="profileForm.get('company')?.invalid && profileForm.get('company')?.touched" class="mt-1 text-sm text-red-600">
@@ -83,7 +83,7 @@ import { OrgsService } from '../../core/services/orgs.service';
             type="tel"
             formControlName="phone"
             data-testid="signup-phone"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             placeholder="(555) 123-4567"
           >
         </div>
@@ -102,7 +102,7 @@ import { OrgsService } from '../../core/services/orgs.service';
                 type="number"
                 formControlName="budgetMin"
                 data-testid="signup-budget-min"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                 placeholder="500"
               >
             </div>
@@ -116,7 +116,7 @@ import { OrgsService } from '../../core/services/orgs.service';
                 type="number"
                 formControlName="budgetMax"
                 data-testid="signup-budget-max"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                 placeholder="1500"
               >
             </div>
@@ -132,7 +132,7 @@ import { OrgsService } from '../../core/services/orgs.service';
                     formControlName="roomType"
                     value="private"
                     data-testid="signup-room-private"
-                    class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300"
+                    class="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300"
                   >
                   <span class="ml-2 text-sm text-gray-700">Private Room</span>
                 </label>
@@ -142,7 +142,7 @@ import { OrgsService } from '../../core/services/orgs.service';
                     formControlName="roomType"
                     value="shared"
                     data-testid="signup-room-shared"
-                    class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300"
+                    class="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300"
                   >
                   <span class="ml-2 text-sm text-gray-700">Shared Room</span>
                 </label>
@@ -156,7 +156,7 @@ import { OrgsService } from '../../core/services/orgs.service';
           type="submit"
           [disabled]="profileForm.invalid || isSubmitting()"
           data-testid="signup-complete-btn"
-          class="w-full bg-brand-blue hover:bg-brand-blue/90 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold transition-colors"
+          class="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold transition-colors"
         >
           <span *ngIf="!isSubmitting()">Complete Profile</span>
           <span *ngIf="isSubmitting()">Creating Account...</span>
@@ -168,7 +168,7 @@ import { OrgsService } from '../../core/services/orgs.service';
           type="button"
           (click)="goBack()"
           data-testid="signup-back-step3-btn"
-          class="text-brand-blue hover:text-brand-blue/80 font-medium"
+          class="text-brand-primary hover:text-brand-primary/80 font-medium"
         >
           Back
         </button>

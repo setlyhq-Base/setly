@@ -1,112 +1,315 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProfileStats, UserProfile, computeProfileCompletion } from '../../../core/models/profile.model';
-import { AvatarUploaderComponent } from '../../../shared/ui/avatar-uploader.component';
-import { ParallaxDirective } from '../../../shared/directives/parallax.directive';
 
 @Component({
   selector: 'app-profile-header-card',
   standalone: true,
-  imports: [CommonModule, AvatarUploaderComponent, ParallaxDirective],
+  imports: [CommonModule],
   template: `
-  <section class="bg-white rounded-2xl shadow-sm border border-gray-200">
-    <!-- Banner -->
-  <div class="banner-cinematic relative h-40 md:h-56 w-full group" [appParallax]="0.25">
-    <img *ngIf="profile?.coverImageUrl; else bannerPlaceholder" [src]="profile?.coverImageUrl" class="banner-media transition-transform duration-700 ease-out group-hover:scale-[1.03] will-change-transform" alt="profile banner" />
-        <ng-template #bannerPlaceholder>
-          <div class="w-full h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 opacity-80 flex items-center justify-center banner-anim">
-            <div class="text-white/80 text-sm tracking-wide">Add a banner to personalize your space</div>
+  <!-- Compact Instagram/Twitter/LinkedIn-style horizontal header -->
+  <div class="profile-header-compact">
+    <!-- Main horizontal layout: Avatar + Info + Buttons -->
+    <div class="header-main">
+      <!-- Left: Profile Photo (80-100px) -->
+      <div class="avatar-container">
+        <img [src]="resolvedAvatar" alt="Profile avatar" class="profile-photo" />
+      </div>
+
+      <!-- Center: Name, Location, Badges, Stats -->
+      <div class="info-section">
+        <!-- Name + Location (single line) -->
+        <div class="name-location-row">
+          <h1 class="profile-name">{{ fullName }}</h1>
+          <span *ngIf="profile?.location" class="location-text">{{ profile?.location }}</span>
+        </div>
+
+        <!-- Verification badges row -->
+        <div class="badges-row">
+          <span class="badge" [class.verified]="profile?.verifications?.email">
+            <svg class="badge-icon" viewBox="0 0 16 16" *ngIf="profile?.verifications?.email">
+              <circle cx="8" cy="8" r="7" fill="currentColor"/>
+              <path d="M5 8l2 2 4-4" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            </svg>
+            Email
+          </span>
+          <span class="badge" [class.verified]="profile?.verifications?.phone">
+            <svg class="badge-icon" viewBox="0 0 16 16" *ngIf="profile?.verifications?.phone">
+              <circle cx="8" cy="8" r="7" fill="currentColor"/>
+              <path d="M5 8l2 2 4-4" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            </svg>
+            Phone
+          </span>
+          <span class="badge" [class.verified]="profile?.verifications?.university">
+            <svg class="badge-icon" viewBox="0 0 16 16" *ngIf="profile?.verifications?.university">
+              <circle cx="8" cy="8" r="7" fill="currentColor"/>
+              <path d="M5 8l2 2 4-4" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            </svg>
+            University
+          </span>
+        </div>
+
+        <!-- Stats row (Instagram style) -->
+        <div class="stats-row">
+          <div class="stat">
+            <div class="stat-number">{{ stats.roomsPosted }}</div>
+            <div class="stat-label">Rooms</div>
           </div>
-        </ng-template>
-        <div class="banner-tint"></div>
-        <div class="banner-glow"></div>
-        <!-- Projected header actions (Edit/Public/Share) -->
-        <div class="absolute top-2 right-2 flex items-center gap-4">
-          <ng-content select="[header-actions]"></ng-content>
-          <button *ngIf="canEdit" (click)="edit.emit()" class="hidden">
-            <!-- Fallback hidden (we provide actions from parent) -->
-          </button>
+          <div class="stat">
+            <div class="stat-number">{{ stats.ridesShared }}</div>
+            <div class="stat-label">Rides</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">{{ marketplaceCount }}</div>
+            <div class="stat-label">Marketplace</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">{{ stats.connectionsCount }}</div>
+            <div class="stat-label">Connections</div>
+          </div>
         </div>
       </div>
 
-  <div class="p-6 md:p-8 relative z-10">
-        <!-- Centered avatar overlapping banner -->
-        <div class="-mt-16 flex justify-center">
-          <div class="relative">
-            <div class="avatar-shell w-32 h-32">
-              <div class="avatar-ring" [class.pulse]="avatarPulse" [style.--p]="completion">
-                <img [src]="resolvedAvatar" alt="Profile avatar" class="avatar-img" />
-              </div>
-            </div>
-            <div *ngIf="completion < 100 && missing.length" class="completion-tip" role="tooltip">
-              <h4>{{ completion }}% complete</h4>
-              <ul>
-                <li *ngFor="let tip of missing">⏺ {{ tip }}</li>
-              </ul>
-            </div>
-            <div class="mt-2 flex justify-center">
-              <app-avatar-uploader (updated)="onAvatar($event)"></app-avatar-uploader>
-            </div>
-          </div>
-        </div>
-
-        <!-- Summary -->
-        <div class="mt-4 flex flex-col items-center text-center">
-          <div class="flex flex-wrap items-center gap-3 justify-center">
-            <h1 class="name-title">{{ fullName }}</h1>
-            <span class="text-gray-500" *ngIf="profile?.location">•</span>
-            <div class="flex items-center gap-2 text-gray-600" *ngIf="profile?.location">
-              <span>📍</span>
-              <span>{{ profile?.location }}</span>
-            </div>
-          </div>
-          <div class="mt-2 text-gray-700 font-medium" *ngIf="profile?.headline; else noHeadline">
-            {{ profile?.headline }}
-          </div>
-          <ng-template #noHeadline>
-            <div class="mt-2 text-gray-400 italic">Add a short headline to introduce yourself</div>
-          </ng-template>
-
-          <!-- Stats Row -->
-          <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="stat-chip">🏠 {{ stats.roomsPosted }} Rooms</div>
-            <div class="stat-chip">🚗 {{ stats.ridesShared }} Rides</div>
-            <div class="stat-chip">💬 {{ stats.reviewsCount }} Reviews</div>
-            <div class="stat-chip">🌍 {{ stats.connectionsCount }} Connections</div>
-          </div>
-
-          <!-- Badges -->
-          <div class="mt-4 flex flex-wrap gap-2 justify-center">
-            <span class="verify-badge" [class.badge-on]="profile?.verifications?.identity">✅ Identity</span>
-            <span class="verify-badge" [class.badge-on]="profile?.verifications?.university">🎓 University</span>
-            <span class="verify-badge" [class.badge-on]="profile?.verifications?.phone">📞 Phone</span>
-            <span class="verify-badge" [class.badge-on]="profile?.verifications?.email">✉️ Email</span>
-          </div>
-        </div>
+      <!-- Right: Action Buttons (top-right corner) -->
+      <div class="actions-section">
+        <ng-content select="[header-actions]"></ng-content>
       </div>
-    </section>
+    </div>
+  </div>
   `,
   styles: [`
-    :host { display:block; }
-    .banner-cinematic { box-shadow: 0 8px 24px -12px rgba(17,24,39,0.18); }
-    .stat-chip { @apply bg-gray-50 text-gray-700 text-sm px-3 py-2 rounded-xl border border-gray-200 font-medium; }
-    .verify-badge { @apply text-xs px-3 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 font-medium; }
-    .badge-on { @apply bg-gradient-to-r from-violet-500 to-indigo-500 text-white border-transparent; }
-  .avatar-shell { position:relative; }
-  .avatar-ring { position:relative; width:100%; height:100%; border-radius:50%; padding:4px; background:conic-gradient(var(--gradient-start) calc(var(--p)*1%), #e5e7eb 0); box-shadow:0 10px 28px -12px rgba(90,79,243,.35), 0 4px 12px -4px rgba(90,79,243,.25); transition:transform .4s cubic-bezier(.16,.8,.3,1), box-shadow .4s; }
-  .avatar-ring::after { content:""; position:absolute; inset:8px; background:#fff; border-radius:50%; }
-  .avatar-ring .avatar-img { position:relative; z-index:2; }
-  .avatar-ring.pulse { animation: avatarPop .5s cubic-bezier(.2,.8,.2,1); }
-  @keyframes avatarPop { 0% { transform: scale(.92); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
-  .completion-tip { position:absolute; top:0; left:100%; transform:translate(12px, 12px); background:#111827; color:#fff; font-size:.65rem; padding:.45rem .6rem; border-radius:.6rem; display:flex; flex-direction:column; gap:.25rem; box-shadow:0 10px 24px -8px rgba(0,0,0,.45); width:160px; }
-  .completion-tip h4 { font-size:.6rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.8; }
-  .completion-tip ul { list-style:none; display:flex; flex-direction:column; gap:.25rem; }
-  .completion-tip li { display:flex; align-items:center; gap:.35rem; font-size:.6rem; }
-  @media (max-width:800px){ .completion-tip { display:none; } }
-  .avatar-ring:hover { transform:translateY(-2px); box-shadow:0 14px 34px -10px rgba(90,79,243,.6), 0 6px 16px -6px rgba(90,79,243,.4); }
-    .avatar-img { width:100%; height:100%; border-radius:50%; object-fit:cover; background:#fff; box-shadow:0 0 0 4px #fff; }
-    @media (max-width:640px){ .avatar-shell { width:104px; height:104px; } }
-    .name-title { font-size:22px; line-height:1.2; font-weight:600; color:#111827; }
+    :host { display: block; }
+    
+    /* Compact Header Container - reduced height */
+    .profile-header-compact {
+      background: white;
+      padding: 20px 0 14px; /* Reduced from 24px/16px */
+      border-bottom: 1px solid #E0E5F0; /* Light gray divider */
+    }
+
+    /* Main horizontal layout - vertically centered */
+    .header-main {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      position: relative;
+    }
+
+    /* Left: Profile Photo */
+    .avatar-container {
+      flex-shrink: 0;
+    }
+
+    .profile-photo {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e5e7eb;
+    }
+
+    /* Center: Info Section */
+    .info-section {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Name + Location Row */
+    .name-location-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .profile-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0A1A3F;
+      margin: 0;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .location-text {
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .location-text::before {
+      content: '📍 ';
+      opacity: 0.7;
+    }
+
+    /* Verification Badges Row - smaller, consistent */
+    .badges-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #94a3b8;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+
+    .badge.verified {
+      background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+    }
+
+    .badge-icon {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+    }
+
+    /* Stats Row - bold numbers on top, labels below */
+    .stats-row {
+      display: flex;
+      align-items: center;
+      gap: 36px; /* More spacing between stats */
+      margin-top: 8px;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      cursor: pointer;
+      transition: transform 0.15s ease-out;
+    }
+
+    .stat:hover {
+      transform: translateY(-1px);
+    }
+
+    .stat-number {
+      font-size: 20px; /* Bigger for better hierarchy */
+      font-weight: 600; /* Semi-bold */
+      color: #0A1A3F;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 13px; /* Slightly bigger */
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* Right: Action Buttons - vertically centered with avatar */
+    .actions-section {
+      flex-shrink: 0;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Match Explore page button styles */
+    .actions-section ::ng-deep .btn-primary {
+      background: linear-gradient(135deg, #0A1A3F 0%, #0F5FFF 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(15, 95, 255, 0.2);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .actions-section ::ng-deep .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15, 95, 255, 0.3);
+    }
+
+    .actions-section ::ng-deep .btn-secondary {
+      background: white;
+      color: #0A1A3F;
+      border: 1px solid #e5e7eb;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .actions-section ::ng-deep .btn-secondary:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .header-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .profile-photo {
+        width: 80px;
+        height: 80px;
+      }
+
+      .profile-name {
+        font-size: 20px;
+      }
+
+      .stats-row {
+        gap: 16px;
+      }
+
+      .stat-number {
+        font-size: 18px;
+      }
+
+      .actions-section {
+        width: 100%;
+      }
+
+      .actions-section ::ng-deep button {
+        flex: 1;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .name-location-row {
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-start;
+      }
+
+      .stats-row {
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .profile-header-compact {
+        padding: 16px 0 12px;
+      }
+    }
   `]
 })
 export class ProfileHeaderCardComponent implements OnChanges {
@@ -136,7 +339,6 @@ export class ProfileHeaderCardComponent implements OnChanges {
       this.profile?.stats || {
         roomsPosted: 0,
         ridesShared: 0,
-        reviewsCount: 0,
         connectionsCount: 0,
       }
     );
@@ -160,5 +362,12 @@ export class ProfileHeaderCardComponent implements OnChanges {
     this.displayedAvatar = url || '/assets/avatar-placeholder.svg';
     this.avatarPulse = true;
     setTimeout(()=> this.avatarPulse = false, 650);
+  }
+
+  // Placeholder marketplace count until wired to real data
+  get marketplaceCount(): number {
+    // Could be derived from profile.stats in future; default to 0
+    const any = (this.profile as any);
+    return (any?.stats?.marketplaceCount as number) || 0;
   }
 }

@@ -23,7 +23,7 @@ import { RouterOutlet } from '@angular/router';
   `,
   styles: [`
     .northstar {
-      @apply inline-block w-3 h-3 rounded-full bg-brand-blue align-middle;
+      @apply inline-block w-3 h-3 rounded-full bg-brand-primary align-middle;
     }
   `]
 })

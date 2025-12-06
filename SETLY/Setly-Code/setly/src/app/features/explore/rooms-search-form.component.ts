@@ -1,23 +1,23 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { LocationAutocompleteComponent } from '../../shared/ui/location-autocomplete.component';
-import { GeoSuggestion } from '../../core/services/geocoding.service';
+import { GooglePlaceInputComponent } from '../../shared/ui/google-place-input.component';
 
 @Component({
   selector: 'app-rooms-search-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LocationAutocompleteComponent],
+  imports: [CommonModule, ReactiveFormsModule, GooglePlaceInputComponent],
   template: `
     <div [formGroup]="form" class="form-layout">
       <div class="form-row single">
         <div class="field-block">
           <label class="field-label">Location</label>
           <span class="field-hint">City or university</span>
-          <app-location-autocomplete
-            [initialCity]="form.controls['location']?.value || ''"
+          <app-google-place-input
+            [initialAddress]="form.controls['location']?.value || ''"
             (picked)="onLocationPicked($event)"
-          ></app-location-autocomplete>
+            placeholder="Search city or university"
+          ></app-google-place-input>
           <p *ngIf="showError('location')" class="field-error">Location is required.</p>
         </div>
       </div>
@@ -70,26 +70,13 @@ import { GeoSuggestion } from '../../core/services/geocoding.service';
 export class RoomsSearchFormComponent {
   @Input() form!: FormGroup;
 
-  onLocationPicked(event: GeoSuggestion) {
+  onLocationPicked(event: { address: string; lat?: number; lng?: number; components?: any }) {
     if (!this.form) return;
-    const value = this.formatValue(event);
-    this.form.controls['location']?.setValue(value);
+    this.form.controls['location']?.setValue(event.address);
   }
 
   showError(control: string) {
     const c = this.form?.controls?.[control];
     return c && c.invalid && (c.dirty || c.touched);
-  }
-
-  private formatValue(s: GeoSuggestion): string {
-    if (!s) return '';
-    if (s.kind === 'university') {
-      return [s.label, s.country].filter(Boolean).join(', ') || s.label;
-    }
-    if (s.source === 'google_places') {
-      return s.label;
-    }
-    const parts = [s.city || s.label, s.state, s.country].filter(Boolean);
-    return parts.length ? parts.join(', ') : s.label;
   }
 }

@@ -42,20 +42,47 @@ router.get('/', async (req: AuthedRequest, res: Response) => {
       }
     }
     // Map to lightweight public directory shape
-    const mapped = users.map(u => ({
-      id: u.id,
-      name: u.displayName,
-      avatarUrl: u.photoUrl || undefined,
-      universityId: u.universityId || undefined,
-      location: [u.city, u.state].filter(Boolean).join(', '),
-      lastSeen: lastSeenMap.get(u.id),
-      badges: {
-        email: !!u.email,
-        phone: !!u.phone,
-        university: !!u.universityId,
-        photo: !!u.photoUrl
-      }
-    }));
+    const mapped = users.map(u => {
+      const locationParts = [u.city, u.state, u.country]
+        .map(part => typeof part === 'string' ? part.trim() : '')
+        .filter(Boolean);
+      const location = locationParts.join(', ');
+      const lastLoginIso = u.lastLoginAt?.toDate?.().toISOString?.() || u.updatedAt?.toDate?.().toISOString?.();
+      const presenceIso = lastSeenMap.get(u.id);
+      const rawCompany = (u.company || '').trim();
+      const rawOrg = (u.organization || '').trim();
+      const rawUniversity = (u.universityId || '').trim();
+      const roleToken = ((u.role || '').trim() || (rawUniversity ? 'student' : '')).toLowerCase();
+      const role = roleToken ? roleToken[0].toUpperCase() + roleToken.slice(1) : undefined;
+      const organization = (roleToken === 'professional'
+        ? (rawCompany || rawOrg || rawUniversity)
+        : (rawOrg || rawUniversity || rawCompany)) || undefined;
+      const universityId = rawUniversity || undefined;
+      const company = rawCompany || undefined;
+      const profileComplete = typeof u.isProfileComplete === 'boolean' ? u.isProfileComplete : UserService.isProfileComplete(u);
+      return {
+        id: u.id,
+        name: u.displayName,
+        avatarUrl: u.photoUrl || undefined,
+        role,
+        organization,
+        company,
+        universityId,
+        city: u.city || undefined,
+        state: u.state || undefined,
+        country: u.country || undefined,
+        location,
+        lastLoginAt: lastLoginIso,
+        lastSeen: presenceIso || lastLoginIso,
+        profileComplete,
+        badges: {
+          email: !!u.email,
+          phone: !!u.phone,
+          university: !!universityId,
+          photo: !!u.photoUrl
+        }
+      };
+    });
     res.json({ users: mapped, nextCursor });
   } catch (e: any) {
     logger.error('[GET /users] Error', e?.message || e);

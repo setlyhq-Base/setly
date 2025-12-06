@@ -22,8 +22,8 @@ export interface UserProfile {
 export interface ProfileStats {
   roomsPosted: number;
   ridesShared: number;
-  reviewsCount: number;
   connectionsCount: number;
+  marketplaceItems?: number;
 }
 
 export interface TravelHistoryEntry {
@@ -39,6 +39,9 @@ export interface TravelHistoryEntry {
 export interface Review {
   id: string;
   fromUserId: string;
+  fromUserName?: string;
+  fromUserAvatar?: string;
+  fromUserLocation?: string;
   toUserId: string;
   city?: string;
   createdAt: string; // ISO
@@ -58,6 +61,9 @@ export interface Connection {
   id: string;
   name: string;
   avatarUrl?: string;
+  university?: string;
+  location?: string;
+  tags?: string[];
   mutualUniversities?: number;
   sharedTrips?: number;
 }

@@ -25,6 +25,9 @@ module.exports = {
     // Premium utilities
     'text-gradient', 'shadow-premium', 'shadow-premium-lg',
     'focus-premium', 'loading-shimmer', 'glass'
+    // Brand typography & color utilities (style guide)
+    ,'heading-h1','heading-h2','heading-h3','heading-h4','text-body','text-small'
+    ,'text-midnight','text-gold','bg-midnight','bg-gold','border-midnight','border-gold','ring-gold'
   ],
   theme: {
     extend: {
@@ -32,15 +35,34 @@ module.exports = {
         'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       colors: {
+        // Core palette (3-tier system)
         transparent: 'transparent',
         current: 'currentColor',
         white: '#ffffff',
         black: '#000000',
         'black-primary': '#0B0B0F',
         brand: {
-          blue: '#3b82f6',
-          ink: '#6c757d'
+          primary: '#0A1A3F', // Midnight Blue – primary brand color (Buttons, Icons, Nav, CTAs)
+          accent: '#F5C75D',  // North Star Gold – highlights, selected states
+          azure: '#3E8FFF',   // Clean Apple-like secondary blue
+          aqua: '#5DAEFF',    // Optional freshness accent (use sparingly)
+          midnight: '#0A1A3F', // Alias for clarity
+          gold: '#F5C75D'      // Alias for clarity
         },
+      /* Deprecated aliases removed: use bg-brand-primary / text-brand-primary / border-brand-primary.
+        If you need the azure mid-stop use custom gradient utilities or brand-deep backgroundImage. */
+        midnight: '#0A1A3F',
+        gold: '#F5C75D',
+        // Trust neutrals (inspired by premium product palettes)
+        neutral: {
+          50: '#F7F8FA',      // Background (Off-White)
+          100: '#E6E6E6',     // Borders (Soft Slate)
+          400: '#6F7785',     // Subtext (Cool Grey)
+          900: '#1A1A1A'      // Body text
+        },
+        success: '#28a745', // Semantic success
+        error: '#dc3545',   // Semantic error
+        // Legacy ramps retained for backwards compatibility (can be pruned later)
         gray: {
           50: '#F8F9FA',
           100: '#E9ECEF',
@@ -122,6 +144,10 @@ module.exports = {
       },
       transitionDuration: {
         '400': '400ms',
+      },
+      backgroundImage: {
+        // Premium deep brand gradient (Midnight Blue → Electric Azure → soft white glow)
+        'brand-deep': 'linear-gradient(135deg,#0A1A3F 0%, #0F5FFF 55%, #E8F4FF 85%, #FFFFFF 100%)'
       },
     },
   },

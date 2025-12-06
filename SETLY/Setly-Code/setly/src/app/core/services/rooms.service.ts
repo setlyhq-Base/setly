@@ -74,6 +74,18 @@ export class RoomsService {
     );
   }
 
+  // New two-step posting flow
+  initUpload(payload: { files: { ext?: string; contentType?: string }[]; [k: string]: any }): Observable<{ roomId: string; uploads: Array<{ key: string; url: string; fields: any; contentType: string; publicUrl: string }> }> {
+    return this.http.post<any>('/api/rooms/init', payload);
+  }
+
+  publish(roomId: string, payload: any): Observable<Room> {
+    return this.http.post<any>(`/api/rooms/${roomId}/publish`, payload).pipe(
+      map(dto => this.mapToRoom(dto)),
+      map((mapped: Room) => { this.roomStore.addRoom(mapped); return mapped; })
+    );
+  }
+
   private mapToRoom(dto: any): Room {
     if (!dto) return dto;
     return {

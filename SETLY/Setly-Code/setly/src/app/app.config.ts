@@ -12,6 +12,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { routes } from './app.routes';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthTokenInterceptor } from './core/interceptors/auth-token.interceptor';
+import { PermissionErrorInterceptor } from './core/interceptors/permission-error.interceptor';
 
 class GlobalErrorHandler implements ErrorHandler {
   handleError(error: any): void {
@@ -35,7 +36,8 @@ export const appConfig: ApplicationConfig = {
           provideFirestore(() => getFirestore())
         ]
       : []),
-    { provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true },
+  { provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true },
+  { provide: HTTP_INTERCEPTORS, useClass: PermissionErrorInterceptor, multi: true },
     { provide: ErrorHandler, useClass: GlobalErrorHandler }
   ]
 };

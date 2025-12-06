@@ -40,7 +40,7 @@ type UploadImage = {
         #fileInput
         class="hidden-input"
         [attr.multiple]="allowMulti ? '' : null"
-        accept="image/*"
+        [attr.accept]="accept"
         (change)="onFileSelected($event)"
         [disabled]="disabled"
       />
@@ -296,6 +296,8 @@ export class ImageUploaderComponent implements ControlValueAccessor, OnChanges, 
   @Input() variant: 'dropzone' | 'circle' = 'dropzone';
   @Input() helperPrimary?: string;
   @Input() helperSecondary?: string;
+  // Accept HEIC/HEIF explicitly in addition to image/* for iOS Safari
+  @Input() accept: string = 'image/*,.heic,.heif';
 
   readonly defaultHelperPrimary = 'Add at least 3 photos';
   readonly defaultHelperSecondary = 'Max 10 • JPG, PNG, WebP';

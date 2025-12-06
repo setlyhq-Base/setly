@@ -32,7 +32,7 @@ import { CodeTimerService } from '../../core/services/code-timer.service';
               (keydown)="onDigitKeydown($event, i)"
               (paste)="onPaste($event)"
               [attr.data-testid]="'signup-code-input-' + i"
-              class="w-12 h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+              class="w-12 h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
               [class.border-red-500]="hasError()"
             >
           </div>
@@ -48,7 +48,7 @@ import { CodeTimerService } from '../../core/services/code-timer.service';
             (click)="resendCode()"
             [disabled]="codeTimer.isActive()"
             data-testid="signup-resend-btn"
-            class="text-brand-blue hover:text-brand-blue/80 disabled:text-gray-400 font-medium"
+            class="text-brand-primary hover:text-brand-primary/80 disabled:text-gray-400 font-medium"
           >
             <span *ngIf="!codeTimer.isActive()">Resend Code</span>
             <span *ngIf="codeTimer.isActive()">Resend in {{ codeTimer.remainingTime() }}s</span>
@@ -61,7 +61,7 @@ import { CodeTimerService } from '../../core/services/code-timer.service';
           (click)="verifyCode()"
           [disabled]="isVerifying() || codeDigits().join('').length !== 6"
           data-testid="signup-verify-btn"
-          class="w-full bg-brand-blue hover:bg-brand-blue/90 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold transition-colors"
+          class="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold transition-colors"
         >
           <span *ngIf="!isVerifying()">Verify Email</span>
           <span *ngIf="isVerifying()">Verifying...</span>

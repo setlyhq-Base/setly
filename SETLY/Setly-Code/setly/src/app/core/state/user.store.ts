@@ -75,7 +75,7 @@ export class UserStore {
       id: dto.id,
       name: dto.displayName || 'User',
       // Prefer explicit publicUrl (new avatar) then stored photoUrl then fallback placeholder
-      photoUrl: dto.publicUrl || dto.photoUrl || '/assets/avatar-placeholder.png',
+  photoUrl: dto.publicUrl || dto.photoUrl || '/assets/avatar-placeholder.svg',
       coverImageUrl: dto.coverImageUrl,
       headline: dto.headline,
   bio: dto.bio,

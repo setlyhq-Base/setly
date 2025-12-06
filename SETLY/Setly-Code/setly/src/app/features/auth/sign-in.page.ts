@@ -22,7 +22,7 @@ import { RouterLink } from '@angular/router';
               <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="email"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"
                 placeholder="your@email.com"
               >
             </div>
@@ -31,16 +31,16 @@ import { RouterLink } from '@angular/router';
               <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="password"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"
                 placeholder="••••••••"
               >
             </div>
 
-            <button type="submit" class="btn w-full bg-brand-blue hover:bg-brand-blue/90 text-white py-3 rounded-lg font-semibold">
+            <button type="submit" class="btn w-full bg-brand-primary hover:bg-brand-primary/90 text-white py-3 rounded-lg font-semibold">
               Sign In
             </button>
 
-            <button type="button" class="w-full text-brand-blue hover:text-brand-blue/80 font-medium py-2">
+            <button type="button" class="w-full text-brand-primary hover:text-brand-primary/80 font-medium py-2">
               Or sign in with magic link
             </button>
           </form>
@@ -48,7 +48,7 @@ import { RouterLink } from '@angular/router';
           <div class="mt-6 text-center">
             <p class="text-gray-600">
               Don't have an account?
-              <a routerLink="/auth/sign-up" class="text-brand-blue hover:text-brand-blue/80 font-medium">Create account</a>
+              <a routerLink="/auth/sign-up" class="text-brand-primary hover:text-brand-primary/80 font-medium">Create account</a>
             </p>
           </div>
         </div>
@@ -57,7 +57,7 @@ import { RouterLink } from '@angular/router';
   `,
   styles: [`
     .northstar {
-      @apply inline-block w-3 h-3 rounded-full bg-brand-blue align-middle;
+      @apply inline-block w-3 h-3 rounded-full bg-brand-primary align-middle;
     }
   `]
 })

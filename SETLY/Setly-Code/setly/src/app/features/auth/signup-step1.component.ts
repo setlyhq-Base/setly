@@ -26,7 +26,7 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
             type="text"
             formControlName="name"
             data-testid="signup-name-input"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             placeholder="Enter your full name"
           >
           <div *ngIf="signupForm.get('name')?.invalid && signupForm.get('name')?.touched" class="mt-1 text-sm text-red-600">
@@ -46,7 +46,7 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
                 formControlName="role"
                 value="student"
                 data-testid="signup-role-student"
-                class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300"
+                  class="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300"
               >
               <span class="ml-2 text-sm text-gray-700">Student</span>
             </label>
@@ -56,7 +56,7 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
                 formControlName="role"
                 value="professional"
                 data-testid="signup-role-professional"
-                class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300"
+                  class="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300"
               >
               <span class="ml-2 text-sm text-gray-700">Working Professional</span>
             </label>
@@ -77,7 +77,7 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
             [value]="orgSearchQuery()"
             (input)="onOrgSearch($event)"
             data-testid="signup-org-search"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             placeholder="Search for your university or company"
           >
           <div *ngIf="orgSuggestions().length > 0" class="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
@@ -110,7 +110,7 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
             type="email"
             formControlName="email"
             data-testid="signup-email-input"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             placeholder="your@email.com"
           >
           <div *ngIf="signupForm.get('email')?.invalid && signupForm.get('email')?.touched" class="mt-1 text-sm text-red-600">
@@ -130,7 +130,7 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
             type="password"
             formControlName="password"
             data-testid="signup-password-input"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             placeholder="Create a strong password"
           >
           <div *ngIf="signupForm.get('password')?.invalid && signupForm.get('password')?.touched" class="mt-1 text-sm text-red-600">
@@ -146,11 +146,11 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
               type="checkbox"
               formControlName="termsAccepted"
               data-testid="signup-terms-checkbox"
-              class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300 rounded mt-0.5"
+            class="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300 rounded mt-0.5"
             >
             <span class="ml-2 text-sm text-gray-700">
-              I agree to the <a href="/terms" class="text-brand-blue hover:underline">Terms of Service</a> and
-              <a href="/privacy" class="text-brand-blue hover:underline">Privacy Policy</a>
+            I agree to the <a href="/terms" class="text-brand-primary hover:underline">Terms of Service</a> and
+            <a href="/privacy" class="text-brand-primary hover:underline">Privacy Policy</a>
             </span>
           </label>
           <div *ngIf="signupForm.get('termsAccepted')?.invalid && signupForm.get('termsAccepted')?.touched" class="mt-1 text-sm text-red-600">
@@ -163,7 +163,7 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
           type="submit"
           [disabled]="signupForm.invalid || isSubmitting()"
           data-testid="signup-submit-btn"
-          class="w-full bg-brand-blue hover:bg-brand-blue/90 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold transition-colors"
+         class="w-full bg-brand-primary hover:bg-brand-primary/90 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold transition-colors"
         >
           <span *ngIf="!isSubmitting()">Continue</span>
           <span *ngIf="isSubmitting()">Creating Account...</span>
@@ -173,7 +173,7 @@ import { OrgsService, Organization } from '../../core/services/orgs.service';
       <div class="mt-6 text-center">
         <p class="text-gray-600">
           Already have an account?
-          <a routerLink="/auth/sign-in" class="text-brand-blue hover:text-brand-blue/80 font-medium">Sign in</a>
+         <a routerLink="/auth/sign-in" class="text-brand-primary hover:text-brand-primary/80 font-medium">Sign in</a>
         </p>
       </div>
     </div>

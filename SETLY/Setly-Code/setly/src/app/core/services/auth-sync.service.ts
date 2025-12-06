@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, onAuthStateChanged, getIdToken, User } from '@angular/fire/auth';
+import { Auth, onAuthStateChanged, User } from '@angular/fire/auth';
 import { HttpClient } from '@angular/common/http';
 import { timeout } from 'rxjs/operators';
 import { AuthStore } from '../state/auth.store';
@@ -17,6 +17,8 @@ export class AuthSyncService {
   private userStore = inject(UserStore);
   private initialized = false;
   private heartbeatHandle: any;
+  private heartbeatFailures = 0;
+  private heartbeatIntervalMs = 20_000; // adaptive
 
   init() {
     if (this.initialized) return;
@@ -29,7 +31,7 @@ export class AuthSyncService {
         return;
       }
       try {
-        const idToken = await getIdToken(fbUser, true);
+        const idToken = await fbUser.getIdToken(true);
         console.debug('[AuthSync] Firebase user UID:', fbUser.uid, 'Token length:', idToken?.length);
         // Prefer configured API base or relative proxy path
         const base = (environment?.apiBaseUrl || '').replace(/\/$/, '');
@@ -135,29 +137,75 @@ export class AuthSyncService {
 
   private async sendHeartbeatOnce() {
     try {
+      if (environment?.featureFlags?.disablePresenceHeartbeat) return; // disabled via flag
       const fbUser = this.af.currentUser as User | null;
       const base = (environment?.apiBaseUrl || '').replace(/\/$/, '');
-      const url = base ? `${base}/presence/heartbeat` : '/api/presence/heartbeat';
+      const debugQuery = environment?.featureFlags?.presenceDebug ? '?debug=1' : '';
+      const url = base ? `${base}/presence/heartbeat${debugQuery}` : `/api/presence/heartbeat${debugQuery}`;
       let headers: any = {};
       if (fbUser) {
-        try { const tok = await getIdToken(fbUser, false); headers = { Authorization: `Bearer ${tok}` }; } catch {}
+        try {
+          const tok = await fbUser.getIdToken(false);
+          headers = { Authorization: `Bearer ${tok}` };
+        } catch {}
       }
-      await firstValueFrom(this.http.post(url, {}, { headers }));
-    } catch {
-      // swallow errors — presence is best-effort
+      const res: any = await firstValueFrom(this.http.post(url, {}, { headers }));
+      // success resets failures & (if slowed) restore faster cadence
+      if (this.heartbeatFailures > 0) {
+        this.heartbeatFailures = 0;
+        if (this.heartbeatIntervalMs !== 20_000) {
+          this.heartbeatIntervalMs = 20_000;
+          this.restartHeartbeatInterval();
+        }
+      }
+      // Emit status event with optional meta
+      const detail: any = { status: 'ok', intervalMs: this.heartbeatIntervalMs };
+      if (res?.meta) detail.meta = res.meta;
+      window.dispatchEvent(new CustomEvent('presence-status', { detail }));
+    } catch (e) {
+      this.heartbeatFailures++;
+      // escalate interval after a few consecutive failures to reduce backend pressure
+      if (this.heartbeatFailures === 3) {
+        this.heartbeatIntervalMs = 60_000; // slow down
+        this.restartHeartbeatInterval();
+        console.warn('[AuthSync] presence heartbeat temporarily slowed (3 consecutive failures)');
+        window.dispatchEvent(new CustomEvent('presence-status', { detail: { status: 'degraded', failures: this.heartbeatFailures, intervalMs: this.heartbeatIntervalMs } }));
+      } else if (this.heartbeatFailures === 6) {
+        this.heartbeatIntervalMs = 120_000; // further slow
+        this.restartHeartbeatInterval();
+        console.warn('[AuthSync] presence heartbeat further slowed (6 consecutive failures)');
+        window.dispatchEvent(new CustomEvent('presence-status', { detail: { status: 'degraded', failures: this.heartbeatFailures, intervalMs: this.heartbeatIntervalMs } }));
+      } else if (this.heartbeatFailures >= 10) {
+        this.stopHeartbeat();
+        console.error('[AuthSync] presence heartbeat stopped after 10 consecutive failures');
+        window.dispatchEvent(new CustomEvent('presence-status', { detail: { status: 'stopped', failures: this.heartbeatFailures } }));
+        return;
+      }
+      // swallow error otherwise – best-effort
     }
   }
 
   private startHeartbeat() {
+    if (environment?.featureFlags?.disablePresenceHeartbeat) {
+      this.stopHeartbeat();
+      console.info('[AuthSync] presence heartbeat disabled via feature flag');
+      window.dispatchEvent(new CustomEvent('presence-status', { detail: { status: 'disabled' } }));
+      return;
+    }
     this.stopHeartbeat();
     // immediate
     this.sendHeartbeatOnce();
-    // then every 20s (keep within 60s TTL)
-    this.heartbeatHandle = setInterval(() => this.sendHeartbeatOnce(), 20000);
+    this.heartbeatHandle = setInterval(() => this.sendHeartbeatOnce(), this.heartbeatIntervalMs);
   }
 
   private stopHeartbeat() {
     try { clearInterval(this.heartbeatHandle); } catch {}
     this.heartbeatHandle = null;
+  }
+
+  private restartHeartbeatInterval() {
+    if (environment?.featureFlags?.disablePresenceHeartbeat) return;
+    try { clearInterval(this.heartbeatHandle); } catch {}
+    this.heartbeatHandle = setInterval(() => this.sendHeartbeatOnce(), this.heartbeatIntervalMs);
   }
 }

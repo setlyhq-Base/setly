@@ -77,11 +77,17 @@ export class UploadsController {
   // POST /api/uploads/presign { type: 'avatar'|'room-photo'|'room-video'|'room-video-thumb', ext: 'jpg|png|webp|mp4|webm' }
   static async presignAvatar(req: AuthedRequest, res: Response) {
     try {
-      // Provide dev fallback when AWS not configured: store file locally
-      const devMode = !AWS_ENABLED;
+      // Provide dev fallback when AWS not configured OR when explicitly forced (for local dev CORS avoidance)
+    const forceLocal = Boolean((req.body || {}).local) || process.env.UPLOADS_FORCE_LOCAL === 'true';
+    const isProd = process.env.NODE_ENV === 'production';
+    const origin = String(req.headers.origin || '');
+    const localhostOrigin = /localhost|127\.0\.0\.1/.test(origin);
+    // Dev mode if: not prod OR request from localhost OR AWS disabled OR forceLocal flag
+    const devMode = !isProd || localhostOrigin || !AWS_ENABLED || forceLocal;
+    try { console.log('[uploads.presign] mode decision', { isProd, origin, localhostOrigin, AWS_ENABLED, forceLocal, devMode }); } catch {}
       if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
 
-      const { type, ext } = req.body || {};
+  const { type, ext, roomId } = req.body || {};
       if (!type || !ext) return res.status(400).json({ error: 'Missing type or ext' });
       const normalizedExt = String(ext || '').toLowerCase();
       const isImage = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(normalizedExt);
@@ -98,7 +104,12 @@ export class UploadsController {
       if (type === 'avatar') {
         key = `users/${req.user.uid}/avatar.${normalizedExt}`;
       } else if (type === 'room-photo') {
-        key = `rooms/${req.user.uid}/${randomUUID()}.${normalizedExt}`;
+        // Prefer provided roomId grouping for cleaner listing asset organization
+        if (roomId && /^[a-zA-Z0-9_-]{6,}$/.test(roomId)) {
+          key = `rooms/${roomId}/${randomUUID()}.${normalizedExt}`;
+        } else {
+          key = `rooms/${req.user.uid}/${randomUUID()}.${normalizedExt}`;
+        }
       } else if (type === 'room-video') {
         key = `rooms/${req.user.uid}/videos/${randomUUID()}.${normalizedExt}`;
       } else if (type === 'room-video-thumb') {
@@ -113,6 +124,7 @@ export class UploadsController {
         const fileName = key.split('/').slice(-1)[0];
         const publicUrl = `/uploads/local/${req.user.uid}/${fileName}?t=${Date.now()}`;
         // Return a simplified fields object so caller can reuse logic (will detect absence of AWS fields)
+        try { console.log('[uploads.presign] devMode local upload selected', { key, contentType }); } catch {}
         return res.json({
           url: publicUrl,
           fields: {},
@@ -140,6 +152,7 @@ export class UploadsController {
         Expires: EXPIRY_SECONDS
       });
       const publicUrl = `https://${AWS_CONFIG.bucketName}.s3.${AWS_CONFIG.region}.amazonaws.com/${key}`;
+      try { console.log('[uploads.presign] S3 presign generated', { key, contentType }); } catch {}
       return res.json({ url: presignedPost.url, fields: presignedPost.fields, key, contentType, publicUrl, expiresAt: Date.now() + EXPIRY_SECONDS * 1000 });
     } catch (error) {
       console.error('Error presigning avatar:', error);

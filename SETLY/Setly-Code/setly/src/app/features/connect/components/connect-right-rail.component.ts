@@ -43,14 +43,14 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   <details [attr.open]="!isMobile ? true : null" class="card-white p-5 rail-section unified-feed-card" [class.snap-start]="isMobile" style="border-radius:14px;">
   <summary class="font-semibold text-lg mb-3 cursor-pointer flex items-center gap-2 text-gray-900">
           <!-- Bookmark icon -->
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3z" stroke="#5A4FF3" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3z" stroke="#3E8FFF" stroke-width="1.5" stroke-linejoin="round"/></svg>
           <span>Saved</span>
         </summary>
   <div *ngFor="let s of savedSearches; let i = index" class="flex items-center justify-between text-sm py-2 gap-2" [class.pulse-once]="s._pulse">
           <div class="min-w-0">
             <div class="truncate font-medium flex items-center gap-2" [title]="s.label">
               <!-- Bookmark icon small -->
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3z" stroke="#5A4FF3" stroke-width="1.3" stroke-linejoin="round"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3z" stroke="#3E8FFF" stroke-width="1.3" stroke-linejoin="round"/></svg>
               <span>{{s.label}}</span>
             </div>
             <div class="text-[11px] text-gray-500">Updated {{relativeDays(s.updatedAt)}} ago</div>
@@ -103,7 +103,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         <h3 class="font-medium mb-2 flex items-center gap-2">
           <span>Setly Pulse</span>
           <!-- Sparkle icon -->
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.2 3.4L16.5 8 13.2 9.2 12 12.5 10.8 9.2 7.5 8l3.3-1.6L12 3z" stroke="#5A4FF3" stroke-width="1.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.2 3.4L16.5 8 13.2 9.2 12 12.5 10.8 9.2 7.5 8l3.3-1.6L12 3z" stroke="#3E8FFF" stroke-width="1.2"/></svg>
         </h3>
         <ul class="text-xs space-y-2">
           <li *ngFor="let h of highlights" class="flex items-center justify-between gap-2">
@@ -116,7 +116,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         </ul>
         <div class="mt-3">
           <svg *ngIf="sparkline.length" viewBox="0 0 120 28" height="28" width="120" fill="none" aria-hidden="true">
-            <polyline [attr.points]="sparkline" stroke="#5A4FF3" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round" />
+            <polyline [attr.points]="sparkline" stroke="#3E8FFF" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round" />
           </svg>
         </div>
         <button (click)="onHighlightsViewed()" class="mt-3 text-[11px] px-2 py-1 border rounded focus-ring" aria-label="Refresh highlights">Refresh</button>
@@ -137,9 +137,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   `,
   styles: [`
     @keyframes pulse-once {
-      0% { box-shadow: 0 0 0 0 rgba(90,79,243,0.0); }
-      50% { box-shadow: 0 0 0 6px rgba(90,79,243,0.15); }
-      100% { box-shadow: 0 0 0 0 rgba(90,79,243,0.0); }
+  0% { box-shadow: 0 0 0 0 rgba(245,199,93,0.0); }
+  50% { box-shadow: 0 0 0 6px rgba(245,199,93,0.25); }
+  100% { box-shadow: 0 0 0 0 rgba(245,199,93,0.0); }
     }
     .pulse-once { animation: pulse-once 600ms ease-out; border-radius: 0.5rem; }
     .mobile-carousel { display: flex; flex-direction: row; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; scroll-snap-type: x mandatory; }
@@ -232,9 +232,9 @@ export class ConnectRightRailComponent implements OnInit, OnDestroy {
   relativeDays(date: Date | string){ const ms = Date.now() - new Date(date).getTime(); const days = Math.max(1, Math.floor(ms / (24*60*60*1000))); return days + ' day' + (days>1 ? 's' : ''); }
 
   // Inline SVG icon getters
-  private iconMedal(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#5A4FF3" stroke-width="1.5"/><path d="M8 12l-2 8 6-3 6 3-2-8" stroke="#5A4FF3" stroke-width="1.5" stroke-linejoin="round"/></svg>'; }
-  private iconPin(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#5A4FF3" stroke-width="1.5"/><circle cx="12" cy="9" r="2" fill="#5A4FF3"/></svg>'; }
-  private iconCar(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 12l2-5h14l2 5v5H3v-5z" stroke="#5A4FF3" stroke-width="1.5"/><circle cx="7.5" cy="17" r="1.5" fill="#5A4FF3"/><circle cx="16.5" cy="17" r="1.5" fill="#5A4FF3"/></svg>'; }
+  private iconMedal(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#3E8FFF" stroke-width="1.5"/><path d="M8 12l-2 8 6-3 6 3-2-8" stroke="#3E8FFF" stroke-width="1.5" stroke-linejoin="round"/></svg>'; }
+  private iconPin(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#3E8FFF" stroke-width="1.5"/><circle cx="12" cy="9" r="2" fill="#3E8FFF"/></svg>'; }
+  private iconCar(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 12l2-5h14l2 5v5H3v-5z" stroke="#3E8FFF" stroke-width="1.5"/><circle cx="7.5" cy="17" r="1.5" fill="#3E8FFF"/><circle cx="16.5" cy="17" r="1.5" fill="#3E8FFF"/></svg>'; }
 
   private generateSparkline(){
     // Mock mini trend: random ups/downs

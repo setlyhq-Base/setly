@@ -211,6 +211,9 @@ export class PostRoomPage {
     }
 
     try {
+      (this as any)._posting = true;
+      const btnEl = document.querySelector('[data-testid="pr-publish"]');
+      if (btnEl) btnEl.setAttribute('disabled','true');
       const currentUser = this.currentUserService.currentUser();
       if (!currentUser) {
         this.toast.error('You must be logged in to publish a listing');
@@ -218,12 +221,14 @@ export class PostRoomPage {
       }
 
       const draft = this.store.draft();
-      // Preserve actual image previews (base64) or URLs so listing detail can render them.
-      // Previously we only stored the photo.key which made the gallery blank.
-      const publishedPhotos = draft.photos
-        .filter(p => (p.preview || p.url) && !p.error)
-        .map(p => p.preview || p.url || p.key);
-      const coverPhoto = draft.photos.find(p => p.isCover);
+      const uploadedPhotos = draft.photos
+        .filter(p => !!p.url && !p.error)
+        .map(p => p.url as string);
+      if (uploadedPhotos.length < 3) {
+        this.toast.error('Please upload at least 3 photos before publishing');
+        return;
+      }
+      const coverPhoto = draft.photos.find(p => p.isCover && p.url);
 
       const roomData: any = {
         title: draft.title,
@@ -240,8 +245,8 @@ export class PostRoomPage {
         furnished: draft.furnished,
         rules: draft.rules,
         distanceKm: (draft as any).distanceMiles ? Math.round(((draft as any).distanceMiles * 1.60934) * 10) / 10 : undefined,
-        photos: publishedPhotos,
-        image: coverPhoto ? (coverPhoto.preview || coverPhoto.url || coverPhoto.key) : publishedPhotos[0],
+  photos: uploadedPhotos,
+  image: coverPhoto?.url || uploadedPhotos[0],
         hostId: currentUser.uid,
         createdAt: new Date().toISOString(),
         availabilityStart: draft.availableFrom,
@@ -249,7 +254,7 @@ export class PostRoomPage {
         amenities: draft.price.utilitiesIncluded
       };
 
-      const created = await this.roomsService.create(roomData).toPromise();
+  const created = await this.roomsService.create(roomData).toPromise();
       if (created) {
         // Map to RoomCard for Browse visibility
         const features: string[] = [];
@@ -277,7 +282,7 @@ export class PostRoomPage {
           universityId: draft.nearUniversityId,
           price: draft.price.monthly
         });
-        this.toast.success('Your room is live! Redirecting…');
+  this.toast.success('Room posted. It’s now visible in Explore → Rooms. Redirecting…');
         setTimeout(() => {
           this.router.navigate(['/listing', created.id]);
         }, 900);
@@ -288,7 +293,15 @@ export class PostRoomPage {
       }
     } catch (error) {
       console.error('Failed to publish room:', error);
-      this.toast.error('Failed to publish listing. Please try again.');
+      const code = (error as any)?.error?.error || (error as any)?.error || '';
+      if (code === 'min-photos') this.toast.error('Please add at least 3 photos.');
+      else if (code === 'title-required') this.toast.error('Please fill out all required fields.');
+      else this.toast.error('Something went wrong while posting your room. Please try again.');
+    }
+    finally {
+      (this as any)._posting = false;
+      const btnEl = document.querySelector('[data-testid="pr-publish"]');
+      if (btnEl) btnEl.removeAttribute('disabled');
     }
   }
 }

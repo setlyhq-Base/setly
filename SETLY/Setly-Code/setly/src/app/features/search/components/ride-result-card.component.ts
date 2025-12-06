@@ -1,71 +1,357 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
+// Airbnb-style ride card with selection highlighting
 @Component({
   selector: 'app-ride-result-card',
   standalone: true,
+  imports: [CommonModule],
   template: `
-    <div class="card-premium ride-card-minimal cursor-pointer group" (click)="onClick()" tabindex="0" (keydown.enter)="onClick()" (keydown.space)="$event.preventDefault(); onClick()">
-      <div class="relative p-5 pb-4">
-        <!-- Driver avatar floating top-right -->
-        <div class="absolute top-4 right-4 z-10">
-          <img *ngIf="item.driver.avatar" [src]="item.driver.avatar" alt="{{item.driver.name}} avatar" class="w-12 h-12 rounded-full object-cover shadow" />
-          <div *ngIf="!item.driver.avatar" class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-lg font-semibold shadow">{{ item.driver.name[0] }}</div>
+    <div class="airbnb-ride-card" 
+         [class.selected]="isSelected"
+         tabindex="0" 
+         (click)="onClick()"
+         (keydown.enter)="onClick()" 
+         (keydown.space)="$event.preventDefault(); onClick()">
+      
+      <!-- Top: Badges -->
+      <div class="badges-row">
+        <span class="badge price-badge">\${{ item.priceNum || 0 }}</span>
+        <span class="badge seats-badge">{{ item.seatsAvailable }} seats</span>
+        <span class="badge rating-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          {{ item.rating }}
+        </span>
+        <button class="favorite-btn" (click)="onFavorite($event)" aria-label="Favorite">
+          <svg class="heart-icon" [class.filled]="isFavorite" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Middle: Route + Driver -->
+      <div class="main-content">
+        <!-- Left: Route -->
+        <div class="route">
+          <div class="city">{{ item.fromLine1 }}</div>
+          <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12h14m-4-4l4 4-4 4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <div class="city">{{ item.toLine1 }}</div>
+          <div class="datetime">{{ item.departureDate }} • {{ item.departureTime }}</div>
         </div>
-        <!-- FROM block -->
-        <div class="mb-3">
-          <div class="flex items-center gap-1 mb-1">
-            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z"/></svg>
-            <span class="label-minimal">FROM</span>
+
+        <!-- Right: Driver -->
+        <div class="driver">
+          <img 
+            *ngIf="item.driver.avatar" 
+            [src]="item.driver.avatar" 
+            [alt]="item.driver.name" 
+            class="avatar"
+          />
+          <div *ngIf="!item.driver.avatar" class="avatar-placeholder">
+            {{ item.driver.name.charAt(0) }}
           </div>
-          <div class="address-minimal">{{ item.fromLine1 }}</div>
-          <div class="address-minimal">{{ item.fromLine2 }}</div>
-        </div>
-        <!-- TO block -->
-        <div class="mb-3">
-          <div class="flex items-center gap-1 mb-1">
-            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z"/></svg>
-            <span class="label-minimal">TO</span>
+          <div class="driver-info">
+            <div class="driver-name">{{ item.driver.name }}</div>
+            <div class="verified" *ngIf="item.driver.verified">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Verified
+            </div>
           </div>
-          <div class="address-minimal">{{ item.toLine1 }}</div>
-          <div class="address-minimal">{{ item.toLine2 }}</div>
-        </div>
-        <!-- DATE & TIME -->
-        <div class="mb-3">
-          <div class="flex items-center gap-1 mb-1">
-            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10"/></svg>
-            <span class="label-minimal">DATE & TIME</span>
-          </div>
-          <div class="date-minimal">{{ item.departureDate }} · {{ item.departureTime }}</div>
-        </div>
-        <!-- DRIVER -->
-        <div class="flex items-center gap-2 mt-2">
-          <span class="label-minimal">DRIVER</span>
-          <span class="driver-minimal">{{ item.driver.name }}</span>
-          <span *ngIf="item.driver.verified" class="verified-badge-minimal">Verified</span>
-          <span class="trust-minimal">Trust {{ item.driver.trustScore }}%</span>
         </div>
       </div>
+
+      <!-- Bottom: View Details -->
+      <button class="view-link" (click)="onViewDetails($event)">
+        View details
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12h14m-4-4l4 4-4 4" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
   `,
   styles: [`
-    .ride-card-minimal { border-radius: 18px; background: #fff; box-shadow: 0 6px 24px -8px rgba(17,24,39,0.08); border: 1px solid #f3f4f6; transition: box-shadow .22s, border-color .22s; }
-    .ride-card-minimal:hover { box-shadow: 0 12px 32px -10px rgba(58,122,254,0.12); border-color: #3A7AFE; }
-    .label-minimal { font-size: 0.72rem; text-transform: uppercase; font-weight: 600; color: #6B7280; letter-spacing: 0.04em; }
-    .address-minimal { font-size: 1rem; color: #222; font-weight: 500; line-height: 1.3; }
-    .date-minimal { font-size: 1rem; color: #222; font-weight: 500; }
-    .driver-minimal { font-size: 1rem; color: #222; font-weight: 500; }
-    .verified-badge-minimal { font-size: 0.75rem; color: #3A7AFE; background: #e0e7ff; border-radius: 8px; padding: 2px 8px; margin-left: 4px; font-weight: 600; }
-    .trust-minimal { font-size: 0.75rem; color: #16A34A; background: #dcfce7; border-radius: 8px; padding: 2px 8px; margin-left: 4px; font-weight: 600; }
+    :host {
+      --brand-midnight: #0A1A3F;
+      --brand-azure: #3E8FFF;
+      --brand-slate: #6F7785;
+      --border-light: #ECECEC;
+    }
+
+    /* AIRBNB-STYLE RIDE CARD */
+    .airbnb-ride-card {
+      background: #FFFFFF;
+      border-radius: 14px;
+      border: 2px solid transparent;
+      padding: 14px 16px;
+      transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .airbnb-ride-card:hover {
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      border-color: rgba(62, 143, 255, 0.2);
+    }
+
+    /* Selected State - Airbnb Blue Highlight */
+    .airbnb-ride-card.selected {
+      border-color: var(--brand-azure);
+      box-shadow: 0 0 0 2px var(--brand-azure), 0 8px 24px rgba(62, 143, 255, 0.25);
+      transform: translateY(-3px) scale(1.02);
+    }
+
+    .airbnb-ride-card:focus {
+      outline: none;
+      border-color: var(--brand-azure);
+      box-shadow: 0 0 0 3px rgba(62, 143, 255, 0.2);
+    }
+
+    /* TOP BADGES ROW */
+    .badges-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(62, 143, 255, 0.2);
+      background: rgba(62, 143, 255, 0.04);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand-midnight);
+    }
+
+    .badge svg {
+      color: var(--brand-azure);
+      fill: var(--brand-azure);
+    }
+
+    .favorite-btn {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 150ms ease;
+      padding: 0;
+    }
+
+    .favorite-btn:hover {
+      transform: scale(1.1);
+      background: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .heart-icon {
+      stroke: var(--brand-midnight);
+      transition: all 150ms ease;
+    }
+    
+    .heart-icon.filled {
+      fill: #FF385C;
+      stroke: #FF385C;
+    }
+    
+    .favorite-btn:hover .heart-icon {
+      stroke: #FF385C;
+      transform: scale(1.05);
+    }
+
+    /* MAIN CONTENT - ROUTE + DRIVER */
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
+
+    /* ROUTE */
+    .route {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .city {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--brand-midnight);
+      line-height: 1.2;
+    }
+
+    .arrow {
+      color: var(--brand-slate);
+      flex-shrink: 0;
+      margin: 0 2px;
+    }
+
+    .datetime {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--brand-slate);
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    /* DRIVER */
+    .driver {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border-light);
+      flex-shrink: 0;
+    }
+
+    .avatar-placeholder {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-azure), #2563EB);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      border: 1px solid var(--border-light);
+      flex-shrink: 0;
+    }
+
+    .driver-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .driver-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand-midnight);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--brand-azure);
+    }
+
+    .verified svg {
+      fill: var(--brand-azure);
+    }
+
+    /* VIEW DETAILS LINK */
+    .view-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand-azure);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 0;
+      width: 100%;
+      text-align: right;
+    }
+
+    .view-link:hover {
+      color: #2563EB;
+      gap: 6px;
+    }
+
+    .view-link svg {
+      transition: transform 0.2s;
+    }
+
+    .view-link:hover svg {
+      transform: translateX(2px);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .route {
+        flex-wrap: wrap;
+      }
+
+      .driver {
+        justify-content: flex-start;
+      }
+
+      .badge {
+        font-size: 11px;
+        padding: 3px 8px;
+      }
+    }
   `]
 })
 export class RideResultCardComponent {
   @Input() item: any;
+  @Input() isSelected: boolean = false;
+  @Output() cardClick = new EventEmitter<any>();
+  
+  isFavorite = false;
+  
   constructor(private router: Router) {}
+  
   onClick() {
-    if (this.item?.id) {
-      this.router.navigate(['/listing', this.item.id]);
-    }
+    this.cardClick.emit(this.item);
+  }
+
+  onFavorite(event: Event) {
+    event.stopPropagation();
+    this.isFavorite = !this.isFavorite;
+    console.log('Favorite toggled for ride:', this.item.id);
+  }
+
+  onViewDetails(event: Event) {
+    event.stopPropagation();
+    this.cardClick.emit(this.item);
   }
 }

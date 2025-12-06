@@ -19,10 +19,10 @@ export interface FilterChip {
         *ngFor="let chip of chips"
         (click)="toggleChip(chip.id)"
         [class.active]="chip.active"
-        class="chip flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2"
+  class="chip flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
         [class]="chip.active
-          ? 'bg-brand-blue text-white border-brand-blue'
-          : 'bg-white text-gray-700 border-gray-300 hover:border-brand-blue hover:text-brand-blue'"
+          ? 'bg-gold/10 text-midnight border-gold'
+          : 'bg-white text-gray-700 border-gray-300 hover:border-gold hover:text-midnight'"
         [attr.aria-pressed]="chip.active"
         [attr.aria-label]="chip.label + (chip.active ? ' (active)' : '')"
       >

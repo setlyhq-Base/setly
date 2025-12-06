@@ -12,7 +12,11 @@ export interface StoredUser {
   phone?: string;
   city?: string;
   state?: string;
+  country?: string;
   universityId?: string;
+  organization?: string;
+  company?: string;
+  role?: 'student' | 'professional' | string;
   languages?: string[];
   interests?: string[];
   socials?: { linkedin?: string; instagram?: string };
@@ -25,45 +29,102 @@ export interface StoredUser {
     connections?: boolean;
     verification?: boolean;
   };
+  isProfileComplete?: boolean;
+  lastLoginAt?: FirebaseFirestore.Timestamp;
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
+  preferences?: {
+    wakeSchedule?: string;
+    cleanliness?: string;
+    noiseTolerance?: string;
+    pets?: string;
+    overnightGuests?: string;
+    cookingHabits?: string;
+    budgetMin?: number;
+    budgetMax?: number;
+    preferredRoommateGender?: string;
+    moveInDate?: FirebaseFirestore.Timestamp | string;
+  };
+  travelHistory?: Array<{
+    city?: string;
+    state?: string;
+    country?: string;
+    university?: string;
+    startDate?: FirebaseFirestore.Timestamp | string;
+    endDate?: FirebaseFirestore.Timestamp | string;
+    label?: string;
+  }>;
+  connectionsCount?: number;
 }
 
 const COLLECTION = 'users';
 
 export class UserService {
   static async upsertAuthUser(authUid: string, email: string, displayName?: string, photoUrl?: string): Promise<StoredUser> {
+    let safeEmail = (email || '').trim();
+    let incomingName = (displayName || '').trim();
+    let safePhoto = (photoUrl || '').trim();
+
+    const deriveName = (primary: string, emailValue: string, fallback: string): string => {
+      if (primary) return primary;
+      if (emailValue) return emailValue.includes('@') ? emailValue.split('@')[0] : emailValue;
+      return fallback;
+    };
+
     // Dev fallback when Firestore is not configured
     if (!db) {
       const now: any = new Date();
+      const resolvedEmail = safeEmail || 'dev@example.com';
+      const resolvedName = deriveName(incomingName, resolvedEmail, 'Dev User');
       return {
         id: authUid,
         authUid,
-        email: email || 'dev@example.com',
-        displayName: displayName || 'Dev User',
-        photoUrl: photoUrl || '',
+        email: resolvedEmail,
+        displayName: resolvedName,
+        photoUrl: safePhoto,
         bio: '',
+        phone: '',
+        city: '',
+        state: '',
+        country: '',
+        organization: '',
+        company: '',
         languages: [],
         interests: [],
         socials: {},
         profileVisibility: { about: true, travelHistory: true, reviews: true, interests: true, connections: true, verification: true },
+        isProfileComplete: false,
+        lastLoginAt: now,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        preferences: {},
+        travelHistory: [],
+        connectionsCount: 0,
       } as any as StoredUser;
     }
+
     try {
       const ref = db.collection(COLLECTION).doc(authUid);
       const snap = await ref.get();
       const now = firestore.Timestamp.now();
+      const resolvedName = deriveName(incomingName, safeEmail, 'Setly member');
+
       if (!snap.exists) {
         const newUser: StoredUser = {
           id: authUid,
           authUid,
-          email,
-          displayName: displayName || '',
-          photoUrl: photoUrl || '',
+          email: safeEmail,
+          displayName: resolvedName,
+          photoUrl: safePhoto,
+          phone: '',
+          city: '',
+          state: '',
+          country: '',
+          organization: '',
+          company: '',
           createdAt: now,
           updatedAt: now,
+          lastLoginAt: now,
           bio: '',
           languages: [],
           interests: [],
@@ -75,50 +136,70 @@ export class UserService {
             interests: true,
             connections: true,
             verification: true,
-          }
+          },
+          isProfileComplete: false,
+          preferences: {},
+          travelHistory: [],
+          connectionsCount: 0,
         } as StoredUser;
         await ref.set(newUser, { merge: true });
         return newUser;
-      } else {
-        const data = snap.data() as StoredUser;
-        const updated: Partial<StoredUser> = {};
-        if (data.email !== email) updated.email = email;
-        if (displayName && data.displayName !== displayName) updated.displayName = displayName;
-        if (photoUrl && data.photoUrl !== photoUrl) updated.photoUrl = photoUrl;
-        if (Object.keys(updated).length) {
-          updated.updatedAt = now;
-          await ref.set(updated, { merge: true });
-        }
-        const latest = (await ref.get()).data() as StoredUser;
-        return latest;
       }
+
+      const data = snap.data() as StoredUser;
+      const updated: Partial<StoredUser> = { updatedAt: now, lastLoginAt: now };
+      if (data.email !== safeEmail) updated.email = safeEmail;
+      if (incomingName && data.displayName !== incomingName) {
+        updated.displayName = incomingName;
+      } else if (!data.displayName && resolvedName && data.displayName !== resolvedName) {
+        updated.displayName = resolvedName;
+      }
+      if (safePhoto && data.photoUrl !== safePhoto) updated.photoUrl = safePhoto;
+
+      await ref.set(updated, { merge: true });
+      const latest = (await ref.get()).data() as StoredUser;
+      return latest;
     } catch (e) {
       // Firestore is initialized but not reachable/authorized; fall back to Auth info or stub
       logger.warnRate('user_upsert_firestore_fail', 30_000, '[UserService.upsertAuthUser] Firestore write failed, falling back:', (e as any)?.message || e);
       const now: any = new Date();
-      let dn = displayName;
-      let pu = photoUrl;
+      let resolvedEmail = safeEmail;
+      let resolvedName = incomingName;
+      let resolvedPhoto = safePhoto;
       try {
         if (auth) {
           const au = await auth.getUser(authUid);
-          dn = dn || au.displayName || undefined;
-          pu = pu || au.photoURL || undefined;
-          email = email || au.email || '';
+          resolvedName = resolvedName || au.displayName || '';
+          resolvedPhoto = resolvedPhoto || au.photoURL || '';
+          resolvedEmail = resolvedEmail || au.email || '';
         }
       } catch {}
+      resolvedEmail = resolvedEmail || 'dev@example.com';
+      const finalName = deriveName(resolvedName, resolvedEmail, 'User');
       return {
         id: authUid,
         authUid,
-        email: email || 'dev@example.com',
-        displayName: dn || 'User',
-        photoUrl: pu || '',
+        email: resolvedEmail,
+        displayName: finalName,
+        photoUrl: resolvedPhoto,
         bio: '',
+        phone: '',
+        city: '',
+        state: '',
+        country: '',
+        organization: '',
+        company: '',
         languages: [],
         interests: [],
         socials: {},
         profileVisibility: { about: true, travelHistory: true, reviews: true, interests: true, connections: true, verification: true },
+        isProfileComplete: false,
+        lastLoginAt: now,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        preferences: {},
+        travelHistory: [],
+        connectionsCount: 0,
       } as any as StoredUser;
     }
   }
@@ -134,12 +215,23 @@ export class UserService {
         displayName: 'Dev User',
         photoUrl: '',
         bio: '',
+        phone: '',
+        city: '',
+        state: '',
+        country: '',
+        organization: '',
+        company: '',
         languages: [],
         interests: [],
         socials: {},
         profileVisibility: { about: true, travelHistory: true, reviews: true, interests: true, connections: true, verification: true },
+        isProfileComplete: false,
+        lastLoginAt: now,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        preferences: {},
+        travelHistory: [],
+        connectionsCount: 0,
       } as any as StoredUser;
     }
     try {
@@ -160,12 +252,23 @@ export class UserService {
             displayName: au.displayName || au.email || au.uid,
             photoUrl: au.photoURL || '',
             bio: '',
+            phone: au.phoneNumber || '',
+            city: '',
+            state: '',
+            country: '',
+            organization: '',
+            company: '',
             languages: [],
             interests: [],
             socials: {},
             profileVisibility: { about: true, travelHistory: true, reviews: true, interests: true, connections: true, verification: true },
+            isProfileComplete: false,
+            lastLoginAt: now,
             createdAt: now,
-            updatedAt: now
+            updatedAt: now,
+            preferences: {},
+            travelHistory: [],
+            connectionsCount: 0,
           } as any as StoredUser;
         }
       } catch (authErr) {
@@ -183,7 +286,7 @@ export class UserService {
     }
     try {
       const allowed: (keyof StoredUser)[] = [
-        'displayName','bio','phone','city','state','universityId','languages','interests','socials','avatarKey','profileVisibility','photoUrl'
+        'displayName','bio','phone','city','state','country','universityId','organization','company','role','languages','interests','socials','avatarKey','profileVisibility','photoUrl','isProfileComplete','preferences','travelHistory','connectionsCount'
       ];
       const safe: Partial<StoredUser> = {};
       for (const key of allowed) {
@@ -212,82 +315,143 @@ export class UserService {
     const completeOnly = !!params?.completeOnly;
     const cursorIso = params?.cursor;
 
-    const mockUsers = (): { users: StoredUser[]; nextCursor?: string } => {
-      const now: any = new Date();
-      const mock: StoredUser[] = Array.from({ length: limit }).map((_, i) => ({
-        id: `dev-user-${i+1}`,
-        authUid: `dev-user-${i+1}`,
-        email: `dev${i+1}@example.com`,
-        displayName: `Dev User ${i+1}`,
-        photoUrl: '',
+    if (!db) {
+      return this.listUsersFromAuth(limit, completeOnly);
+    }
+
+    try {
+      const store = db!;
+      const buildQuery = (field: 'lastLoginAt' | 'updatedAt'): FirebaseFirestore.Query => {
+        let q: FirebaseFirestore.Query = store.collection(COLLECTION).orderBy(field, 'desc').limit(limit);
+        if (cursorIso) {
+          const ts = firestore.Timestamp.fromDate(new Date(cursorIso));
+          q = q.startAfter(ts);
+        }
+        return q;
+      };
+
+      let cursorField: 'lastLoginAt' | 'updatedAt' = 'lastLoginAt';
+      let snapshot: FirebaseFirestore.QuerySnapshot;
+      try {
+        snapshot = await buildQuery('lastLoginAt').get();
+      } catch (err) {
+        logger.warnRate('user_list_lastlogin_order_fail', 30_000, '[UserService.listUsers] ordering by lastLoginAt failed, falling back to updatedAt:', (err as any)?.message || err);
+        snapshot = await buildQuery('updatedAt').get();
+        cursorField = 'updatedAt';
+      }
+
+      if (snapshot.empty && cursorIso && cursorField === 'lastLoginAt') {
+        // Some legacy documents might not have lastLoginAt yet; fall back when paging.
+        snapshot = await buildQuery('updatedAt').get();
+        cursorField = 'updatedAt';
+      }
+
+      const docs = snapshot.docs;
+      const usersRaw = docs.map(d => d.data() as StoredUser);
+      let users = completeOnly ? usersRaw.filter(u => this.isProfileComplete(u)) : usersRaw;
+
+  if (auth && users.length < limit) {
+        try {
+          const existing = new Set(users.map(u => u.id));
+          const authRes = await auth.listUsers(1000);
+          for (const u of authRes.users) {
+            if (existing.has(u.uid)) continue;
+            const authUser: StoredUser = {
+              id: u.uid,
+              authUid: u.uid,
+              email: u.email || '',
+              displayName: u.displayName || (u.email || u.uid),
+              photoUrl: u.photoURL || undefined,
+              bio: '',
+              phone: u.phoneNumber || '',
+              city: '',
+              state: '',
+              country: '',
+              organization: '',
+              company: '',
+              languages: [],
+              interests: [],
+              socials: {},
+              profileVisibility: { about: true, travelHistory: true, reviews: true, interests: true, connections: true, verification: true },
+              isProfileComplete: false,
+              createdAt: firestore.Timestamp.fromDate(new Date(u.metadata.creationTime || Date.now())),
+              updatedAt: firestore.Timestamp.fromDate(new Date(u.metadata.lastSignInTime || u.metadata.creationTime || Date.now())),
+              lastLoginAt: firestore.Timestamp.fromDate(new Date(u.metadata.lastSignInTime || u.metadata.creationTime || Date.now())),
+              preferences: {},
+              travelHistory: [],
+              connectionsCount: 0,
+            } as any;
+            if (!completeOnly || this.isProfileComplete(authUser)) {
+              users.push(authUser);
+            }
+            if (users.length >= limit) break;
+          }
+        } catch (mergeErr) {
+          logger.warnRate('user_list_merge_auth_fail', 60_000, '[UserService.listUsers] unable to merge Auth users:', (mergeErr as any)?.message || mergeErr);
+        }
+      }
+
+  const toMillis = (ts?: FirebaseFirestore.Timestamp) => ts?.toMillis?.() ?? ts?.toDate?.()?.getTime?.() ?? 0;
+  users.sort((a, b) => toMillis(b.lastLoginAt || b.updatedAt) - toMillis(a.lastLoginAt || a.updatedAt));
+
+      const last = snapshot.docs[snapshot.docs.length - 1]?.data() as StoredUser | undefined;
+      let nextCursor: string | undefined = undefined;
+      if (last) {
+        const ts = cursorField === 'lastLoginAt' ? (last.lastLoginAt || last.updatedAt) : (last.updatedAt || last.lastLoginAt);
+        nextCursor = ts?.toDate?.().toISOString?.();
+      }
+      return { users, nextCursor };
+    } catch (e) {
+      logger.warnRate('user_list_firestore_fail', 30_000, '[UserService.listUsers] Firestore unavailable, attempting Auth fallback:', (e as any)?.message || e);
+      return this.listUsersFromAuth(limit, completeOnly);
+    }
+  }
+
+  private static async listUsersFromAuth(limit: number, completeOnly: boolean): Promise<{ users: StoredUser[]; nextCursor?: string }> {
+    if (!auth) {
+      return { users: [], nextCursor: undefined };
+    }
+    try {
+      const res = await auth.listUsers(1000);
+      const mapped: StoredUser[] = res.users.slice(0, limit).map((u) => ({
+        id: u.uid,
+        authUid: u.uid,
+        email: u.email || '',
+        displayName: u.displayName || (u.email || u.uid),
+        photoUrl: u.photoURL || undefined,
         bio: '',
+        phone: u.phoneNumber || '',
+        city: '',
+        state: '',
+        country: '',
+        organization: '',
+        company: '',
         languages: [],
         interests: [],
         socials: {},
         profileVisibility: { about: true, travelHistory: true, reviews: true, interests: true, connections: true, verification: true },
-        city: ['Boston','NYC','Austin'][i % 3],
-        state: ['MA','NY','TX'][i % 3],
-        universityId: ['neu','mit','harvard'][i % 3],
-        createdAt: now,
-        updatedAt: now
+        isProfileComplete: false,
+        createdAt: firestore.Timestamp.fromDate(new Date(u.metadata.creationTime || Date.now())),
+        updatedAt: firestore.Timestamp.fromDate(new Date(u.metadata.lastSignInTime || u.metadata.creationTime || Date.now())),
+        lastLoginAt: firestore.Timestamp.fromDate(new Date(u.metadata.lastSignInTime || u.metadata.creationTime || Date.now())),
+        preferences: {},
+        travelHistory: [],
+        connectionsCount: 0,
       } as any));
-      const filtered = completeOnly ? mock.filter(u => this.isProfileComplete(u)) : mock;
+      const filtered = completeOnly ? mapped.filter(u => this.isProfileComplete(u)) : mapped;
       return { users: filtered, nextCursor: undefined };
-    };
-
-    if (!db) {
-      // Dev fallback when Firestore is not configured
-      return mockUsers();
-    }
-
-    try {
-      let q: FirebaseFirestore.Query = db.collection(COLLECTION).orderBy('updatedAt', 'desc').limit(limit);
-      if (cursorIso) {
-        const ts = firestore.Timestamp.fromDate(new Date(cursorIso));
-        q = q.startAfter(ts);
-      }
-      const snapshot = await q.get();
-      let users = snapshot.docs.map(d => d.data() as StoredUser);
-      if (completeOnly) users = users.filter(u => this.isProfileComplete(u));
-      const last = snapshot.docs[snapshot.docs.length - 1]?.data() as StoredUser | undefined;
-      const nextCursor = last?.updatedAt ? (last.updatedAt.toDate?.().toISOString?.() || undefined) : undefined;
-      return { users, nextCursor };
-    } catch (e) {
-      logger.warnRate('user_list_firestore_fail', 30_000, '[UserService.listUsers] Firestore unavailable, attempting Auth fallback:', (e as any)?.message || e);
-      // Fallback to Firebase Auth directory (real signed-in users), minimal fields
-      if (auth) {
-        try {
-          const res = await auth.listUsers(1000);
-          const mapped: StoredUser[] = res.users.slice(0, limit).map((u) => ({
-            id: u.uid,
-            authUid: u.uid,
-            email: u.email || '',
-            displayName: u.displayName || (u.email || u.uid),
-            photoUrl: undefined,
-            bio: '',
-            languages: [],
-            interests: [],
-            socials: {},
-            profileVisibility: { about: true, travelHistory: true, reviews: true, interests: true, connections: true, verification: true },
-            createdAt: firestore.Timestamp.fromDate(new Date(u.metadata.creationTime || Date.now())),
-            updatedAt: firestore.Timestamp.fromDate(new Date(u.metadata.lastSignInTime || u.metadata.creationTime || Date.now()))
-          } as any));
-          const filtered = completeOnly ? mapped.filter(u => this.isProfileComplete(u)) : mapped;
-          return { users: filtered, nextCursor: undefined };
-        } catch (authErr) {
-          logger.error('[UserService.listUsers] Auth fallback failed:', (authErr as any)?.message || authErr);
-        }
-      }
-      // If all else fails, return empty (no mock)
+    } catch (authErr) {
+      logger.error('[UserService.listUsersFromAuth] Auth fallback failed:', (authErr as any)?.message || authErr);
       return { users: [], nextCursor: undefined };
     }
   }
 
-  private static isProfileComplete(u: StoredUser): boolean {
+  static isProfileComplete(u: StoredUser): boolean {
+    if (typeof u.isProfileComplete === 'boolean') return u.isProfileComplete;
     // Heuristic: has displayName and at least a location or a university
     const hasName = !!(u.displayName && u.displayName.trim().length);
-    const hasLoc = !!(u.city || u.state);
-    const hasSchool = !!u.universityId;
+    const hasLoc = !!(u.city || u.state || u.country);
+    const hasSchool = !!(u.universityId || u.organization);
     return !!(hasName && (hasLoc || hasSchool));
   }
 }

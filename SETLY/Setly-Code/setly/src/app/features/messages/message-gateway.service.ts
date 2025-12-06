@@ -191,8 +191,7 @@ export class MessageGatewayService {
   // Presence helpers
   private presenceInterval?: any;
   startPresence(){
-    // Heartbeat every 30s and refresh online users
-    const beat = async () => { try { await this.http.post('/api/presence/heartbeat', {}).toPromise(); } catch {} };
+    // Only refresh online list; heartbeat handled centrally by AuthSyncService now
     const refresh = async () => {
       try {
         const res: any = await this.http.get('/api/presence/online').toPromise();
@@ -201,8 +200,8 @@ export class MessageGatewayService {
         if (res?.map && typeof res.map === 'object') this.store.mergePresenceMap(res.map as Record<string, number>);
       } catch {}
     };
-    beat(); refresh();
+    refresh();
     if (this.presenceInterval) { try { clearInterval(this.presenceInterval); } catch {} }
-    this.presenceInterval = setInterval(() => { beat(); refresh(); }, 30_000);
+    this.presenceInterval = setInterval(() => { refresh(); }, 30_000);
   }
 }

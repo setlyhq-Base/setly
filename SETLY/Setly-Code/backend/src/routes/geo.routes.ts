@@ -63,43 +63,67 @@ type AddressSuggestionPayload = {
 
 const fetchGoogleCitySuggestions = async ($fetch: any, query: string): Promise<Suggestion[]> => {
   if (!GOOGLE_PLACES_API_KEY) return [];
-  const autoUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&types=(cities)&components=country:us&key=${GOOGLE_PLACES_API_KEY}`;
+  
+  // Enhanced autocomplete with better fuzzy matching
+  const autoUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&types=(cities)&components=country:us&sessiontoken=${randomUUID()}&key=${GOOGLE_PLACES_API_KEY}`;
+  
   try {
     const autoRes = await $fetch(autoUrl);
     if (!autoRes.ok) return [];
     const autoData: any = await autoRes.json();
+    
     if (!autoData || (autoData.status && autoData.status !== 'OK' && autoData.status !== 'ZERO_RESULTS')) {
       console.warn('[geo/search] Google autocomplete status', autoData?.status, autoData?.error_message || '');
       return [];
     }
-    const predictions: any[] = Array.isArray(autoData?.predictions) ? autoData.predictions.slice(0, 5) : [];
+    
+    const predictions: any[] = Array.isArray(autoData?.predictions) ? autoData.predictions.slice(0, 8) : [];
     const detailResults: Suggestion[] = [];
+    
     for (const pred of predictions) {
       try {
         const placeId = pred.place_id;
         if (!placeId) continue;
-        const detailUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=geometry,address_component,name,formatted_address&key=${GOOGLE_PLACES_API_KEY}`;
+        
+        const detailUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=geometry,address_component,name,formatted_address,types&sessiontoken=${randomUUID()}&key=${GOOGLE_PLACES_API_KEY}`;
         const detailRes = await $fetch(detailUrl);
         if (!detailRes.ok) continue;
+        
         const detailData: any = await detailRes.json();
         if (!detailData || detailData.status !== 'OK' || !detailData.result) continue;
+        
         const comps = Array.isArray(detailData.result.address_components) ? detailData.result.address_components : [];
         const city = parseComponent(comps, ['locality', 'postal_town', 'administrative_area_level_2', 'administrative_area_level_3']) || detailData.result.name;
         const state = parseComponent(comps, ['administrative_area_level_1']);
         const countryComp = comps.find((c: any) => Array.isArray(c.types) && c.types.includes('country'));
+        
         if (countryComp && !isUnitedStatesCountry(countryComp.short_name) && !isUnitedStatesCountry(countryComp.long_name)) {
           continue;
         }
+        
         const country = countryComp?.long_name;
         const geom = detailData.result.geometry?.location || {};
         const lat = typeof geom.lat === 'number' ? geom.lat : undefined;
         const lon = typeof geom.lng === 'number' ? geom.lng : undefined;
+        
         const mainText = pred?.structured_formatting?.main_text;
         const secondaryText = pred?.structured_formatting?.secondary_text;
         const label = (mainText && secondaryText) ? `${mainText}, ${secondaryText}` : (pred.description || detailData.result.formatted_address || city || '');
+        
         const description = (state && country)
           ? `${state}, ${country}`
           : (country || state || detailData.result.formatted_address || '');
+        
+        // Calculate relevance score for better sorting
+        const queryLower = query.toLowerCase();
+        const cityLower = city?.toLowerCase() || '';
+        const labelLower = label.toLowerCase();
+        
+        let relevanceScore = 0;
+        if (cityLower.startsWith(queryLower)) relevanceScore += 100;
+        else if (cityLower.includes(queryLower)) relevanceScore += 80;
+        else if (labelLower.includes(queryLower)) relevanceScore += 60;
+        
         detailResults.push({
           id: `google:${placeId}`,
           label,
@@ -111,15 +135,17 @@ const fetchGoogleCitySuggestions = async ($fetch: any, query: string): Promise<S
           description,
           kind: 'city',
           source: 'google_places',
-          meta: { placeId }
+          meta: { placeId, relevanceScore }
         });
       } catch (err) {
         console.warn('[geo/search] Google place details failed', err);
       }
     }
-    return detailResults;
+    
+    // Sort by relevance score
+    return detailResults.sort((a, b) => (b.meta?.relevanceScore || 0) - (a.meta?.relevanceScore || 0));
   } catch (err) {
-    console.warn('[geo/search] Google autocomplete failed', err);
+    console.error('[geo/search] Google fetch failed', err);
     return [];
   }
 };
@@ -207,94 +233,152 @@ const fetchGoogleAddressSuggestions = async (
   opts: { city?: string; state?: string; lat?: number; lon?: number }
 ): Promise<AddressSuggestionPayload[]> => {
   if (!GOOGLE_PLACES_API_KEY) return [];
+  
   try {
+    // Build better contextual query for address search
     const cityContext = [opts.city, opts.state].filter(Boolean).join(', ').trim();
     const augmentedQuery = cityContext && !query.toLowerCase().includes(cityContext.toLowerCase())
       ? `${query}, ${cityContext}`
       : query;
+    
     const params = new URLSearchParams({
       input: augmentedQuery,
       types: 'address',
+      components: 'country:us',
+      sessiontoken: randomUUID(),
       key: GOOGLE_PLACES_API_KEY
     });
-    params.set('components', 'country:us');
+    
+    // Enhanced location biasing for better local results
     if (typeof opts.lat === 'number' && typeof opts.lon === 'number') {
-      const radiusMeters = 25000;
+      const radiusMeters = 15000; // Reduced radius for more precise results
       params.set('locationbias', `circle:${radiusMeters}@${opts.lat},${opts.lon}`);
-      params.set('strictbounds', 'true');
+    } else if (opts.city && opts.state) {
+      // Use region biasing if no coordinates available
+      params.set('region', opts.state.toLowerCase());
     }
-    params.set('sessiontoken', randomUUID());
+    
     const autoRes = await $fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?${params.toString()}`);
     if (!autoRes.ok) return [];
+    
     const autoData: any = await autoRes.json();
     if (!autoData || (autoData.status && autoData.status !== 'OK' && autoData.status !== 'ZERO_RESULTS')) {
       console.warn('[geo/address] Google autocomplete status', autoData?.status, autoData?.error_message || '');
       return [];
     }
-    const predictions: any[] = Array.isArray(autoData?.predictions) ? autoData.predictions.slice(0, 6) : [];
+    
+    const predictions: any[] = Array.isArray(autoData?.predictions) ? autoData.predictions.slice(0, 8) : [];
     const detailed: AddressSuggestionPayload[] = [];
+    
     for (const pred of predictions) {
       try {
         const placeId = pred?.place_id;
         if (!placeId) continue;
+        
         const detailParams = new URLSearchParams({
           place_id: placeId,
-          fields: 'address_component,geometry,formatted_address,name',
+          fields: 'address_component,geometry,formatted_address,name,types',
+          sessiontoken: randomUUID(),
           key: GOOGLE_PLACES_API_KEY
         });
+        
         const detailRes = await $fetch(`https://maps.googleapis.com/maps/api/place/details/json?${detailParams.toString()}`);
         if (!detailRes.ok) continue;
+        
         const detailData: any = await detailRes.json();
         if (!detailData || detailData.status !== 'OK' || !detailData.result) continue;
+        
         const comps = Array.isArray(detailData.result.address_components) ? detailData.result.address_components : [];
+        const streetNumber = parseComponent(comps, ['street_number']);
+        const streetName = parseComponent(comps, ['route']);
         const city = parseComponent(comps, ['locality', 'postal_town', 'administrative_area_level_2', 'administrative_area_level_3']);
         const state = parseComponent(comps, ['administrative_area_level_1']);
+        const postcode = parseComponent(comps, ['postal_code']);
+        
         const countryComp = comps.find((c: any) => Array.isArray(c.types) && c.types.includes('country'));
         if (countryComp && !isUnitedStatesCountry(countryComp.short_name) && !isUnitedStatesCountry(countryComp.long_name)) {
           continue;
         }
         const country = countryComp?.long_name || parseComponent(comps, ['country']);
-        const postcode = parseComponent(comps, ['postal_code']);
+        
+        // Enhanced address formatting similar to Google Maps
+        const formattedAddress = [streetNumber, streetName].filter(Boolean).join(' ') || 
+                               pred?.structured_formatting?.main_text || 
+                               detailData.result.name || 
+                               detailData.result.formatted_address || 
+                               query;
+        
         const geom = detailData.result.geometry?.location || {};
-        const label = pred?.structured_formatting?.main_text || detailData.result.name || detailData.result.formatted_address || query;
-        const secondary = pred?.structured_formatting?.secondary_text || [city, state, country].filter(Boolean).join(', ');
+        const description = pred?.structured_formatting?.secondary_text || 
+                          [city, state, postcode].filter(Boolean).join(', ');
+        
+        // Enhanced city/state filtering with better fuzzy matching
         if (opts.city) {
-          const normalizedCity = (city || '').toLowerCase();
-          const normalizedDesired = opts.city.toLowerCase();
+          const normalizedCity = (city || '').toLowerCase().trim();
+          const normalizedDesired = opts.city.toLowerCase().trim();
           const formatted = (detailData.result.formatted_address || '').toLowerCase();
-          if (normalizedCity && !normalizedCity.includes(normalizedDesired) && !normalizedDesired.includes(normalizedCity) && !formatted.includes(normalizedDesired)) {
-            continue;
-          }
+          
+          // More flexible city matching
+          const cityMatches = normalizedCity.includes(normalizedDesired) || 
+                            normalizedDesired.includes(normalizedCity) ||
+                            formatted.includes(normalizedDesired) ||
+                            normalizedCity.replace(/\s+/g, '').includes(normalizedDesired.replace(/\s+/g, ''));
+          
+          if (!cityMatches) continue;
         }
+        
         if (opts.state) {
-          const normalizedState = (state || '').toLowerCase();
-          const normalizedDesiredState = opts.state.toLowerCase();
+          const normalizedState = (state || '').toLowerCase().trim();
+          const normalizedDesiredState = opts.state.toLowerCase().trim();
           const formatted = (detailData.result.formatted_address || '').toLowerCase();
-          if (normalizedDesiredState && normalizedState && !normalizedState.includes(normalizedDesiredState) && !formatted.includes(normalizedDesiredState)) {
+          
+          if (normalizedDesiredState && normalizedState && 
+              !normalizedState.includes(normalizedDesiredState) && 
+              !normalizedDesiredState.includes(normalizedState) &&
+              !formatted.includes(normalizedDesiredState)) {
             continue;
           }
         }
+        
+        // Calculate relevance score for better ranking
+        const queryLower = query.toLowerCase();
+        const addressLower = formattedAddress.toLowerCase();
+        let relevanceScore = 0;
+        
+        if (addressLower.startsWith(queryLower)) relevanceScore += 100;
+        else if (addressLower.includes(queryLower)) relevanceScore += 80;
+        if (streetNumber && streetName) relevanceScore += 50; // Prefer complete addresses
+        if (opts.city && city && city.toLowerCase().includes(opts.city.toLowerCase())) relevanceScore += 30;
+        
         detailed.push({
           id: `google:${placeId}`,
-          label,
-          address: detailData.result.formatted_address || label,
-          city: city || undefined,
-          state: state || undefined,
-          country: country || undefined,
-          postcode: postcode || undefined,
+          label: formattedAddress,
+          address: detailData.result.formatted_address || formattedAddress,
+          city: city || '',
+          state: state || '',
+          postcode: postcode || '',
+          country: country || 'United States',
           lat: typeof geom.lat === 'number' ? geom.lat : undefined,
           lon: typeof geom.lng === 'number' ? geom.lng : undefined,
-          description: secondary || undefined,
+          description,
           source: 'google_places',
-          meta: { placeId }
+          meta: { 
+            placeId, 
+            relevanceScore,
+            streetNumber,
+            streetName,
+            types: detailData.result.types || []
+          }
         });
       } catch (err) {
         console.warn('[geo/address] Google place details failed', err);
       }
     }
-    return detailed;
+    
+    // Sort by relevance score
+    return detailed.sort((a, b) => (b.meta?.relevanceScore || 0) - (a.meta?.relevanceScore || 0));
   } catch (err) {
-    console.warn('[geo/address] Google autocomplete failed', err);
+    console.error('[geo/address] Google fetch failed', err);
     return [];
   }
 };

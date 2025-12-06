@@ -56,7 +56,7 @@ interface NavItem {
   `,
   styles: [`
     :host { display:block; }
-  .active-bar { position:absolute; left:6px; top:50%; transform:translateY(-50%); width:4px; height:24px; border-radius:4px; background:#5A4FF3; box-shadow:0 0 18px rgba(90,79,243,.65); }
+  .active-bar { position:absolute; left:6px; top:50%; transform:translateY(-50%); width:4px; height:24px; border-radius:4px; background: var(--brand-gold); box-shadow:0 0 18px rgba(245,199,93,.45); }
   .sidebar-btn { border-bottom:1px solid rgba(255,255,255,0.08); }
   .sidebar-btn:last-child { border-bottom:none; }
   .sidebar-btn.active { background:#1a1b21; color:#fff; }

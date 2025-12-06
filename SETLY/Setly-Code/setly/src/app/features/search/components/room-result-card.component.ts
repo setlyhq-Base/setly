@@ -1,66 +1,301 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
+// Airbnb-style card with selection highlighting
 @Component({
   selector: 'app-room-result-card',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="card-premium hover-lift cursor-pointer group" (click)="onClick()">
-      <div class="relative">
-        <img [src]="item.image || '/assets/placeholder-room.jpg'" [alt]="item.title" class="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
-
-        <!-- price badge -->
-        <div class="absolute top-3 right-3">
-          <span class="price-badge" *ngIf="item.price">{{ item.price }}</span>
+    <div class="airbnb-card" 
+         [class.selected]="isSelected"
+         (click)="onClick()"
+         (keydown.enter)="onClick()"
+         (keydown.space)="$event.preventDefault(); onClick()"
+         tabindex="0"
+         role="button"
+         [attr.aria-label]="'View details for ' + item.title">
+      
+      <!-- Image Container with Zoom Effect -->
+      <div class="image-container">
+        <img 
+          [src]="item.image || '/assets/placeholder-room.jpg'" 
+          [alt]="item.title" 
+          class="room-image" 
+          loading="lazy">
+        
+        <!-- Top Tag (Guest Favorite / Verified) -->
+        <div *ngIf="item.verified" class="top-tag">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Verified
         </div>
-
-        <!-- subtle overlay for text -->
-        <div class="absolute left-0 right-0 bottom-0 p-3 bg-gradient-to-t from-black/45 via-black/18 to-transparent text-white">
-          <div class="flex items-start justify-between">
-            <div class="space-y-1">
-              <h3 class="text-sm font-semibold leading-tight group-hover:text-indigo-100">{{ item.title }}</h3>
-              <div class="flex items-center gap-2 text-xs text-white/85">
-                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" aria-hidden><path stroke="currentColor" stroke-width="1.6" d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z"/></svg>
-                <span class="truncate">{{ item.location }}</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="host-avatar w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">{{ (item.host || 'S')[0] }}</div>
-            </div>
-          </div>
-        </div>
+        
+        <!-- Price Badge -->
+        <div class="price-badge">{{ item.price }}</div>
+        
+        <!-- Favorite Button -->
+        <button class="favorite-btn" (click)="onFavorite($event)" aria-label="Add to favorites">
+          <svg class="heart-icon" [class.filled]="isFavorite" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </button>
       </div>
-      <div class="p-3 pt-4 bg-white/0">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" aria-hidden><path stroke="currentColor" stroke-width="1.6" d="M3 7h18M7 7v10a2 2 0 002 2h6a2 2 0 002-2V7"/></svg>
-            <span class="text-sm text-gray-800">{{ item.host || 'Setly Host' }}</span>
-          </div>
-          <button class="connect-small inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition" (click)="onConnect($event)">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8a6 6 0 01-12 0"/></svg>
-          </button>
+      
+      <!-- Content -->
+      <div class="card-content">
+        <!-- Title & Location -->
+        <h3 class="card-title">{{ item.title }}</h3>
+        <p class="card-location">
+          <svg class="location-icon" width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path stroke="currentColor" stroke-width="2" d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z"/>
+            <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          {{ item.location }}
+        </p>
+        
+        <!-- Rating -->
+        <div class="card-rating" *ngIf="item.rating">
+          <svg class="star-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          <span class="rating-value">{{ item.rating }}</span>
         </div>
       </div>
     </div>
   `,
   styles: [
     `
-    .price-badge { display:inline-flex; align-items:center; justify-content:center; padding:8px 10px; border-radius:9999px; font-weight:700; background:linear-gradient(90deg,#ffffffee,#f8fafcaa); color:#0f172a; box-shadow:0 6px 18px -8px rgba(15,23,42,0.2); font-size:13px; }
-    .host-avatar { box-shadow:0 6px 18px -10px rgba(15,23,42,0.2); }
-    .connect-small { background:transparent; border-radius:8px; padding:6px; }
-    .card-premium img { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+    :host {
+      --brand-azure: #3E8FFF;
+      --text-primary: #0A1A3F;
+      --text-secondary: #6F7785;
+      --border-light: #ECECEC;
+    }
+    
+    /* Airbnb-Style Card Container */
+    .airbnb-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid transparent;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+    
+    .airbnb-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    .airbnb-card:active {
+      transform: translateY(-2px) scale(1.005);
+    }
+    
+    /* Selected State - Airbnb Blue Highlight */
+    .airbnb-card.selected {
+      border-color: var(--brand-azure);
+      box-shadow: 0 0 0 2px var(--brand-azure), 0 8px 24px rgba(62, 143, 255, 0.25);
+      transform: translateY(-4px) scale(1.02);
+    }
+    
+    /* Image Container with Zoom Effect */
+    .image-container {
+      position: relative;
+      width: 100%;
+      padding-top: 66.67%; /* 3:2 aspect ratio like Airbnb */
+      overflow: hidden;
+      background: #F7F8FA;
+    }
+    
+    .room-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 250ms ease-out;
+    }
+    
+    .airbnb-card:hover .room-image {
+      transform: scale(1.05);
+    }
+    
+    /* Top Tag (Verified/Guest Favorite) */
+    .top-tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      z-index: 2;
+    }
+    
+    .top-tag svg {
+      color: var(--brand-azure);
+    }
+    
+    /* Price Badge */
+    .price-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      z-index: 2;
+    }
+    
+    /* Favorite Button - Always Visible */
+    .favorite-btn {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 150ms ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      z-index: 2;
+    }
+    
+    .favorite-btn:hover {
+      transform: scale(1.1);
+      background: #FFFFFF;
+    }
+    
+    .favorite-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .heart-icon {
+      stroke: var(--text-primary);
+      transition: all 150ms ease;
+    }
+    
+    .heart-icon.filled {
+      fill: #FF385C;
+      stroke: #FF385C;
+    }
+    
+    .favorite-btn:hover .heart-icon {
+      stroke: #FF385C;
+      transform: scale(1.1);
+    }
+    
+    /* Card Content */
+    .card-content {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.3;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    
+    .card-location {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    
+    .location-icon {
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+    
+    .card-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .star-icon {
+      color: #FFB400;
+    }
+    
+    .rating-value {
+      color: var(--text-primary);
+    }
+    
+    /* Focus Styles */
+    .airbnb-card:focus {
+      outline: none;
+      border-color: var(--brand-azure);
+      box-shadow: 0 0 0 3px rgba(62, 143, 255, 0.2);
+    }
+    
+    /* Animation for selection */
+    @keyframes pulse-select {
+      0%, 100% { transform: scale(1.02); }
+      50% { transform: scale(1.03); }
+    }
+    
+    .airbnb-card.selected {
+      animation: pulse-select 300ms ease-out;
+    }
     `
   ]
 })
 export class RoomResultCardComponent {
   @Input() item: any;
+  @Input() isSelected: boolean = false;
+  @Output() cardClick = new EventEmitter<any>();
+  
+  isFavorite = false;
+  
   constructor(private router: Router) {}
+  
   onClick() {
-    if (this.item?.id) {
-      this.router.navigate(['/listing', this.item.id]);
-    }
+    this.cardClick.emit(this.item);
   }
-  onConnect(e: Event){ e.stopPropagation(); }
+  
+  onFavorite(event: Event) {
+    event.stopPropagation();
+    this.isFavorite = !this.isFavorite;
+    console.log('Favorite toggled for room:', this.item.id);
+  }
 }

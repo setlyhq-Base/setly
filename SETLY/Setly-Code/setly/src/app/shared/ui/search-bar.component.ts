@@ -19,7 +19,7 @@ import { debounceTime, Subject, takeUntil } from 'rxjs';
         (focus)="showSuggestions = true"
         (blur)="hideSuggestions()"
         placeholder="Search for rooms near USA universities..."
-  class="w-full px-4 py-2.5 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+  class="w-full px-4 py-2.5 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
         aria-label="Search for rooms"
         autocomplete="off"
         data-testid="search-input"

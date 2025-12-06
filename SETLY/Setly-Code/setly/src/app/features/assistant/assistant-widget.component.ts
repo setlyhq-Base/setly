@@ -2,18 +2,16 @@ import { Component, OnInit, HostListener, signal, computed, AfterViewInit, ViewC
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
-import { ActionChipsComponent } from './action-chips.component';
 import { AssistantService } from './assistant.service';
 import { RoomPreviewCardComponent } from './room-preview-card.component';
 import { RideCtaComponent } from './ride-cta.component';
-import { TypingIndicatorComponent } from './typing-indicator.component';
 import { PLAYBOOKS } from './assistant-playbooks';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-assistant-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScrollingModule, ActionChipsComponent, RoomPreviewCardComponent, RideCtaComponent, TypingIndicatorComponent],
+  imports: [CommonModule, FormsModule, ScrollingModule, RoomPreviewCardComponent, RideCtaComponent],
   templateUrl: './assistant-widget.component.html',
   styleUrl: './assistant-widget.component.css',
   host: { 'style': 'pointer-events:auto' }

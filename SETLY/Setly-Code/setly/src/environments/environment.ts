@@ -29,7 +29,15 @@ export const environment = {
     softDisableAuth: false,
     mockPhoneAuth: false,
     disableRecaptchaEnterprise: false,
-    bypassTrustedActions: false
+    bypassTrustedActions: false,
+    // Keep off in prod; use S3 uploads
+    forceLocalUploads: false,
+    // Allow disabling presence heartbeat if backend under maintenance
+    disablePresenceHeartbeat: false,
+    // Request debug meta in heartbeat responses (frontend adds ?debug=1)
+    presenceDebug: false,
+    enableRoomVideo: false,
+    enableAmenitySuggestions: true
   },
   universityApiBase: 'https://universities.hipolabs.com',
   // Use S3 dataset for faster, consistent suggestions in production

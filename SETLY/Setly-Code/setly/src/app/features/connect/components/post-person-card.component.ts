@@ -47,14 +47,14 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
         <div class="flex items-center gap-2">
           <button *ngIf="!connected()" (click)="connect()" class="btn-brand px-3 py-2 rounded-md text-sm focus-ring" aria-label="Connect">Connect</button>
           <button *ngIf="connected()" (click)="message()" class="px-3 py-2 border rounded-md text-sm focus-ring inline-flex items-center gap-1" aria-label="Message">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16v10H5.17L4 16.17V5z" stroke="#5A4FF3" stroke-width="1.3"/><circle cx="9" cy="10" r="1" fill="#5A4FF3"/><circle cx="12" cy="10" r="1" fill="#5A4FF3"/><circle cx="15" cy="10" r="1" fill="#5A4FF3"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16v10H5.17L4 16.17V5z" stroke="#3E8FFF" stroke-width="1.3"/><circle cx="9" cy="10" r="1" fill="#3E8FFF"/><circle cx="12" cy="10" r="1" fill="#3E8FFF"/><circle cx="15" cy="10" r="1" fill="#3E8FFF"/></svg>
             <span>Message</span>
           </button>
         </div>
       </div>
       <!-- Interests chips (mock for now) -->
       <div class="flex flex-wrap gap-2">
-        <span *ngFor="let interest of interests()" class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] border border-indigo-200">{{interest}}</span>
+        <span *ngFor="let interest of interests()" class="px-2 py-0.5 rounded-full bg-[#E8F4FF] text-brand-azure text-[11px] border border-[#BBD9FF]">{{interest}}</span>
       </div>
       <div *ngIf="connected()" class="text-[11px] text-green-700 inline-flex items-center gap-1" aria-label="Connected status">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12l2 2 4-4" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -65,7 +65,7 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
   `
   ,
   styles: [`
-    .shadow-glow-blue { box-shadow: 0 0 0 1px rgba(90,79,243,0.2), 0 8px 20px -6px rgba(90,79,243,0.25); }
+    .shadow-glow-blue { box-shadow: 0 0 0 1px rgba(62,143,255,0.20), 0 8px 20px -6px rgba(62,143,255,0.25); }
   `]
 })
 export class PostPersonCardComponent implements OnInit {

@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { FirebaseAuthService } from '../auth/firebase-auth.service';
-import { Firestore, doc, onSnapshot, setDoc, serverTimestamp, getDoc } from '@angular/fire/firestore';
+import { Firestore } from '@angular/fire/firestore';
+import { doc, onSnapshot, setDoc, serverTimestamp, getDoc, FirestoreError } from 'firebase/firestore';
 import { User } from '../models/user.model';
 
 @Injectable({
@@ -9,6 +10,7 @@ import { User } from '../models/user.model';
 export class CurrentUserService {
   private _firebaseUser = signal<any>(null);
   private _profile = signal<User | null>(null);
+  private profileUnsub: (() => void) | null = null;
 
   // Computed signals
   currentUser = computed(() => {
@@ -38,6 +40,7 @@ export class CurrentUserService {
         await this.ensureUserDocument(user);
         this.subscribeToProfile(user.uid);
       } else {
+        this.unsubscribeProfile();
         this._profile.set(null);
       }
     });
@@ -45,18 +48,39 @@ export class CurrentUserService {
 
   private subscribeToProfile(uid: string): void {
     const userDoc = doc(this.firestore, 'users', uid);
-    onSnapshot(userDoc, (docSnap) => {
+    this.unsubscribeProfile();
+    this.profileUnsub = onSnapshot(userDoc, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
+        const organizationRaw = data['organization'];
+        const organizationName = typeof organizationRaw === 'string'
+          ? organizationRaw
+          : (organizationRaw?.name as string | undefined);
         this._profile.set({
           ...data,
           createdAt: data['createdAt']?.toDate() || new Date(),
           updatedAt: data['updatedAt']?.toDate() || new Date(),
+          lastLoginAt: data['lastLoginAt']?.toDate?.() || undefined,
+          organization: organizationRaw,
+          organizationName,
         } as User);
       } else {
         this._profile.set(null);
       }
+    }, (error: FirestoreError) => {
+      if (error?.code === 'unavailable') {
+        console.info('[CurrentUserService] Offline while listening for profile updates');
+      } else {
+        console.warn('[CurrentUserService] Profile listener error', error);
+      }
     });
+  }
+
+  private unsubscribeProfile(): void {
+    if (this.profileUnsub) {
+      try { this.profileUnsub(); } catch {}
+      this.profileUnsub = null;
+    }
   }
 
   async upsertProfile(profileData: Partial<User>): Promise<void> {
@@ -85,8 +109,12 @@ export class CurrentUserService {
           updatedAt: serverTimestamp()
         }, { merge: true });
       }
-    } catch (err) {
-      console.warn('[CurrentUserService] Failed ensuring user document', err);
+    } catch (err: any) {
+      if (err?.code === 'unavailable') {
+        console.info('[CurrentUserService] Skipping ensureUserDocument while offline');
+      } else {
+        console.warn('[CurrentUserService] Failed ensuring user document', err);
+      }
     }
   }
 

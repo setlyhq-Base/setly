@@ -7,14 +7,13 @@ import { AnalyticsService } from '../../core/services/analytics.service';
 import { AnyConnectPost, ConnectFeedResponse } from './models/connect.models';
 import { ConnectFiltersPanelComponent } from './components/connect-filters-panel.component';
 import { ConnectFeedComponent } from './components/connect-feed.component';
-import { ConnectRightRailComponent } from './components/connect-right-rail.component';
 import { PeopleDirectoryComponent } from './components/people-directory.component';
 import { ToastContainerComponent } from '../../shared/ui/toast-container.component';
 
 @Component({
   selector: 'app-connect',
   standalone: true,
-  imports: [CommonModule, RouterModule, ConnectFiltersPanelComponent, ConnectFeedComponent, ConnectRightRailComponent, PeopleDirectoryComponent, ToastContainerComponent],
+  imports: [CommonModule, RouterModule, ConnectFiltersPanelComponent, ConnectFeedComponent, PeopleDirectoryComponent, ToastContainerComponent],
   templateUrl: './connect.page.html',
   styleUrls: ['./connect.page.scss']
 })

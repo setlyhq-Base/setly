@@ -67,7 +67,7 @@ export class ConnectSocialService {
   }
 
   // Inline icon helpers
-  private iconMedal(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#5A4FF3" stroke-width="1.5"/><path d="M8 12l-2 8 6-3 6 3-2-8" stroke="#5A4FF3" stroke-width="1.5" stroke-linejoin="round"/></svg>'; }
-  private iconPin(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#5A4FF3" stroke-width="1.5"/><circle cx="12" cy="9" r="2" fill="#5A4FF3"/></svg>'; }
-  private iconCar(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 12l2-5h14l2 5v5H3v-5z" stroke="#5A4FF3" stroke-width="1.5"/><circle cx="7.5" cy="17" r="1.5" fill="#5A4FF3"/><circle cx="16.5" cy="17" r="1.5" fill="#5A4FF3"/></svg>'; }
+  private iconMedal(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#3E8FFF" stroke-width="1.5"/><path d="M8 12l-2 8 6-3 6 3-2-8" stroke="#3E8FFF" stroke-width="1.5" stroke-linejoin="round"/></svg>'; }
+  private iconPin(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" stroke="#3E8FFF" stroke-width="1.5"/><circle cx="12" cy="9" r="2" fill="#0F5FFF"/></svg>'; }
+  private iconCar(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 12l2-5h14l2 5v5H3v-5z" stroke="#3E8FFF" stroke-width="1.5"/><circle cx="7.5" cy="17" r="1.5" fill="#0F5FFF"/><circle cx="16.5" cy="17" r="1.5" fill="#0F5FFF"/></svg>'; }
 }

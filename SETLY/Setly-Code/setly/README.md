@@ -28,6 +28,11 @@ Whether you’re an international student landing in a new country or a professi
 | **Trust Layer** | Verification & privacy | Hide personal info until both parties connect |
 | **Persistence** | Local storage + mock API | Smooth UX during MVP testing |
 | **Design** | Minimal dark theme | Built with Tailwind + Angular Signals |
+| **Media Uploads** | Reliable image + video | S3 presigned posts with local dev fallback & retry overlay |
+| **Location Intelligence** | Unified Google Places input | Autocomplete + details + text search + fuzzy universities |
+| **Performance** | Caching + abort | In-memory LRU + request cancellation prevents race conditions |
+| **Accessibility** | ARIA-enhanced suggestions | Live region + listbox roles for screen readers |
+| **Consistency** | Canonical roomId lifecycle | init UUID reused on publish for stable asset grouping |
 
 ---
 
@@ -37,10 +42,13 @@ Whether you’re an international student landing in a new country or a professi
 - [Angular 17](https://angular.dev) (Standalone Components + Signals)  
 - [TailwindCSS](https://tailwindcss.com)  
 - [TypeScript](https://www.typescriptlang.org)  
+- Google Places API (proxied backend)  
 
 **Backend (Planned for MVP-2):**  
 - Node.js + Express or NestJS  
 - MongoDB / Firebase (cloud-hosted data layer)  
+- Prisma + PostgreSQL prototype  
+- AWS S3 (media uploads)  
 
 **Other Tools:**  
 - Stripe (for reservation payments — Beta)  
@@ -74,11 +82,15 @@ src/
 - Live chat with notifications  
 - Reservation flow with Stripe integration  
 - Recommendation engine (match roommates)
+- Video thumbnail pipeline (ffmpeg + Lambda trigger)  
+- Institution geocode enrichment endpoint  
+- Server-side media validation (limit + type enforcement)  
 
 ### MVP-3 (Future)
 - Move-in services (Wi-Fi, utilities, movers)  
 - Partner onboarding (universities, housing networks)  
 - Global expansion for student relocation  
+- Predictive search ranking (semantic + popularity weighting)  
 
 ---
 
@@ -91,6 +103,56 @@ If you’re a developer, designer, or student who wants to be part of the journe
 3. Submit a pull request  
 
 We believe in community-driven growth — just like our users. 🌱  
+
+---
+## Location & Search Architecture
+
+### Overview
+All address / place fields use a single Angular component: `GooglePlaceInputComponent`.
+
+### Flow
+1. User types → debounced (325ms) input.
+2. Component calls backend `/api/places/autocomplete` (session token passed).
+3. If sparse (<3) or university intent, backend injects fuzzy institution predictions (Levenshtein over `us_institutions.json`).
+4. If still empty, component triggers fallback `/api/places/textsearch` and synthesizes predictions.
+5. On selection, component optionally calls `/api/places/details` for precise lat/lng then resets session & clears caches.
+
+### Performance
+- Abortable requests: new query unsubscribes prior observable to avoid stale overwrites.
+- LRU caches (max 50) for autocomplete/text search minimize repeat upstream calls.
+
+### Accessibility
+- ARIA roles: `combobox`, `listbox`, `option`; live region announces count or absence of suggestions.
+- Keyboard: Arrow keys cycle; Enter selects; Escape closes.
+
+### Canonical Room ID Lifecycle
+- `POST /api/rooms/init` issues UUID used in S3 object keys.
+- Publish reuses same ID ensuring stable grouping & easy diff updates.
+
+### Media Upload Reliability
+- Local dev fallback (no AWS): direct local endpoints replace presigned posts.
+- Validation codes (e.g. `min-photos`, `too-many-videos`) provide granular UI feedback.
+- Video uploads gated by feature flag; server enforces max count & type (mp4/webm).
+
+### Fuzzy Institution Endpoint
+- `/api/places/institution?name=` pipeline: exact | fuzzy | Google text search | synthetic fallback.
+- Deterministic pseudo coordinates generated when dataset lacks lat/lng.
+
+### Future Enhancements
+- Semantic ranking (popularity, recency, distance weighting).
+- Persistent cache keyed by normalized query + session.
+- Real institution geocodes pre-seeded.
+- Background video thumbnail generation on finalize.
+
+### Feature Flags
+- `enableRoomVideo` – toggles video UI.
+- `forceLocalUploads` – forces local storage uploads.
+- Amenity suggestions flag – conditional chips UI.
+
+### Testing Strategy (Planned)
+- Unit: caching abort logic, fuzzy institution injection, canonical roomId reuse.
+- E2E: Playwright covers assistant widget, listing creation, permissions.
+---
 
 ---
 

@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AddressAutocompleteComponent } from './address-autocomplete.component';
+import { GooglePlaceInputComponent } from './google-place-input.component';
 import { FormsModule } from '@angular/forms';
 import { RidesService } from '../../core/services/rides.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
@@ -17,7 +17,7 @@ interface RideRequest {
 @Component({
   selector: 'app-ride-request-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddressAutocompleteComponent],
+  imports: [CommonModule, FormsModule, GooglePlaceInputComponent],
   template: `
     <div 
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -43,23 +43,21 @@ interface RideRequest {
           <!-- Pickup Location (Google Maps Autocomplete) -->
           <div>
             <label for="pickup" class="block text-sm font-medium text-gray-700 mb-1">Pickup location</label>
-            <app-address-autocomplete
-              [placeholder]="'Enter pickup address'"
+            <app-google-place-input
+              placeholder="Enter pickup address"
               [initialAddress]="form.pickup"
               (picked)="form.pickup = $event.address"
-              required
-            ></app-address-autocomplete>
+            ></app-google-place-input>
           </div>
 
           <!-- Destination (Google Maps Autocomplete) -->
           <div>
             <label for="destination" class="block text-sm font-medium text-gray-700 mb-1">Drop location</label>
-            <app-address-autocomplete
-              [placeholder]="'Enter drop address'"
+            <app-google-place-input
+              placeholder="Enter drop address"
               [initialAddress]="form.destination"
               (picked)="form.destination = $event.address"
-              required
-            ></app-address-autocomplete>
+            ></app-google-place-input>
           </div>
 
           <!-- Audience Selector -->

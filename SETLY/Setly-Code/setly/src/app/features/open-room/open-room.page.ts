@@ -271,8 +271,8 @@ export class OpenRoomPage {
     this.model.uploading = true;
     try {
       for (const file of files) {
-        const url = await this.uploads.uploadRoomMedia(type, file);
-        this.model.photos.push(url);
+        const uploaded = await this.uploads.uploadRoomMedia(type, file);
+        this.model.photos.push(uploaded.url);
       }
     } catch (e:any) {
       console.error(e);
@@ -285,10 +285,10 @@ export class OpenRoomPage {
   async uploadVideo(file: File) {
     this.model.uploading = true;
     try {
-      const url = await this.uploads.uploadRoomMedia('room-video', file);
+  const uploaded = await this.uploads.uploadRoomMedia('room-video', file);
       // Simple thumbnail: create object URL for first frame fallback (could be server-side later)
       const thumbUrl = URL.createObjectURL(file);
-      this.model.videos.push({ url, thumb: thumbUrl });
+  this.model.videos.push({ url: uploaded.url, thumb: thumbUrl });
     } catch (e:any) {
       console.error(e);
       this.toast.error('Video upload failed');

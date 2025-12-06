@@ -1,27 +1,44 @@
-import { Component, signal, inject, OnInit, HostListener } from '@angular/core';
+import { Component, signal, inject, OnInit, HostListener, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PostRoomPage } from '../../features/post-room/post-room.page';
 import { SetlyRideFormComponent } from '../../features/ride/setly-ride-form.component';
 import { ToastService } from '../../core/services/toast.service';
-import { ToastContainerComponent } from './toast-container.component';
+import { ActiveTabService } from '../../core/services/active-tab.service';
 
 @Component({
   selector: 'app-fab',
   standalone: true,
-  imports: [CommonModule, FormsModule, PostRoomPage, SetlyRideFormComponent, ToastContainerComponent],
+  imports: [CommonModule, FormsModule, PostRoomPage, SetlyRideFormComponent],
   template: `
     <!-- FAB Button -->
     <button
       class="fab-button"
+      [class.icon-changing]="iconChanging()"
       (click)="togglePopover()"
       aria-label="Create new post"
       [attr.aria-expanded]="showPopover()"
       data-testid="fab-button"
     >
-      <svg class="fab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M12 5v14M5 12h14" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+      <!-- Dynamic icon based on active tab -->
+      <svg *ngIf="activeTab() === 'rooms'" class="fab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <!-- Home icon -->
+        <path d="M3 10l9-7 9 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10 21v-6h4v6" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <svg *ngIf="activeTab() === 'rides'" class="fab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <!-- Car icon - clear side view -->
+        <path d="M5 17h14M5 17c-1.1 0-2-.9-2-2v-4c0-.55.45-1 1-1l2.5-4c.3-.48.84-.8 1.44-.8h7.12c.6 0 1.14.32 1.44.8L19 10c.55 0 1 .45 1 1v4c0 1.1-.9 2-2 2M5 17v1M19 17v1" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="7.5" cy="17" r="1.5" fill="#FFFFFF"/>
+        <circle cx="16.5" cy="17" r="1.5" fill="#FFFFFF"/>
+      </svg>
+      <svg *ngIf="activeTab() === 'market'" class="fab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <!-- Box icon -->
+        <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M12 13V3" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M3 8l9 5 9-5" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
       </svg>
     </button>
 
@@ -32,9 +49,10 @@ import { ToastContainerComponent } from './toast-container.component';
       <button class="popover-item" (click)="selectOption('room')" role="menuitem">
         <span class="item-icon" aria-hidden="true">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M3 10l9-7 9 7" stroke="#6A6A6A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" stroke="#6A6A6A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 21v-6h4v6" stroke="#6A6A6A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Home icon - matching FAB -->
+            <path d="M3 10l9-7 9 7" stroke="#6A6A6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" stroke="#6A6A6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 21v-6h4v6" stroke="#6A6A6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
         <div class="item-content">
@@ -45,9 +63,10 @@ import { ToastContainerComponent } from './toast-container.component';
       <button class="popover-item" (click)="selectOption('ride')" role="menuitem">
         <span class="item-icon" aria-hidden="true">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M3 13h18l-1.2-3.2A2 2 0 0 0 18.9 8H5.1A2 2 0 0 0 4.2 9.8L3 13z" stroke="#6A6A6A" stroke-width="1.8" stroke-linejoin="round"/>
-            <circle cx="7.5" cy="16.5" r="1.6" stroke="#6A6A6A" stroke-width="1.8"/>
-            <circle cx="16.5" cy="16.5" r="1.6" stroke="#6A6A6A" stroke-width="1.8"/>
+            <!-- Car icon - clear side view matching tabs -->
+            <path d="M5 17h14M5 17c-1.1 0-2-.9-2-2v-4c0-.55.45-1 1-1l2.5-4c.3-.48.84-.8 1.44-.8h7.12c.6 0 1.14.32 1.44.8L19 10c.55 0 1 .45 1 1v4c0 1.1-.9 2-2 2M5 17v1M19 17v1" stroke="#6A6A6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="7.5" cy="17" r="1.5" fill="#6A6A6A"/>
+            <circle cx="16.5" cy="17" r="1.5" fill="#6A6A6A"/>
           </svg>
         </span>
         <div class="item-content">
@@ -58,9 +77,10 @@ import { ToastContainerComponent } from './toast-container.component';
       <button class="popover-item" (click)="selectOption('market')" role="menuitem">
         <span class="item-icon" aria-hidden="true">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" stroke="#6A6A6A" stroke-width="1.8" stroke-linejoin="round"/>
-            <path d="M12 13V3" stroke="#6A6A6A" stroke-width="1.8" stroke-linejoin="round"/>
-            <path d="M3 8l9 5 9-5" stroke="#6A6A6A" stroke-width="1.8" stroke-linejoin="round"/>
+            <!-- Box icon - matching FAB -->
+            <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" stroke="#6A6A6A" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M12 13V3" stroke="#6A6A6A" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M3 8l9 5 9-5" stroke="#6A6A6A" stroke-width="2" stroke-linejoin="round"/>
           </svg>
         </span>
         <div class="item-content">
@@ -130,27 +150,67 @@ import { ToastContainerComponent } from './toast-container.component';
   styles: [`
     .fab-button {
       position: fixed;
-      bottom: 28px; /* standard FAB placement */
+      bottom: 28px;
       right: 28px;
       width: 58px;
       height: 58px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      background: #3E8FFF; /* Electric Azure */
       border: none;
-      box-shadow: 0 4px 20px rgba(80, 100, 250, 0.3);
+      box-shadow: 0 4px 20px rgba(62, 143, 255, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
       z-index: 1000;
     }
     .fab-button:hover {
       transform: scale(1.05);
-      box-shadow: 0 8px 30px rgba(80, 100, 250, 0.45);
+      box-shadow: 0 8px 30px rgba(62, 143, 255, 0.5);
+      background: #5BA0FF; /* Slightly brighter on hover */
     }
+    .fab-button:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 12px rgba(62, 143, 255, 0.35);
+    }
+    
+    /* Icon change animation */
+    .fab-button.icon-changing {
+      animation: iconChange 0.3s ease;
+    }
+    @keyframes iconChange {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 4px 20px rgba(62, 143, 255, 0.4);
+      }
+      25% {
+        transform: scale(0.9);
+        box-shadow: 0 2px 12px rgba(62, 143, 255, 0.3);
+      }
+      50% {
+        transform: scale(0.9);
+        box-shadow: 0 6px 24px rgba(62, 143, 255, 0.6);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 4px 20px rgba(62, 143, 255, 0.4);
+      }
+    }
+    
     .fab-icon {
-      display:block;
+      display: block;
+      animation: iconFadeIn 0.15s ease;
+    }
+    @keyframes iconFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .fab-popover {
@@ -324,19 +384,19 @@ import { ToastContainerComponent } from './toast-container.component';
       margin-top: 8px;
     }
     .btn-primary {
-      background: linear-gradient(135deg, var(--brand-start, #3A7AFE) 0%, var(--brand-end, #7A5CFF) 100%);
+      background: linear-gradient(135deg, var(--brand-midnight, #0A1A3F) 0%, var(--brand-azure, #3E8FFF) 55%, #E8F4FF 85%);
       color: white;
       border: none;
       padding: 10px 20px;
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 8px 18px -6px rgba(58,122,254,0.35), 0 2px 6px rgba(122,92,255,0.18);
+      box-shadow: 0 8px 18px -6px rgba(62,143,255,0.28), 0 2px 6px rgba(10,26,63,0.18);
     }
     .btn-secondary {
       background: white;
-      border: 1.5px solid var(--brand-blue, #3A7AFE);
-      color: var(--deep-navy, #0F1A3B);
+      border: 1.5px solid var(--brand-midnight, #0A1A3F);
+      color: var(--text, #1A1A1A);
       padding: 10px 20px;
       border-radius: 8px;
       font-weight: 600;
@@ -367,15 +427,33 @@ import { ToastContainerComponent } from './toast-container.component';
   `]
 })
 export class FabComponent implements OnInit {
+  private activeTabService = inject(ActiveTabService);
+  private router = inject(Router);
+  private toast = inject(ToastService);
+
   showPopover = signal(false);
   showRoomModal = signal(false);
   showRideModal = signal(false);
   showMarketModal = signal(false);
+  iconChanging = signal(false);
+
+  // Get active tab from service
+  activeTab = this.activeTabService.activeTab;
 
   marketForm = { title: '', price: 0, desc: '' };
 
-  private router = inject(Router);
-  private toast = inject(ToastService);
+  constructor() {
+    // Trigger animation when tab changes
+    effect(() => {
+      this.activeTab(); // Track the signal
+      this.triggerIconChangeAnimation();
+    });
+  }
+
+  triggerIconChangeAnimation() {
+    this.iconChanging.set(true);
+    setTimeout(() => this.iconChanging.set(false), 300);
+  }
 
   togglePopover() {
     this.showPopover.update(v => !v);

@@ -39,8 +39,25 @@ export class GeocodingService {
   private http = inject(HttpClient);
   search(query: string): Observable<GeoSuggestion[]> {
     if (!query || query.trim().length < 2) return new Observable(sub => { sub.next([]); sub.complete(); });
-    return this.http.get<{ items: any[] }>(`/api/geo/search?q=${encodeURIComponent(query.trim())}`).pipe(
-      map(res => (res.items || []).map(r => normalizeSuggestion(r)))
+    const q = query.trim();
+    return this.http.get<{ items: any[] }>(`/api/geo/search?q=${encodeURIComponent(q)}`).pipe(
+      map(res => {
+        let items = (res.items || []).map(r => normalizeSuggestion(r));
+        if (needsUniversityFuzzy(q) && items.filter(i => i.kind==='university').length < 1) {
+          const fuzzy = fuzzyUniversityMatches(q).map(name => ({
+            id: 'fuzzy_uni:' + name,
+            label: name,
+            name,
+            kind: 'university' as GeoSuggestionKind,
+            source: 'universities',
+            country: 'United States'
+          }));
+          // Merge de-duplicating by label
+          const existing = new Set(items.map(i => i.label.toLowerCase()));
+            for (const f of fuzzy) if (!existing.has(f.label.toLowerCase())) items.push(f as any);
+        }
+        return items;
+      })
     );
   }
 
@@ -105,4 +122,70 @@ function normalizeAddressSuggestion(raw: any): AddressSuggestion {
     source,
     meta: raw?.meta && typeof raw.meta === 'object' ? raw.meta : undefined
   };
+}
+
+// --- Fuzzy University Matching (client-side assist) ---
+let universityList: string[] | null = null;
+function loadUniversityList(): string[] {
+  if (universityList) return universityList;
+  // Lazy fetch from backend static dataset endpoint or embedded subset for speed.
+  // For simplicity, embed minimal list placeholder; backend sources full dataset when needed.
+  universityList = [
+    'University of New Haven', 'Yale University', 'Harvard University', 'Stanford University', 'Massachusetts Institute of Technology',
+    'Princeton University', 'Columbia University', 'Cornell University', 'University of California Berkeley', 'University of California Los Angeles'
+  ];
+  return universityList;
+}
+
+function needsUniversityFuzzy(q: string): boolean {
+  const lower = q.toLowerCase();
+  return /(univer|college|institute|academy)/.test(lower);
+}
+
+function fuzzyUniversityMatches(q: string): string[] {
+  const list = loadUniversityList();
+  const lowerQ = q.toLowerCase();
+  const normQ = lowerQ.replace(/univerisy|univeristy|unversity|unviersity/g, 'university');
+  const scored: { name: string; score: number }[] = [];
+  for (const name of list) {
+    const lname = name.toLowerCase();
+    let score = 0;
+    // Token based scoring
+    const tokens = normQ.split(/[^a-z0-9]+/).filter(t => t.length > 2);
+    for (const t of tokens) {
+      if (lname.includes(t)) score += 3;
+      else {
+        const dist = levenshtein(t, closestWord(lname, t));
+        if (dist <= Math.min(2, Math.floor(t.length/2))) score += 2 - dist * 0.5;
+      }
+    }
+    if (score > 0) scored.push({ name, score });
+  }
+  scored.sort((a,b) => b.score - a.score);
+  return scored.slice(0,5).map(s => s.name);
+}
+
+function closestWord(haystack: string, token: string): string {
+  let best = ''; let bestDist = Infinity;
+  for (const w of haystack.split(/[^a-z0-9]+/)) {
+    if (!w) continue;
+    const d = levenshtein(token, w);
+    if (d < bestDist) { bestDist = d; best = w; }
+  }
+  return best || token;
+}
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  const dp = Array.from({ length: m + 1 }, () => new Array<number>(n + 1));
+  for (let i=0;i<=m;i++) dp[i][0]=i;
+  for (let j=0;j<=n;j++) dp[0][j]=j;
+  for (let i=1;i<=m;i++) {
+    for (let j=1;j<=n;j++) {
+      const cost = a[i-1]===b[j-1]?0:1;
+      dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+    }
+  }
+  return dp[m][n];
 }

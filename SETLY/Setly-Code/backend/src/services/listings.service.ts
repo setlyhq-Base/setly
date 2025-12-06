@@ -125,11 +125,11 @@ export class ListingsService {
       return ownerId ? all.filter(r => r.ownerId === ownerId) : all;
     }
   }
-  static async create(data: Omit<ListingRecord, 'id' | 'createdAt'>): Promise<ListingRecord> {
+  static async create(data: Omit<ListingRecord, 'createdAt'> & { id?: string }): Promise<ListingRecord> {
     try {
       const created = await prisma.room.create({
         data: {
-          id: randomUUID(),
+          id: data.id || randomUUID(),
           ownerId: data.ownerId,
           title: data.title,
           description: data.description,
@@ -143,6 +143,7 @@ export class ListingsService {
           roomType: data.roomType,
           bath: data.bath,
           furnished: data.furnished,
+          // TODO(thumbnail-pipeline): video thumbnails generation planned via ffmpeg Lambda trigger after upload finalize.
           vegetarian: data.rules?.vegetarian ?? null,
           smoking: data.rules?.smoking ?? null,
           petsOk: data.rules?.petsOk ?? null,
@@ -186,7 +187,7 @@ export class ListingsService {
       ensureMemorySeed();
       const rec: ListingRecord = {
         ...data,
-  id: randomUUID(),
+        id: data.id || randomUUID(),
         createdAt: new Date().toISOString()
       };
       memoryRooms.push(rec);

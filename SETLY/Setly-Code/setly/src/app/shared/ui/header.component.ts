@@ -135,7 +135,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5a2 2 0 0 1 2-2h6.172a2 2 0 0 1 1.414.586l4.828 4.828A2 2 0 0 1 19 9.828V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v6h6" />
                 </svg>
-                <span>Explore</span>
+                <span>Your next move</span>
               </a>
             </li>
             <li>

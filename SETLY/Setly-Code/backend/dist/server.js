@@ -201,8 +201,11 @@ exports.app.use('/api/universities', universities_routes_1.default);
 exports.app.use('/api/assistant', assistant_routes_1.default);
 // Dev local avatar upload handler (PUT /uploads/local/:uid/avatar.ext)
 exports.app.put('/uploads/local/:uid/:filename', async (req, res) => {
-    if (aws_1.AWS_ENABLED)
+    // Allow local uploads when AWS is disabled OR when explicitly forced for local dev
+    const forceLocal = process.env.UPLOADS_FORCE_LOCAL === 'true' || req.headers['x-local-upload'] === 'true';
+    if (aws_1.AWS_ENABLED && !forceLocal) {
         return res.status(400).json({ error: 'Local upload disabled when AWS enabled' });
+    }
     const { uid, filename } = req.params;
     if (!uid || !filename)
         return res.status(400).json({ error: 'Missing uid or filename' });

@@ -17,7 +17,6 @@ import { SkeletonCardComponent } from '../../shared/ui/skeleton-card.component';
 
 import { SearchHeroComponent } from '../../shared/ui/search-hero/search-hero.component';
 import { RideRequestModalComponent } from '../../shared/ui/ride-request-modal.component';
-import { TestimonialCarouselComponent } from '../../shared/ui/testimonial-carousel.component';
 import { HeaderComponent } from '../../shared/ui/header.component';
 import { ProfileNudgeBannerComponent } from '../../shared/ui/profile-nudge-banner.component';
 
@@ -39,7 +38,6 @@ interface SearchParams {
     FormsModule,
     SearchHeroComponent,
     RideRequestModalComponent,
-    TestimonialCarouselComponent,
     ProfileNudgeBannerComponent
   ],
   template: `
@@ -53,16 +51,16 @@ interface SearchParams {
       <!-- Premium Hero Section -->
       <section class="relative isolate overflow-hidden" data-testid="hero-section">
         <!-- Ambient gradient background and decorative orbs -->
-        <div class="absolute inset-0 -z-10 bg-gradient-to-br from-white via-indigo-50 to-purple-50"></div>
-        <div class="absolute top-[-6rem] left-1/2 -translate-x-1/2 w-[60rem] h-[60rem] rounded-full bg-gradient-to-tr from-indigo-200/50 via-indigo-100/10 to-transparent blur-3xl"></div>
-        <div class="absolute bottom-[-4rem] right-[-2rem] w-[40rem] h-[40rem] rounded-full bg-gradient-to-tl from-purple-200/40 via-purple-100/10 to-transparent blur-3xl"></div>
+  <div class="absolute inset-0 -z-10 bg-gradient-to-br from-white via-[#E8F4FF] to-white"></div>
+  <div class="absolute top-[-6rem] left-1/2 -translate-x-1/2 w-[60rem] h-[60rem] rounded-full bg-gradient-to-tr from-[#BBD9FF]/50 via-[#E8F4FF]/10 to-transparent blur-3xl"></div>
+  <div class="absolute bottom-[-4rem] right-[-2rem] w-[40rem] h-[40rem] rounded-full bg-gradient-to-tl from-[#BBD9FF]/40 via-[#E8F4FF]/10 to-transparent blur-3xl"></div>
         <div class="container mx-auto px-4 pt-24 pb-32">
           <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
             <!-- Left Column -->
             <div class="flex-1 w-full space-y-10">
               <div class="space-y-6">
                 <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-black/5 text-xs font-medium text-gray-700 shadow-sm">
-                  <span class="w-2 h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse"></span>
+                  <span class="w-2 h-2 rounded-full animate-pulse" style="background: var(--brand-gradient)"></span>
                   Trusted student housing & rides
                 </span>
                 <h1 class="text-[2.75rem] md:text-[3.75rem] leading-[1.05] font-semibold tracking-tight text-gray-900">
@@ -74,7 +72,7 @@ interface SearchParams {
               </div>
               <div class="flex flex-col sm:flex-row gap-4">
                 <button (click)="navigateToBrowse()" class="group relative inline-flex items-center justify-center rounded-xl px-7 py-4 text-sm font-semibold text-white overflow-hidden" data-testid="hero-search-button">
-                  <span class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 transition-transform group-hover:scale-105"></span>
+                  <span class="absolute inset-0 transition-transform group-hover:scale-105" style="background: var(--brand-gradient)"></span>
                   <span class="relative flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -112,7 +110,7 @@ interface SearchParams {
             <div class="flex-1 w-full max-w-xl mx-auto">
               <div class="relative group">
                 <div class="absolute -inset-2 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-60 group-hover:opacity-80 transition"></div>
-                <div class="relative rounded-3xl border border-white/40 bg-white/80 backdrop-blur-xl shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 transition overflow-hidden">
+                <div class="relative rounded-3xl border border-white/40 bg-white/80 backdrop-blur-xl shadow-lg transition overflow-hidden">
                   <app-search-hero
                     [initialQuery]="searchParams().query || ''"
                     [initialCity]="searchParams().city || ''"
@@ -172,20 +170,20 @@ interface SearchParams {
               </div>
 
               <div class="p-6">
-                <h3 class="font-medium text-lg text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                <h3 class="font-medium text-lg text-gray-900 mb-2 group-hover:text-brand-azure transition-colors">
                   {{ room.title }}
                 </h3>
                 <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ room.title }}</p>
 
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background: var(--brand-gradient)">
                       <span class="text-white text-xs font-semibold">{{ room.hostId.charAt(0) }}</span>
                     </div>
                     <span class="text-sm text-gray-700">{{ room.hostId }}</span>
                   </div>
 
-                  <button (click)="onConnectClick(room, $event)" class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition" [attr.data-testid]="'connect-button-' + room.id">
+                  <button (click)="onConnectClick(room, $event)" class="inline-flex items-center gap-1 text-sm font-medium text-brand-azure hover:text-brand-midnight transition" [attr.data-testid]="'connect-button-' + room.id">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8a6 6 0 01-12 0"/></svg>
                     Connect
                   </button>
@@ -237,7 +235,7 @@ interface SearchParams {
             </div>
             <button
               (click)="openRideModal()"
-              class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg px-6 py-3 transition"
+              class="w-full text-white font-medium rounded-lg px-6 py-3 transition btn-brand"
               data-testid="setlyride-button"
             >
               Request SetlyRide

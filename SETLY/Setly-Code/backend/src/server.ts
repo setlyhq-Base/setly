@@ -6,6 +6,7 @@ import uploadsRouter from './routes/uploads.routes';
 import roomsRouter from './routes/rooms.routes';
 import healthRouter from './routes/health.routes';
 import geoRouter from './routes/geo.routes';
+import placesRouter from './routes/places.routes';
 import connectRouter from './routes/connect.routes';
 import fs from 'fs';
 import { AWS_ENABLED } from './config/aws';
@@ -179,6 +180,7 @@ app.post('/api/auth/sync', async (req, res) => {
 app.use('/api/uploads', authMiddleware, uploadsRouter);
 app.use('/api/rooms', authMiddleware, roomsRouter);
 app.use('/api/geo', geoRouter); // public geocoding search
+app.use('/api/places', placesRouter); // Google Places proxy endpoints (autocomplete/details/textsearch)
 app.use('/api/connect', connectRouter); // public connect discovery endpoints
 app.use('/', healthRouter);
 app.use('/api/auth', authMiddleware, authRouter);
@@ -193,7 +195,11 @@ app.use('/api/assistant', assistantRouter);
 
 // Dev local avatar upload handler (PUT /uploads/local/:uid/avatar.ext)
 app.put('/uploads/local/:uid/:filename', async (req, res) => {
-  if (AWS_ENABLED) return res.status(400).json({ error: 'Local upload disabled when AWS enabled' });
+  // Allow local uploads when AWS is disabled OR when explicitly forced for local dev
+  const forceLocal = process.env.UPLOADS_FORCE_LOCAL === 'true' || req.headers['x-local-upload'] === 'true';
+  if (AWS_ENABLED && !forceLocal) {
+    return res.status(400).json({ error: 'Local upload disabled when AWS enabled' });
+  }
   const { uid, filename } = req.params;
   if (!uid || !filename) return res.status(400).json({ error: 'Missing uid or filename' });
   const chunks: Buffer[] = [];

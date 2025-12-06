@@ -148,7 +148,7 @@ import { LocationAutocompleteComponent } from '../../shared/ui/location-autocomp
             (picked)="onCityPicked($event)"
           ></app-location-autocomplete>
           <div class="mt-2 text-xs text-gray-400" *ngIf="form.get('city')?.value">
-            Selected: {{ [form.get('city')?.value, form.get('state')?.value].filter(Boolean).join(', ') }}
+            Selected: {{ formatLocation(form.get('city')?.value, form.get('state')?.value) }}
           </div>
           <div class="mt-1 text-sm text-red-400" *ngIf="form.get('city')?.invalid && form.get('city')?.touched">
             Please pick your city
@@ -218,7 +218,7 @@ import { LocationAutocompleteComponent } from '../../shared/ui/location-autocomp
                     type="radio"
                     formControlName="roomType"
                     value="private"
-                    class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300"
+                    class="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300"
                   >
                   <span class="ml-2 text-sm text-gray-300">Private Room</span>
                 </label>
@@ -227,7 +227,7 @@ import { LocationAutocompleteComponent } from '../../shared/ui/location-autocomp
                     type="radio"
                     formControlName="roomType"
                     value="shared"
-                    class="h-4 w-4 text-brand-blue focus:ring-brand-blue border-gray-300"
+                    class="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300"
                   >
                   <span class="ml-2 text-sm text-gray-300">Shared Room</span>
                 </label>
@@ -315,6 +315,13 @@ export class ProfileWizardComponent {
 
   private clean(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
+  }
+
+  formatLocation(city: unknown, state: unknown): string {
+    return [city, state]
+      .map(value => typeof value === 'string' ? value.trim() : '')
+      .filter((value): value is string => value.length > 0)
+      .join(', ');
   }
 
   private extractStateFromLabel(label?: string): string {

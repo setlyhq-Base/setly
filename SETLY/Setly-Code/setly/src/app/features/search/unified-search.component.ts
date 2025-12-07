@@ -218,17 +218,17 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
     /* 🎯 Premium Tab Navigation */
     .category-tabs {
       display: inline-flex;
-      gap: 12px;
-      padding: 8px;
-      background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border-radius: 24px;
-      border: 1px solid rgba(226, 232, 240, 0.6);
+      gap: 10px;
+      padding: 6px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-radius: 20px;
+      border: 1px solid rgba(226, 232, 240, 0.5);
       box-shadow: 
-        0 12px 40px -12px rgba(62, 143, 255, 0.15),
-        0 4px 12px rgba(10, 26, 63, 0.06),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 10px 32px -10px rgba(62, 143, 255, 0.12),
+        0 4px 10px rgba(10, 26, 63, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
         inset 0 -1px 0 rgba(0, 0, 0, 0.02);
       position: relative;
     }
@@ -240,14 +240,14 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 18px 32px;
-      border-radius: 18px;
+      padding: 16px 28px;
+      border-radius: 16px;
       background: transparent;
       border: none;
       cursor: pointer;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
-      min-width: 140px;
+      min-width: 130px;
     }
     
     /* 💫 Ripple Effect on Click */
@@ -276,18 +276,20 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
     }
     
     .category-tab:hover {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.03) 100%);
-      transform: translateY(-2px);
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(99, 102, 241, 0.04) 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 18px -4px rgba(59, 130, 246, 0.15);
     }
     
     .category-tab.active {
-      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
       box-shadow: 
-        0 12px 24px -8px rgba(62, 143, 255, 0.5),
-        0 6px 12px rgba(99, 102, 241, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.25),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
+        0 10px 22px -6px rgba(62, 143, 255, 0.45),
+        0 6px 14px -2px rgba(99, 102, 241, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+        0 1px 0 0 rgba(255, 255, 255, 0.2) inset,
+        0 -1px 0 0 rgba(0, 0, 0, 0.1) inset;
+      transform: translateY(-2px);
     }
     
     .category-tab:active {
@@ -314,27 +316,27 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.12);
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(8px);
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
     
     .category-tab:hover .tab-icon-wrapper {
-      background: rgba(59, 130, 246, 0.15);
-      transform: translateY(-4px) scale(1.05);
-      box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.3);
+      background: rgba(59, 130, 246, 0.12);
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 6px 14px -4px rgba(59, 130, 246, 0.25);
     }
     
     .category-tab.active .tab-icon-wrapper {
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.22);
       box-shadow: 
-        0 8px 16px -4px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      border-color: rgba(255, 255, 255, 0.2);
+        0 6px 14px -4px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.18);
     }
     
     /* 🔷 Tab Icon Styling */
@@ -404,30 +406,30 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
     /* 💫 Active Tab Indicator */
     .tab-indicator {
       position: absolute;
-      bottom: 6px;
+      bottom: 5px;
       left: 50%;
       transform: translateX(-50%) scaleX(0);
-      width: 40px;
-      height: 4px;
+      width: 36px;
+      height: 3px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.6);
-      box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0.5) 100%);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.2);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .category-tab.active .tab-indicator {
       transform: translateX(-50%) scaleX(1);
-      animation: indicatorPulse 2s ease-in-out infinite;
+      animation: indicatorPulse 2.5s ease-in-out infinite;
     }
     
     @keyframes indicatorPulse {
       0%, 100% { 
-        opacity: 0.8;
-        box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+        opacity: 0.75;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.2);
       }
       50% { 
         opacity: 1;
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        box-shadow: 0 0 14px rgba(255, 255, 255, 0.6), 0 0 28px rgba(255, 255, 255, 0.3);
       }
     }
     
@@ -456,18 +458,19 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
       }
       
       .category-tabs {
-        gap: 10px;
-        padding: 7px;
+        gap: 9px;
+        padding: 6px;
       }
       
       .category-tab {
-        padding: 16px 28px;
-        min-width: 130px;
+        padding: 15px 26px;
+        min-width: 125px;
       }
       
       .tab-icon-wrapper {
-        width: 44px;
-        height: 44px;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
       }
     }
     
@@ -508,27 +511,28 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
       .category-tabs {
         gap: 8px;
         padding: 6px;
-        border-radius: 20px;
+        border-radius: 18px;
       }
       
       .category-tab {
         padding: 14px 24px;
-        min-width: 110px;
-        border-radius: 16px;
+        min-width: 115px;
+        min-height: 44px; /* Ensure minimum tap target */
+        border-radius: 15px;
       }
       
       .tab-icon-wrapper {
         width: 40px;
         height: 40px;
-        border-radius: 12px;
+        border-radius: 11px;
       }
       
       .tab-label {
-        font-size: 14px;
+        font-size: 13.5px;
       }
       
       .tab-subtitle {
-        font-size: 10px;
+        font-size: 9.5px;
       }
     }
     
@@ -536,27 +540,38 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
     @media (max-width: 640px) {
       .category-selector-container {
         margin-bottom: 24px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+      }
+      
+      .category-selector-container::-webkit-scrollbar {
+        display: none; /* Chrome/Safari/Opera */
       }
       
       .category-tabs {
-        width: 100%;
-        justify-content: space-between;
-        gap: 6px;
-        padding: 5px;
+        width: max-content;
+        min-width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+        padding: 6px;
         border-radius: 18px;
       }
       
       .category-tab {
-        flex: 1;
-        padding: 12px 16px;
-        min-width: 0;
+        flex: 0 0 auto;
+        padding: 14px 24px;
+        min-width: 120px;
+        min-height: 44px; /* Ensure minimum tap target */
         border-radius: 14px;
       }
       
       .tab-icon-wrapper {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
       }
       
       .tab-icon {
@@ -570,12 +585,12 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
       }
       
       .tab-subtitle {
-        font-size: 9px;
+        font-size: 9.5px;
       }
       
       .tab-indicator {
         bottom: 4px;
-        width: 30px;
+        width: 32px;
         height: 3px;
       }
     }
@@ -592,46 +607,69 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
       
       .category-selector-container {
         margin-bottom: 20px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 4px;
       }
       
       .category-tabs {
-        gap: 4px;
-        padding: 4px;
+        width: max-content;
+        min-width: calc(100% - 8px);
+        gap: 6px;
+        padding: 5px;
         border-radius: 16px;
       }
       
       .category-tab {
-        padding: 10px 12px;
-        border-radius: 12px;
+        flex: 0 0 auto;
+        padding: 12px 20px;
+        border-radius: 13px;
+        min-width: 110px;
+        min-height: 44px; /* Ensure minimum tap target */
       }
       
       .tab-content {
-        gap: 6px;
+        gap: 7px;
       }
       
       .tab-icon-wrapper {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
       }
       
       .tab-icon {
-        width: 16px;
-        height: 16px;
+        width: 17px;
+        height: 17px;
       }
       
       .tab-label {
-        font-size: 11px;
+        font-size: 12px;
+        font-weight: 600;
       }
       
       .tab-subtitle {
-        display: none; /* Hide subtitle on very small screens */
+        font-size: 9px;
       }
       
       .tab-indicator {
         bottom: 3px;
-        width: 24px;
-        height: 2px;
+        width: 28px;
+        height: 2.5px;
+      }
+      
+      /* Add scroll hint shadow */
+      .category-selector-container::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 40px;
+        background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.9));
+        pointer-events: none;
+        z-index: 1;
       }
     }
     

@@ -28,7 +28,7 @@ import { SharedDataService } from '../../core/services/shared-data.service';
       </div>
 
       <!-- 🎯 Premium Hero Banner -->
-      <section class="relative isolate pt-8 pb-6 md:pt-12 md:pb-8">
+      <section class="relative isolate pt-20 pb-6 md:pt-12 md:pb-8">
         <div class="max-w-7xl mx-auto px-4 md:px-6">
           <!-- Greeting Header -->
           <div class="mb-6 md:mb-8 animate-fade-in-up">

@@ -116,58 +116,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
           </ng-template>
         </nav>
       </div>
-
-      <nav class="md:hidden" *ngIf="authStore.user().isAuthenticated">
-        <div class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 py-2 shadow-lg">
-          <ul class="mx-auto flex max-w-7xl items-center justify-between px-6 text-[11px] font-medium uppercase tracking-[0.08em] text-gray-500">
-            <li>
-              <a routerLink="/connect" routerLinkActive="text-accent" class="mobile-nav-link" (click)="closeMobileNav()">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 10a4 4 0 1 1 8 0v1h1a3 3 0 0 1 3 3v5H4v-5a3 3 0 0 1 3-3h1v-1Z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 17h.01" />
-                </svg>
-                <span>Connect</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/explore" routerLinkActive="text-accent" class="mobile-nav-link" (click)="closeMobileNav()">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5a2 2 0 0 1 2-2h6.172a2 2 0 0 1 1.414.586l4.828 4.828A2 2 0 0 1 19 9.828V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v6h6" />
-                </svg>
-                <span>Your next move</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/post" routerLinkActive="text-accent" class="mobile-nav-link" (click)="closeMobileNav()">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-                </svg>
-                <span>Post</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/messages" routerLinkActive="text-accent" class="mobile-nav-link relative" (click)="closeMobileNav()">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9.172a2 2 0 0 1-.586 1.414l-3.828 3.828A2 2 0 0 1 15.172 20H5a2 2 0 0 1-2-2V5Z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m7 7 5 4 5-4" />
-                </svg>
-                <span>Messages</span>
-                <span *ngIf="conversations.unreadTotal() > 0" class="absolute right-1 top-0 -translate-y-1/2 rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">{{ conversations.unreadTotal() }}</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/profile" routerLinkActive="text-accent" class="mobile-nav-link" (click)="closeMobileNav()">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 20a8 8 0 1 1 16 0" />
-                </svg>
-                <span>Profile</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
     </header>
   `,
   styles: [`
@@ -177,7 +125,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     }
     .nav-link { @apply text-gray-700 hover:text-gray-900 transition-colors; font-weight:500; }
     .mobile-nav-item { @apply flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium text-gray-600 transition-colors; }
-    .mobile-nav-link { @apply flex flex-col items-center gap-1 text-gray-500 transition-colors hover:text-gray-900; }
   `]
 })
 export class HeaderComponent {

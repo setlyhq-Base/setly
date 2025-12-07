@@ -18,11 +18,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   <header class="app-header sticky top-0 z-50 bg-white/85 backdrop-blur px-4 py-2 md:py-3" [class.header-dark]="useDark">
       <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-8">
         <div class="flex items-center gap-3 flex-1 md:flex-none">
-          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm md:hidden" (click)="toggleMobileNav()" aria-label="Toggle navigation" [attr.aria-expanded]="mobileNavOpen">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h10" />
-            </svg>
-          </button>
           <a routerLink="/" class="flex min-w-0 items-center gap-2 font-semibold text-lg text-gray-900 md:text-xl" (click)="closeMobileNav()">
             <span class="northstar"></span>
             <span class="truncate uppercase tracking-[0.15em]">Setly</span>
@@ -34,18 +29,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         </div>
 
         <div class="flex items-center gap-2 md:gap-6">
-          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm md:hidden" (click)="toggleSearch()" aria-label="Toggle search">
+          <!-- Mobile Profile Icon (top-right) -->
+          <a routerLink="/profile" class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm md:hidden" aria-label="Profile" (click)="closeMobileNav()">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
             </svg>
-          </button>
-
-          <a routerLink="/messages" class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm md:hidden" aria-label="Messages" (click)="closeMobileNav()">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h6" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 4h14a2 2 0 0 1 2 2v10.172a2 2 0 0 1-.586 1.414l-3.828 3.828A2 2 0 0 1 15.172 22H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
-            </svg>
-            <span *ngIf="conversations.unreadTotal() > 0" class="absolute -top-1 -right-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-semibold text-white shadow-sm">{{ conversations.unreadTotal() }}</span>
           </a>
 
           <div class="hidden md:flex items-center gap-6" *ngIf="authStore.user().isAuthenticated; else loggedOutDesktop">
@@ -85,37 +73,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
           <button (click)="goToSignIn()" class="btn-secondary">Sign In</button>
         </nav>
       </ng-template>
-
-      <div class="md:hidden" *ngIf="searchExpanded">
-        <div class="mx-auto mt-3 max-w-7xl">
-          <app-search-bar></app-search-bar>
-        </div>
-      </div>
-
-      <div *ngIf="mobileNavOpen" class="md:hidden">
-        <nav class="fixed inset-x-0 top-[60px] z-40 max-h-[calc(100vh-60px)] overflow-y-auto border-t border-gray-200 bg-white/95 px-4 py-4 shadow-lg">
-          <div class="space-y-1" *ngIf="authStore.user().isAuthenticated; else loggedOutMobile">
-            <ng-container *ngFor="let link of navLinks">
-              <a [routerLink]="link.route" routerLinkActive="bg-gray-100 text-gray-900" class="mobile-nav-item" (click)="closeMobileNav()">{{ link.label }}</a>
-            </ng-container>
-            <a routerLink="/messages" routerLinkActive="bg-gray-100 text-gray-900" class="mobile-nav-item relative" (click)="closeMobileNav()">
-              Messages
-              <span *ngIf="conversations.unreadTotal() > 0" class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-rose-500 px-2 py-0.5 text-xs font-semibold text-white">{{ conversations.unreadTotal() }}</span>
-            </a>
-            <a routerLink="/profile" routerLinkActive="bg-gray-100 text-gray-900" class="mobile-nav-item" (click)="closeMobileNav()">Profile</a>
-            <button (click)="signOut()" class="mobile-nav-item text-left text-red-600">Sign Out</button>
-          </div>
-          <ng-template #loggedOutMobile>
-            <div class="space-y-1">
-              <ng-container *ngFor="let link of navLinks">
-                <a [routerLink]="link.route" routerLinkActive="bg-gray-100 text-gray-900" class="mobile-nav-item" (click)="closeMobileNav()">{{ link.label }}</a>
-              </ng-container>
-              <a routerLink="/messages" routerLinkActive="bg-gray-100 text-gray-900" class="mobile-nav-item" (click)="closeMobileNav()">Messages</a>
-              <button (click)="goToSignIn()" class="mobile-nav-item text-left text-accent">Sign In</button>
-            </div>
-          </ng-template>
-        </nav>
-      </div>
     </header>
   `,
   styles: [`
@@ -124,7 +81,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
     }
     .nav-link { @apply text-gray-700 hover:text-gray-900 transition-colors; font-weight:500; }
-    .mobile-nav-item { @apply flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium text-gray-600 transition-colors; }
   `]
 })
 export class HeaderComponent {

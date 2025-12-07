@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ConversationStoreService } from '../../features/messages/conversation-store.service';
 
 interface NavItem {
   label: string;
@@ -16,7 +17,7 @@ interface NavItem {
   template: `
     <nav class="bottom-nav" aria-label="Mobile navigation">
       <div class="bottom-nav-container">
-        @for (item of navItems(); track item.route) {
+        @for (item of navItemsWithBadge(); track item.route) {
           <a 
             [routerLink]="item.route"
             routerLinkActive="active"
@@ -24,7 +25,7 @@ interface NavItem {
             [attr.aria-label]="item.label">
             <span class="nav-icon" [innerHTML]="item.icon"></span>
             <span class="nav-label">{{ item.label }}</span>
-            @if (item.badge) {
+            @if (item.badge && item.badge > 0) {
               <span class="nav-badge">{{ item.badge }}</span>
             }
           </a>
@@ -61,7 +62,8 @@ interface NavItem {
       height: 60px;
       max-width: 100%;
       margin: 0 auto;
-      padding: 6px 8px;
+      padding: 6px 4px;
+      gap: 2px;
     }
     
     .nav-item {
@@ -70,14 +72,15 @@ interface NavItem {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      padding: 8px 10px;
-      min-width: 56px;
+      gap: 3px;
+      padding: 6px 8px;
+      min-width: 48px;
+      flex: 1;
       text-decoration: none;
       color: #6B7280;
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       -webkit-tap-highlight-color: transparent;
-      border-radius: 14px;
+      border-radius: 12px;
     }
     
     .nav-item:active {
@@ -159,38 +162,55 @@ interface NavItem {
   `]
 })
 export class BottomNavComponent {
+  private conversations = inject(ConversationStoreService);
+  
   navItems = signal<NavItem[]>([
     {
       label: 'Connect',
-      icon: `<svg viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`,
+      icon: `<svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
       route: '/connect'
     },
     {
       label: 'People',
-      icon: `<svg viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`,
+      icon: `<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
       route: '/people'
     },
     {
       label: 'Explore',
-      icon: `<svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`,
+      icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`,
       route: '/explore'
     },
     {
       label: 'Post',
-      icon: `<svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>`,
+      icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
       route: '/post'
     },
     {
       label: 'Browse',
-      icon: `<svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
+      icon: `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
       route: '/browse'
     },
     {
       label: 'Messages',
-      icon: `<svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>`,
+      icon: `<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
       route: '/messages'
+    },
+    {
+      label: 'Profile',
+      icon: `<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+      route: '/profile'
     }
   ]);
+
+  // Computed signal that adds unread badge to Messages
+  navItemsWithBadge = computed(() => {
+    return this.navItems().map(item => {
+      if (item.route === '/messages') {
+        return { ...item, badge: this.conversations.unreadTotal() };
+      }
+      return item;
+    });
+  });
 
   constructor(private router: Router) {}
 }

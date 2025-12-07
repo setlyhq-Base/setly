@@ -27,35 +27,68 @@ const minArrayLength = (min: number): ValidatorFn => {
   imports: [CommonModule, ReactiveFormsModule, RoomsSearchFormComponent, RoomsPostFormComponent, RidesSearchFormComponent, RidesPostFormComponent, MarketSearchFormComponent, MarketPostFormComponent],
   template: `
     <div class="card-shell" [ngClass]="'tab-' + tab">
+      <!-- 🎨 Glassmorphic overlay for premium depth -->
+      <div class="card-overlay"></div>
+      
       <div class="card-inner">
+        <!-- ✨ Premium Mode Toggle with Gradient -->
         <div class="mode-toggle">
-          <div class="toggle-pill">
-            <button type="button" class="toggle-btn" [class.active]="mode() === 'search'" (click)="setMode('search')">Search</button>
-            <button type="button" class="toggle-btn" [class.active]="mode() === 'post'" (click)="setMode('post')">Post</button>
+          <div class="toggle-container">
+            <button 
+              type="button" 
+              class="toggle-btn" 
+              [class.active]="mode() === 'search'" 
+              (click)="setMode('search')">
+              <svg class="toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <span>Search</span>
+            </button>
+            <button 
+              type="button" 
+              class="toggle-btn" 
+              [class.active]="mode() === 'post'" 
+              (click)="setMode('post')">
+              <svg class="toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <span>Post</span>
+            </button>
+            <div class="toggle-slider" [class.post-active]="mode() === 'post'"></div>
           </div>
         </div>
-        <div class="form-body fade-switch" [attr.data-mode]="mode()">
-        <ng-container *ngIf="tab === 'rooms' && mode() === 'search'">
-          <app-rooms-search-form [form]="roomsSearchForm" />
-        </ng-container>
-        <ng-container *ngIf="tab === 'rooms' && mode() === 'post'">
-          <app-rooms-post-form [form]="roomsPostForm" />
-        </ng-container>
-        <ng-container *ngIf="tab === 'rides' && mode() === 'search'">
-          <app-rides-search-form [form]="ridesSearchForm" />
-        </ng-container>
-        <ng-container *ngIf="tab === 'rides' && mode() === 'post'">
-          <app-rides-post-form [form]="ridesPostForm" />
-        </ng-container>
-        <ng-container *ngIf="tab === 'market' && mode() === 'search'">
-          <app-market-search-form [form]="marketSearchForm" />
-        </ng-container>
-        <ng-container *ngIf="tab === 'market' && mode() === 'post'">
-          <app-market-post-form [form]="marketPostForm" />
-        </ng-container>
+
+        <!-- 📋 Form Body with Smooth Transitions -->
+        <div class="form-body" [attr.data-mode]="mode()">
+          <ng-container *ngIf="tab === 'rooms' && mode() === 'search'">
+            <app-rooms-search-form [form]="roomsSearchForm" />
+          </ng-container>
+          <ng-container *ngIf="tab === 'rooms' && mode() === 'post'">
+            <app-rooms-post-form [form]="roomsPostForm" />
+          </ng-container>
+          <ng-container *ngIf="tab === 'rides' && mode() === 'search'">
+            <app-rides-search-form [form]="ridesSearchForm" />
+          </ng-container>
+          <ng-container *ngIf="tab === 'rides' && mode() === 'post'">
+            <app-rides-post-form [form]="ridesPostForm" />
+          </ng-container>
+          <ng-container *ngIf="tab === 'market' && mode() === 'search'">
+            <app-market-search-form [form]="marketSearchForm" />
+          </ng-container>
+          <ng-container *ngIf="tab === 'market' && mode() === 'post'">
+            <app-market-post-form [form]="marketPostForm" />
+          </ng-container>
         </div>
+
+        <!-- 📤 Upload Progress Section -->
         <div *ngIf="uploadProgress().length > 0" class="upload-progress-section">
-          <h4 class="upload-progress-title">Upload Progress</h4>
+          <h4 class="upload-progress-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Upload Progress
+          </h4>
           <div class="upload-progress-list">
             <div *ngFor="let upload of uploadProgress()" class="upload-progress-item">
               <div class="upload-file-info">
@@ -68,221 +101,604 @@ const minArrayLength = (min: number): ValidatorFn => {
             </div>
           </div>
         </div>
+
+        <!-- 🚀 Premium CTA Button -->
         <div class="cta-row">
           <button class="form-main-btn" [disabled]="loading()" (click)="submit()">
-            <span *ngIf="!loading()">{{ mainButtonLabel() }}</span>
-            <span *ngIf="loading()" class="loading-dots">{{ mainButtonLabel() }}</span>
+            <span class="btn-content" *ngIf="!loading()">
+              <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              {{ mainButtonLabel() }}
+            </span>
+            <span class="btn-content loading" *ngIf="loading()">
+              <svg class="spinner" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+                <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+              {{ mainButtonLabel() }}
+            </span>
           </button>
         </div>
-        <p *ngIf="error()" class="error-text">{{ error() }}</p>
+
+        <!-- ⚠️ Error Message -->
+        <p *ngIf="error()" class="error-text">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ error() }}
+        </p>
       </div>
     </div>
   `,
   styles: [`
+    /* 🎨 Premium Card Shell with Enhanced Glassmorphism */
     .card-shell {
       width: 100%;
       max-width: 960px;
       margin: 0 auto;
       position: relative;
-      background: #FFFFFF;
-      border-radius: 28px;
-      border: 1px solid #ECECEC;
-      box-shadow: 0 4px 20px -8px rgba(10, 26, 63, 0.1);
-      padding: clamp(26px, 3vw, 32px);
+      background: 
+        linear-gradient(135deg, 
+          rgba(255, 255, 255, 0.98) 0%, 
+          rgba(248, 250, 255, 0.95) 100%
+        );
+      border-radius: 36px;
+      border: 1px solid rgba(226, 232, 240, 0.6);
+      box-shadow: 
+        0 24px 70px -15px rgba(62, 143, 255, 0.18),
+        0 12px 32px -12px rgba(10, 26, 63, 0.08),
+        0 4px 12px rgba(0, 0, 0, 0.03),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+      padding: clamp(32px, 4.5vw, 48px);
       overflow: hidden;
-      transition: box-shadow 0.3s ease;
-      /* Background image defaults - will be overridden per tab */
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: cardSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    
+    @keyframes cardSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
     
     .card-shell:hover {
-      box-shadow: 0 8px 32px -8px rgba(10, 26, 63, 0.15);
+      box-shadow: 
+        0 28px 80px -15px rgba(62, 143, 255, 0.22),
+        0 14px 36px -12px rgba(10, 26, 63, 0.1),
+        0 6px 16px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      transform: translateY(-3px);
+      border-color: rgba(59, 130, 246, 0.2);
     }
     
-    /* Dynamic background images per tab - restore original images */
-    .card-shell.tab-rooms {
-      background-image: url('/assets/images/backgrounds/bg-rooms.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
-    .card-shell.tab-rides {
-      background-image: url('/assets/images/backgrounds/bg-rides.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
-    .card-shell.tab-market {
-      background-image: url('/assets/images/backgrounds/bg-marketplace.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
-    
-    /* Overlay to ensure form contents remain visible on images */
-    .card-shell::before {
-      content: '';
+    /* 🎨 Enhanced Glassmorphic Overlay */
+    .card-overlay {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(255, 255, 255, 0.75); /* 75% opacity for readability */
-      backdrop-filter: blur(3px); /* Subtle blur for depth */
-      border-radius: 28px;
+      background: 
+        radial-gradient(circle at top right, rgba(99, 102, 241, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at center, rgba(139, 92, 246, 0.02) 0%, transparent 70%);
+      backdrop-filter: blur(2px);
+      border-radius: 36px;
       pointer-events: none;
-      z-index: 1;
+      z-index: 0;
+      animation: overlayFloat 8s ease-in-out infinite;
     }
     
+    @keyframes overlayFloat {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 0.8; }
+    }
+    
+    /* 📦 Card Inner Container */
     .card-inner {
       width: min(100%, 760px);
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 32px;
       position: relative;
       z-index: 2;
     }
-    .mode-toggle { display: flex; justify-content: center; }
-    .toggle-pill {
-      display: inline-flex;
-      padding: 4px;
-      border-radius: 999px;
-      background: rgba(10,26,63,0.04);
-      border: 1px solid #ECECEC;
-      gap: 6px;
-    }
-    .toggle-btn {
-      min-width: 110px;
-      padding: 9px 18px;
-      border-radius: 999px;
-      border: 1px solid #3E8FFF;
-      background: #FFFFFF;
-      color: #3E8FFF;
-      font-weight: 600;
-      font-size: 0.95rem;
-      transition: background .2s, color .2s, box-shadow .2s;
-      cursor: pointer;
-    }
-    .toggle-btn.active {
-      background: #3E8FFF;
-      color: #FFFFFF;
-      box-shadow: 0 4px 12px -8px rgba(62, 143, 255, 0.4);
-      border: 1px solid #3E8FFF;
-    }
-    .toggle-btn:hover:not(.active) {
-      background: rgba(62, 143, 255, 0.05);
-    }
-    .toggle-btn:focus-visible {
-      outline: 2px solid rgba(62, 143, 255, 0.4);
-      outline-offset: 2px;
-    }
-    .form-body { display: flex; flex-direction: column; gap: 24px; }
-    .fade-switch { transition: opacity .22s; }
-  .cta-row { display:flex; justify-content:center; margin-top: 12px; }
-    .form-main-btn {
-      border-radius: 999px;
-      background: #3E8FFF;
-      color: #fff;
-      border: none;
-      box-shadow: 0 8px 24px -12px rgba(62, 143, 255, 0.4);
-      font-weight: 700;
-      font-size: 1rem;
-      letter-spacing: 0.01em;
-      padding: 14px 36px;
-      min-width: 220px;
-      transition: transform .2s, box-shadow .2s, background .2s;
-    }
-    .form-main-btn:hover { 
-      transform: translateY(-1px); 
-      box-shadow: 0 12px 32px -14px rgba(62, 143, 255, 0.5);
-      background: #5BA0FF;
-    }
-    .form-main-btn:active { transform: translateY(0); }
-    .form-main-btn[disabled] { opacity:0.6; cursor:not-allowed; transform:none; box-shadow:0 8px 24px -16px rgba(62, 143, 255, 0.3); }
-    .error-text { text-align:center; font-size:0.85rem; color:#e11d48; }
-    @media (max-width: 900px) {
-      .card-shell { padding: 24px; border-radius: 24px; }
-      .card-inner { gap: 22px; }
-      .toggle-btn { min-width: 100px; font-size: 0.9rem; }
-    }
-    @media (max-width: 640px) {
-      .card-shell { padding: 22px 18px; border-radius: 22px; }
-      .card-inner { gap: 20px; }
-      .form-body { gap: 20px; }
-      .form-main-btn { width: 100%; min-width: 0; }
+    
+    /* ✨ Premium Mode Toggle with Animated Slider */
+    .mode-toggle { 
+      display: flex; 
+      justify-content: center;
+      margin-bottom: 4px;
     }
     
-    /* Upload Progress Styles */
-    .upload-progress-section {
-      margin: 16px 0;
-      padding: 16px;
-      background: rgba(249, 250, 251, 0.8);
-      border-radius: 12px;
-      border: 1px solid rgba(226, 232, 240, 0.6);
+    .toggle-container {
+      position: relative;
+      display: inline-flex;
+      padding: 7px;
+      border-radius: 18px;
+      background: rgba(248, 250, 255, 0.9);
+      border: 1px solid rgba(226, 232, 240, 0.5);
+      box-shadow: 
+        0 6px 16px -6px rgba(62, 143, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+      gap: 8px;
     }
-    .upload-progress-title {
-      margin: 0 0 12px 0;
-      font-size: 14px;
+    
+    .toggle-slider {
+      position: absolute;
+      top: 7px;
+      left: 7px;
+      width: calc(50% - 11px);
+      height: calc(100% - 14px);
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      border-radius: 14px;
+      box-shadow: 
+        0 6px 16px -4px rgba(62, 143, 255, 0.5),
+        0 3px 8px rgba(99, 102, 241, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+    }
+    
+    .toggle-slider.post-active {
+      left: calc(50% + 4px);
+    }
+    
+    .toggle-btn {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 150px;
+      padding: 14px 28px;
+      border-radius: 14px;
+      border: none;
+      background: transparent;
+      color: #64748b;
       font-weight: 600;
-      color: #374151;
+      font-size: 15px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      justify-content: center;
     }
+    
+    .toggle-btn:hover:not(.active) {
+      color: #475569;
+      background: rgba(59, 130, 246, 0.04);
+    }
+    
+    .toggle-btn.active {
+      color: #ffffff;
+    }
+    
+    .toggle-btn:focus-visible {
+      outline: 3px solid rgba(62, 143, 255, 0.4);
+      outline-offset: 4px;
+    }
+    
+    .toggle-icon {
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .toggle-btn:hover .toggle-icon {
+      transform: scale(1.1) rotate(-5deg);
+    }
+    
+    .toggle-btn.active .toggle-icon {
+      transform: scale(1.15);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    }
+    
+    /* 📋 Form Body with Enhanced Transitions */
+    .form-body { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 28px;
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* 🚀 Ultra-Premium CTA Button */
+    .cta-row { 
+      display: flex; 
+      justify-content: center; 
+      margin-top: 20px;
+    }
+    
+    .form-main-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      color: #ffffff;
+      border: none;
+      box-shadow: 
+        0 16px 36px -10px rgba(62, 143, 255, 0.5),
+        0 6px 16px rgba(99, 102, 241, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: 0.02em;
+      padding: 18px 44px;
+      min-width: 260px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      overflow: hidden;
+    }
+    
+    .form-main-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+      transition: left 0.6s ease;
+    }
+    
+    .form-main-btn:hover::before {
+      left: 100%;
+    }
+    
+    .form-main-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+    
+    .form-main-btn:active::after {
+      width: 300px;
+      height: 300px;
+      opacity: 0;
+    }
+    
+    .form-main-btn:hover { 
+      transform: translateY(-3px) scale(1.02); 
+      box-shadow: 
+        0 20px 44px -10px rgba(62, 143, 255, 0.6),
+        0 8px 20px rgba(99, 102, 241, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    
+    .form-main-btn:active { 
+      transform: translateY(-1px) scale(0.99); 
+    }
+    
+    .form-main-btn[disabled] { 
+      opacity: 0.65; 
+      cursor: not-allowed; 
+      transform: none; 
+      box-shadow: 
+        0 10px 24px -10px rgba(62, 143, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    
+    .form-main-btn[disabled]:hover {
+      transform: none;
+    }
+    
+    .btn-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .btn-icon {
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+    
+    .form-main-btn:hover .btn-icon {
+      transform: translateX(6px) scale(1.1);
+      animation: iconBounce 0.6s ease-in-out;
+    }
+    
+    @keyframes iconBounce {
+      0%, 100% { transform: translateX(6px) scale(1.1); }
+      50% { transform: translateX(10px) scale(1.15); }
+    }
+    
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* ⚠️ Error Message */
+    .error-text { 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center; 
+      font-size: 14px; 
+      font-weight: 500;
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 12px;
+      padding: 12px 20px;
+      animation: shakeError 0.4s ease-out;
+    }
+    
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+    
+    /* 📤 Premium Upload Progress Section */
+    .upload-progress-section {
+      margin: 20px 0;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(249, 250, 251, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+      border-radius: 16px;
+      border: 1px solid rgba(226, 232, 240, 0.7);
+      box-shadow: 0 4px 12px -4px rgba(62, 143, 255, 0.08);
+    }
+    
+    .upload-progress-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 16px 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    
+    .upload-progress-title svg {
+      color: #3b82f6;
+    }
+    
     .upload-progress-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
     }
+    
     .upload-progress-item {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      border: 1px solid rgba(226, 232, 240, 0.5);
     }
+    
     .upload-file-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
     }
+    
     .upload-filename {
       font-size: 13px;
-      color: #6b7280;
-      font-weight: 500;
-    }
-    .upload-status {
-      font-size: 12px;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-weight: 500;
-      text-transform: uppercase;
-    }
-    .status-pending {
-      background: rgba(156, 163, 175, 0.2);
-      color: #6b7280;
-    }
-    .status-uploading {
-      background: rgba(59, 130, 246, 0.2);
-      color: #2563eb;
-    }
-    .status-success {
-      background: rgba(34, 197, 94, 0.2);
-      color: #16a34a;
-    }
-    .status-failed {
-      background: rgba(239, 68, 68, 0.2);
-      color: #dc2626;
-    }
-    .upload-progress-bar {
-      height: 4px;
-      background: rgba(226, 232, 240, 0.8);
-      border-radius: 2px;
+      color: #475569;
+      font-weight: 600;
+      flex: 1;
       overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
+    
+    .upload-status {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+    
+    .status-pending {
+      background: rgba(156, 163, 175, 0.15);
+      color: #6b7280;
+      border: 1px solid rgba(156, 163, 175, 0.2);
+    }
+    
+    .status-uploading {
+      background: rgba(59, 130, 246, 0.15);
+      color: #2563eb;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
+    .status-success {
+      background: rgba(34, 197, 94, 0.15);
+      color: #16a34a;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+    
+    .status-failed {
+      background: rgba(239, 68, 68, 0.15);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .upload-progress-bar {
+      height: 6px;
+      background: rgba(226, 232, 240, 0.5);
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-      border-radius: 2px;
+      background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+      border-radius: 999px;
       transition: width 0.3s ease;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    }
+    
+    /* 📱 Mobile Responsive Design */
+    @media (max-width: 900px) {
+      .card-shell { 
+        padding: 28px; 
+        border-radius: 28px; 
+      }
+      
+      .card-inner { 
+        gap: 24px; 
+      }
+      
+      .toggle-btn { 
+        min-width: 120px; 
+        font-size: 14px; 
+      }
+      
+      .form-main-btn {
+        padding: 15px 36px;
+        min-width: 220px;
+        font-size: 15px;
+      }
+    }
+    
+    @media (max-width: 640px) {
+      .card-shell { 
+        padding: 24px 20px; 
+        border-radius: 24px;
+        box-shadow: 
+          0 16px 50px -12px rgba(62, 143, 255, 0.12),
+          0 6px 20px -6px rgba(10, 26, 63, 0.06);
+      }
+      
+      .card-inner { 
+        gap: 22px; 
+      }
+      
+      .form-body { 
+        gap: 20px; 
+      }
+      
+      .toggle-container {
+        width: 100%;
+        max-width: 100%;
+      }
+      
+      .toggle-btn {
+        flex: 1;
+        min-width: 0;
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+      
+      .toggle-icon {
+        width: 16px;
+        height: 16px;
+      }
+      
+      .form-main-btn { 
+        width: 100%; 
+        min-width: 0;
+        padding: 16px 32px;
+      }
+      
+      .btn-icon {
+        width: 16px;
+        height: 16px;
+      }
+      
+      .upload-progress-section {
+        padding: 16px;
+        margin: 16px 0;
+      }
+      
+      .upload-progress-item {
+        padding: 10px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .card-shell {
+        padding: 20px 16px;
+        border-radius: 20px;
+      }
+      
+      .toggle-btn {
+        padding: 10px 12px;
+        font-size: 13px;
+        gap: 6px;
+      }
+      
+      .toggle-btn span {
+        display: none;
+      }
+      
+      .toggle-icon {
+        display: block;
+        margin: 0 auto;
+      }
+      
+      .toggle-slider {
+        width: calc(50% - 9px);
+      }
+    }
+    
+    /* ✨ Reduced Motion Support */
+    @media (prefers-reduced-motion: reduce) {
+      .card-shell,
+      .form-main-btn,
+      .toggle-btn,
+      .toggle-slider,
+      .progress-fill,
+      .btn-icon,
+      .spinner {
+        transition: none;
+        animation: none;
+      }
+      
+      .form-main-btn::before {
+        display: none;
+      }
     }
   `]
 })

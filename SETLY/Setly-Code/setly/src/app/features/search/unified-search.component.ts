@@ -8,101 +8,659 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
   imports: [CommonModule, ExploreFormCardComponent],
   template: `
     <section class="search-wrap">
-      <!-- Tabs -->
-      <nav class="tabs" role="tablist" aria-label="Search modes">
-        <button role="tab" [attr.aria-selected]="active() === 'rooms'" class="tab" [class.active]="active() === 'rooms'" (click)="setTab('rooms')">
-          <!-- Home icon -->
-          <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M3 10l9-7 9 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 21v-6h4v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span>Rooms</span>
-        </button>
-        <button role="tab" [attr.aria-selected]="active() === 'rides'" class="tab" [class.active]="active() === 'rides'" (click)="setTab('rides')">
-          <!-- Car icon - clear side view -->
-          <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 17h14M5 17c-1.1 0-2-.9-2-2v-4c0-.55.45-1 1-1l2.5-4c.3-.48.84-.8 1.44-.8h7.12c.6 0 1.14.32 1.44.8L19 10c.55 0 1 .45 1 1v4c0 1.1-.9 2-2 2M5 17v1M19 17v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="7.5" cy="17" r="1.5" fill="currentColor"/>
-            <circle cx="16.5" cy="17" r="1.5" fill="currentColor"/>
-          </svg>
-          <span>Rides</span>
-        </button>
-        <button role="tab" [attr.aria-selected]="active() === 'market'" class="tab" [class.active]="active() === 'market'" (click)="setTab('market')">
-          <!-- Box icon -->
-          <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M12 13V3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M3 8l9 5 9-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-          </svg>
-          <span>Marketplace</span>
-        </button>
-      </nav>
+      <!-- � Floating Accent Orbs -->
+      <div class="accent-orbs" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+      </div>
 
-      <app-explore-form-card
-        [tab]="active()"
-        (action)="handleAction($event)"></app-explore-form-card>
+      <!-- �🎨 Premium Category Selector with Enhanced Glassmorphism -->
+      <div class="category-selector-container">
+        <div class="category-glow"></div>
+        <nav class="category-tabs" role="tablist" aria-label="Search categories">
+          <button 
+            role="tab" 
+            [attr.aria-selected]="active() === 'rooms'" 
+            class="category-tab" 
+            [class.active]="active() === 'rooms'" 
+            (click)="setTab('rooms')"
+            type="button">
+            <div class="tab-ripple"></div>
+            <div class="tab-content">
+              <div class="tab-icon-wrapper">
+                <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 10l9-7 9 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M10 21v-6h4v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="tab-label">Rooms</span>
+              <span class="tab-subtitle">Find housing</span>
+            </div>
+            <div class="tab-indicator"></div>
+          </button>
+          
+          <button 
+            role="tab" 
+            [attr.aria-selected]="active() === 'rides'" 
+            class="category-tab" 
+            [class.active]="active() === 'rides'" 
+            (click)="setTab('rides')"
+            type="button">
+            <div class="tab-ripple"></div>
+            <div class="tab-content">
+              <div class="tab-icon-wrapper">
+                <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M5 17h14M5 17c-1.1 0-2-.9-2-2v-4c0-.55.45-1 1-1l2.5-4c.3-.48.84-.8 1.44-.8h7.12c.6 0 1.14.32 1.44.8L19 10c.55 0 1 .45 1 1v4c0 1.1-.9 2-2 2M5 17v1M19 17v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="7.5" cy="17" r="1.5" fill="currentColor"/>
+                  <circle cx="16.5" cy="17" r="1.5" fill="currentColor"/>
+                </svg>
+              </div>
+              <span class="tab-label">Rides</span>
+              <span class="tab-subtitle">Share trips</span>
+            </div>
+            <div class="tab-indicator"></div>
+          </button>
+          
+          <button 
+            role="tab" 
+            [attr.aria-selected]="active() === 'market'" 
+            class="category-tab" 
+            [class.active]="active() === 'market'" 
+            (click)="setTab('market')"
+            type="button">
+            <div class="tab-ripple"></div>
+            <div class="tab-content">
+              <div class="tab-icon-wrapper">
+                <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M12 13V3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M3 8l9 5 9-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="tab-label">Marketplace</span>
+              <span class="tab-subtitle">Buy & sell</span>
+            </div>
+            <div class="tab-indicator"></div>
+          </button>
+        </nav>
+      </div>
+
+      <!-- 🎯 Form Card with Transition -->
+      <div class="form-card-wrapper">
+        <app-explore-form-card
+          [tab]="active()"
+          (action)="handleAction($event)"></app-explore-form-card>
+      </div>
     </section>
   `,
   styles: [
     `
-  .search-wrap { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 24px; }
-    .tabs { display:flex; gap:12px; margin: 0 auto 14px; justify-content: center; align-items:center; position:relative; }
-    .tab { 
-      display:inline-flex; 
-      align-items:center; 
-      gap:8px; 
-      padding: 8px 16px; 
-      border-radius: 9999px; 
-      background: #ffffff; 
-      backdrop-filter: blur(6px); 
-      color: #6F7785; 
-      font-weight:600; 
-      font-size:13px; 
-      border:1px solid #ECECEC; 
-      box-shadow:0 2px 8px rgba(10,26,63,0.04); 
-      transition: all 0.15s ease, color 0.12s ease, border-color 0.12s ease; 
+    /* 🎨 Premium Search Wrapper */
+    .search-wrap { 
+      width: 100%; 
+      max-width: 1040px; 
+      margin: 0 auto; 
+      padding: 0 24px;
+      position: relative;
+    }
+    
+    /* 🌟 Floating Accent Orbs for Depth */
+    .accent-orbs {
+      position: absolute;
+      top: -100px;
+      left: 0;
+      right: 0;
+      height: 300px;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.15;
+      animation: floatOrb 20s ease-in-out infinite;
+    }
+    
+    .orb-1 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+      top: 0;
+      left: 10%;
+      animation-delay: 0s;
+    }
+    
+    .orb-2 {
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, #6366f1 0%, transparent 70%);
+      top: 50px;
+      right: 15%;
+      animation-delay: 5s;
+    }
+    
+    .orb-3 {
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+      top: 100px;
+      left: 50%;
+      animation-delay: 10s;
+    }
+    
+    @keyframes floatOrb {
+      0%, 100% { 
+        transform: translate(0, 0) scale(1); 
+      }
+      25% { 
+        transform: translate(20px, -20px) scale(1.1); 
+      }
+      50% { 
+        transform: translate(-15px, -10px) scale(0.9); 
+      }
+      75% { 
+        transform: translate(10px, -25px) scale(1.05); 
+      }
+    }
+    
+    /* 🌟 Category Selector Container with Premium Glow */
+    .category-selector-container {
+      margin-bottom: 36px;
+      display: flex;
+      justify-content: center;
+      animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      z-index: 1;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* ✨ Glow Effect Behind Tabs */
+    .category-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120%;
+      height: 150%;
+      background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
+      filter: blur(40px);
+      pointer-events: none;
+      opacity: 0;
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulseGlow {
+      0%, 100% { 
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      50% { 
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1.1);
+      }
+    }
+    
+    /* 🎯 Premium Tab Navigation */
+    .category-tabs {
+      display: inline-flex;
+      gap: 12px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-radius: 24px;
+      border: 1px solid rgba(226, 232, 240, 0.6);
+      box-shadow: 
+        0 12px 40px -12px rgba(62, 143, 255, 0.15),
+        0 4px 12px rgba(10, 26, 63, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+      position: relative;
+    }
+    
+    /* ✨ Individual Category Tab */
+    .category-tab {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 32px;
+      border-radius: 18px;
+      background: transparent;
+      border: none;
       cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      min-width: 140px;
     }
-    .tab:hover { 
-      transform: translateY(-2px); 
-      background: #ffffff; 
-      color: #0A1A3F; 
-      border-color: #3E8FFF;
-      box-shadow:0 4px 12px rgba(62,143,255,0.12);
+    
+    /* 💫 Ripple Effect on Click */
+    .tab-ripple {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.3);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
     }
-    .tab.active { 
-      background: #ffffff; 
-      color: #0A1A3F; 
-      border: 2px solid #3E8FFF;
-      box-shadow:0 4px 16px rgba(62,143,255,0.16); 
-      font-weight: 700;
+    
+    .category-tab:active .tab-ripple {
+      animation: ripple 0.6s ease-out;
     }
-    .tab-icon { 
-      color: #6F7785; 
-      transition: color 0.12s ease, opacity 0.12s ease;
+    
+    @keyframes ripple {
+      to {
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+      }
+    }
+    
+    .category-tab:hover {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.03) 100%);
+      transform: translateY(-2px);
+    }
+    
+    .category-tab.active {
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      box-shadow: 
+        0 12px 24px -8px rgba(62, 143, 255, 0.5),
+        0 6px 12px rgba(99, 102, 241, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    .category-tab:active {
+      transform: scale(0.97);
+    }
+    
+    .category-tab:focus-visible {
+      outline: 3px solid rgba(62, 143, 255, 0.4);
+      outline-offset: 4px;
+    }
+    
+    /* 📦 Tab Content Wrapper */
+    .tab-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* 🎨 Icon Wrapper with Premium Styling */
+    .tab-icon-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .category-tab:hover .tab-icon-wrapper {
+      background: rgba(59, 130, 246, 0.15);
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.3);
+    }
+    
+    .category-tab.active .tab-icon-wrapper {
+      background: rgba(255, 255, 255, 0.25);
+      box-shadow: 
+        0 8px 16px -4px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    /* 🔷 Tab Icon Styling */
+    .tab-icon {
+      color: #64748b;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       flex-shrink: 0;
     }
-    .tab:hover .tab-icon {
-      color: #0A1A3F;
+    
+    .category-tab:hover .tab-icon {
+      color: #3b82f6;
+      transform: scale(1.1) rotate(5deg);
     }
-    .tab.active .tab-icon { 
-      color: #3E8FFF;
+    
+    .category-tab.active .tab-icon {
+      color: #ffffff;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+      animation: iconPop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .tabs::after { 
-      content:''; 
-      position:absolute; 
-      left:50%; 
-      transform:translateX(-50%); 
-      bottom:-8px; 
-      height:2px; 
-      width:120px; 
-      background: linear-gradient(90deg, rgba(62,143,255,0.3), rgba(62,143,255,0.1)); 
-      border-radius:9999px; 
+    
+    @keyframes iconPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
     }
+    
+    /* 📝 Tab Label */
+    .tab-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: #475569;
+      letter-spacing: 0.01em;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    
+    .category-tab:hover .tab-label {
+      color: #1e293b;
+    }
+    
+    .category-tab.active .tab-label {
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* 🏷️ Tab Subtitle */
+    .tab-subtitle {
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      transition: all 0.3s ease;
+      opacity: 0.8;
+    }
+    
+    .category-tab:hover .tab-subtitle {
+      color: #64748b;
+      opacity: 1;
+    }
+    
+    .category-tab.active .tab-subtitle {
+      color: rgba(255, 255, 255, 0.85);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* 💫 Active Tab Indicator */
+    .tab-indicator {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%) scaleX(0);
+      width: 40px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .category-tab.active .tab-indicator {
+      transform: translateX(-50%) scaleX(1);
+      animation: indicatorPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes indicatorPulse {
+      0%, 100% { 
+        opacity: 0.8;
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+      }
+      50% { 
+        opacity: 1;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+      }
+    }
+    
+    /* 🎯 Form Card Wrapper with Transition */
+    .form-card-wrapper {
+      position: relative;
+      z-index: 1;
+      animation: cardFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+    }
+    
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* 📱 Tablet Responsive (768px - 1024px) */
+    @media (max-width: 1024px) {
+      .search-wrap {
+        padding: 0 20px;
+      }
+      
+      .category-tabs {
+        gap: 10px;
+        padding: 7px;
+      }
+      
+      .category-tab {
+        padding: 16px 28px;
+        min-width: 130px;
+      }
+      
+      .tab-icon-wrapper {
+        width: 44px;
+        height: 44px;
+      }
+    }
+    
+    /* 📱 Mobile Landscape & Small Tablets (640px - 768px) */
     @media (max-width: 768px) {
-      .tabs { gap:8px; }
-      .tab { padding:8px 12px; }
+      .search-wrap {
+        padding: 0 16px;
+      }
+      
+      .accent-orbs {
+        top: -80px;
+        height: 250px;
+      }
+      
+      .orb {
+        filter: blur(50px);
+      }
+      
+      .orb-1 {
+        width: 250px;
+        height: 250px;
+      }
+      
+      .orb-2 {
+        width: 200px;
+        height: 200px;
+      }
+      
+      .orb-3 {
+        width: 150px;
+        height: 150px;
+      }
+      
+      .category-selector-container {
+        margin-bottom: 28px;
+      }
+      
+      .category-tabs {
+        gap: 8px;
+        padding: 6px;
+        border-radius: 20px;
+      }
+      
+      .category-tab {
+        padding: 14px 24px;
+        min-width: 110px;
+        border-radius: 16px;
+      }
+      
+      .tab-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+      }
+      
+      .tab-label {
+        font-size: 14px;
+      }
+      
+      .tab-subtitle {
+        font-size: 10px;
+      }
+    }
+    
+    /* 📱 Mobile Portrait (480px - 640px) */
+    @media (max-width: 640px) {
+      .category-selector-container {
+        margin-bottom: 24px;
+      }
+      
+      .category-tabs {
+        width: 100%;
+        justify-content: space-between;
+        gap: 6px;
+        padding: 5px;
+        border-radius: 18px;
+      }
+      
+      .category-tab {
+        flex: 1;
+        padding: 12px 16px;
+        min-width: 0;
+        border-radius: 14px;
+      }
+      
+      .tab-icon-wrapper {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+      }
+      
+      .tab-icon {
+        width: 18px;
+        height: 18px;
+      }
+      
+      .tab-label {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      
+      .tab-subtitle {
+        font-size: 9px;
+      }
+      
+      .tab-indicator {
+        bottom: 4px;
+        width: 30px;
+        height: 3px;
+      }
+    }
+    
+    /* 📱 Small Mobile (< 480px) */
+    @media (max-width: 480px) {
+      .search-wrap {
+        padding: 0 12px;
+      }
+      
+      .accent-orbs {
+        display: none; /* Hide orbs on very small screens for performance */
+      }
+      
+      .category-selector-container {
+        margin-bottom: 20px;
+      }
+      
+      .category-tabs {
+        gap: 4px;
+        padding: 4px;
+        border-radius: 16px;
+      }
+      
+      .category-tab {
+        padding: 10px 12px;
+        border-radius: 12px;
+      }
+      
+      .tab-content {
+        gap: 6px;
+      }
+      
+      .tab-icon-wrapper {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+      }
+      
+      .tab-icon {
+        width: 16px;
+        height: 16px;
+      }
+      
+      .tab-label {
+        font-size: 11px;
+      }
+      
+      .tab-subtitle {
+        display: none; /* Hide subtitle on very small screens */
+      }
+      
+      .tab-indicator {
+        bottom: 3px;
+        width: 24px;
+        height: 2px;
+      }
+    }
+    
+    /* ✨ Reduced Motion Support */
+    @media (prefers-reduced-motion: reduce) {
+      .category-tab,
+      .tab-icon,
+      .tab-label,
+      .tab-subtitle,
+      .tab-indicator,
+      .tab-icon-wrapper,
+      .tab-ripple {
+        transition: none;
+        animation: none;
+      }
+      
+      .category-selector-container,
+      .form-card-wrapper,
+      .accent-orbs {
+        animation: none;
+      }
+      
+      .orb {
+        animation: none;
+      }
+      
+      .category-glow {
+        animation: none;
+      }
     }
     `
     ]

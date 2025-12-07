@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Midnight Blue Background with gradient -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A1A3F;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0F5FFF;stop-opacity:0.3" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  
+  <!-- Large Gold Star (North Star) -->
+  <path d="M256 100L279.888 185.112L365 209L279.888 232.888L256 318L232.112 232.888L147 209L232.112 185.112L256 100Z" fill="#F5C75D" stroke="#F5C75D" stroke-width="4" stroke-linejoin="round"/>
+  
+  <!-- Stylized S lettermark -->
+  <path d="M256 240C224 240 198 266 198 298C198 330 224 356 256 356C280 356 300 342 312 322C324 302 324 278 312 258C300 238 280 224 256 224C232 224 212 244 212 268C212 292 232 312 256 312" stroke="white" stroke-width="14" stroke-linecap="round" fill="none"/>
+  
+  <!-- Community connection pattern -->
+  <circle cx="180" cy="400" r="10" fill="#F5C75D" opacity="0.7"/>
+  <circle cx="332" cy="400" r="10" fill="#F5C75D" opacity="0.7"/>
+  <circle cx="256" cy="430" r="10" fill="#F5C75D" opacity="0.7"/>
+  <circle cx="140" cy="370" r="8" fill="#F5C75D" opacity="0.5"/>
+  <circle cx="372" cy="370" r="8" fill="#F5C75D" opacity="0.5"/>
+  
+  <!-- Connection lines -->
+  <line x1="180" y1="400" x2="256" y2="430" stroke="#F5C75D" stroke-width="3" opacity="0.5"/>
+  <line x1="332" y1="400" x2="256" y2="430" stroke="#F5C75D" stroke-width="3" opacity="0.5"/>
+  <line x1="140" y1="370" x2="180" y2="400" stroke="#F5C75D" stroke-width="2" opacity="0.4"/>
+  <line x1="372" y1="370" x2="332" y2="400" stroke="#F5C75D" stroke-width="2" opacity="0.4"/>
+</svg>

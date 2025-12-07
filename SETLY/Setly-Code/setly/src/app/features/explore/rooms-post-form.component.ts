@@ -14,68 +14,160 @@ import { GeoSuggestion } from '../../core/services/geocoding.service';
   imports: [CommonModule, ReactiveFormsModule, LocationAutocompleteComponent, GooglePlaceInputComponent, ImageUploaderComponent],
   template: `
     <div [formGroup]="form" class="form-layout">
+      <!-- City and Address Row -->
       <div class="form-row two-cols">
         <div class="field-block">
-          <label class="field-label">City</label>
-          <app-location-autocomplete
-            [initialCity]="form.controls['city']?.value || ''"
-            [initialState]="form.controls['state']?.value || ''"
-            [placeholder]="'Search US city'"
-            (picked)="onCityPicked($event)"
-          ></app-location-autocomplete>
-          <p *ngIf="showError('city')" class="field-error">Please select a city.</p>
+          <label class="field-label-premium required">City</label>
+          <span class="field-hint">Select your US city</span>
+          <div class="input-icon-wrapper">
+            <svg class="input-icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 22V12h6v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <app-location-autocomplete
+              [initialCity]="form.controls['city']?.value || ''"
+              [initialState]="form.controls['state']?.value || ''"
+              [placeholder]="'Search city'"
+              (picked)="onCityPicked($event)"
+            ></app-location-autocomplete>
+          </div>
+          <p *ngIf="showError('city')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            City is required
+          </p>
         </div>
         <div class="field-block">
-          <label class="field-label">Room address</label>
-          <app-google-place-input
-            [initialAddress]="form.controls['address']?.value || ''"
-            (picked)="onAddressPicked($event)"
-            placeholder="Enter full address"
-          ></app-google-place-input>
-          <p *ngIf="showError('address')" class="field-error">Please enter the full address.</p>
+          <label class="field-label-premium required">Street Address</label>
+          <span class="field-hint">Full room address</span>
+          <div class="input-icon-wrapper">
+            <svg class="input-icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+            </svg>
+            <app-google-place-input
+              [initialAddress]="form.controls['address']?.value || ''"
+              (picked)="onAddressPicked($event)"
+              placeholder="Enter address"
+            ></app-google-place-input>
+          </div>
+          <p *ngIf="showError('address')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            Address is required
+          </p>
         </div>
       </div>
 
+      <!-- Room Type, Price & Amenities Row -->
       <div class="form-row three-cols">
+        <!-- Room Type -->
         <div class="field-block">
-          <label class="field-label">Room type</label>
-          <select class="input-premium w-full" formControlName="roomType">
-            <option value="shared">Shared</option>
-            <option value="private">Private</option>
-            <option value="studio">Studio</option>
-            <option value="1br">1 Bedroom</option>
-            <option value="2br">2 Bedroom</option>
-          </select>
-          <p *ngIf="showError('roomType')" class="field-error">Please select a room type.</p>
+          <label class="field-label-premium required">Room Type</label>
+          <span class="field-hint">Select category</span>
+          <div class="input-icon-wrapper icon-right">
+            <svg class="input-icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 11h10M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <select class="select-premium w-full" formControlName="roomType" style="padding-left: 48px;">
+              <option value="">Select type</option>
+              <option value="shared">Shared Room</option>
+              <option value="private">Private Room</option>
+              <option value="studio">Studio</option>
+              <option value="1br">1 Bedroom</option>
+              <option value="2br">2 Bedroom</option>
+            </select>
+          </div>
+          <p *ngIf="showError('roomType')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            Room type required
+          </p>
         </div>
+
+        <!-- Price -->
         <div class="field-block">
-          <label class="field-label">Price per month</label>
-          <input type="number" class="input-premium w-full" formControlName="price" min="0" inputmode="numeric" />
-          <p *ngIf="showError('price')" class="field-error">Enter a valid monthly price.</p>
+          <label class="field-label-premium required">Monthly Rent</label>
+          <span class="field-hint">Price in USD</span>
+          <div class="input-icon-wrapper">
+            <svg class="input-icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              <path d="M10.5 8.5h4M10.5 15.5h4M12 8.5v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input 
+              type="number" 
+              class="input-premium w-full no-spinner" 
+              formControlName="price" 
+              min="0" 
+              placeholder="1200"
+              inputmode="numeric" 
+              style="padding-left: 48px;"
+            />
+          </div>
+          <p *ngIf="showError('price')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            Valid price required
+          </p>
         </div>
+
+        <!-- Amenities -->
         <div class="field-block amenities-field">
-          <label class="field-label">Amenities</label>
-          <button type="button" class="amenities-trigger input-premium w-full" [class.invalid]="showError('amenities')" (click)="toggleAmenitiesDropdown()" #amenitiesTrigger>
+          <label class="field-label-premium required">Amenities</label>
+          <span class="field-hint">Select features</span>
+          <button type="button" class="amenities-trigger input-premium w-full" [class.error]="showError('amenities')" (click)="toggleAmenitiesDropdown()" #amenitiesTrigger>
             <span class="amenities-summary">{{ amenitiesSummary }}</span>
-            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06L8.53 10.78a.75.75 0 0 1-1.06 0L4.47 7.28a.75.75 0 0 1 0-1.06Z" fill="currentColor"/></svg>
+            <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06L8.53 10.78a.75.75 0 0 1-1.06 0L4.47 7.28a.75.75 0 0 1 0-1.06Z" fill="currentColor"/>
+            </svg>
           </button>
-          <div class="amenities-menu" *ngIf="amenitiesDropdownOpen" #amenitiesMenu>
-            <label class="amenity-option" *ngFor="let option of amenityOptions">
-              <input type="checkbox" [checked]="isAmenitySelected(option.value)" (change)="toggleAmenity(option.value)" />
-              <span>{{ option.label }}</span>
+          <div class="amenities-menu-premium" *ngIf="amenitiesDropdownOpen" #amenitiesMenu>
+            <label class="checkbox-premium-wrapper" *ngFor="let option of amenityOptions">
+              <input 
+                type="checkbox" 
+                class="checkbox-premium"
+                [checked]="isAmenitySelected(option.value)" 
+                (change)="toggleAmenity(option.value)" 
+              />
+              <span class="checkbox-premium-label">{{ option.label }}</span>
             </label>
           </div>
-          <p *ngIf="showError('amenities')" class="field-error">Select at least one amenity.</p>
+          <p *ngIf="showError('amenities')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            Select at least one
+          </p>
         </div>
       </div>
 
+      <!-- Description & Photos Row -->
       <div class="form-row description-row">
         <div class="field-block">
-          <label class="field-label">Description</label>
-          <textarea class="input-premium w-full" rows="4" formControlName="description" placeholder="Share details about the room, lease terms, roommates..."></textarea>
+          <label class="field-label-premium">Description</label>
+          <span class="field-hint">Share details about your room</span>
+          <textarea 
+            class="textarea-premium w-full" 
+            rows="5" 
+            formControlName="description" 
+            placeholder="Describe the room, lease terms, roommate preferences, and any special features..."
+          ></textarea>
+          <div class="field-helper">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 7v4M8 5h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Include details that help renters make a decision
+          </div>
         </div>
+        
         <div class="field-block uploader-block">
-          <label class="field-label">Upload photos</label>
+          <label class="field-label-premium required">Photos</label>
+          <span class="field-hint">Add images of the room</span>
           <app-image-uploader
             formControlName="photos"
             [maxImages]="10"
@@ -83,9 +175,16 @@ import { GeoSuggestion } from '../../core/services/geocoding.service';
             [helperPrimary]="'Add at least 3 photos'"
             [helperSecondary]="'Max 10 • JPG, PNG, WebP'"
           ></app-image-uploader>
-          <p *ngIf="showError('photos')" class="field-error">Please add at least 3 photos.</p>
+          <p *ngIf="showError('photos')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            Add at least 3 photos
+          </p>
+          
+          <!-- Optional Video Upload -->
           <div *ngIf="featureVideo" class="mt-4 space-y-2">
-            <label class="field-label">Optional room video</label>
+            <label class="field-label-premium">Room Video (Optional)</label>
             <input #videoInput type="file" accept="video/*" (change)="onVideoSelected($event)" class="input-premium" />
             <div class="flex flex-wrap gap-3" *ngIf="videos.length">
               <div class="relative" *ngFor="let v of videos; let i = index">
@@ -99,59 +198,131 @@ import { GeoSuggestion } from '../../core/services/geocoding.service';
     </div>
   `,
   styles: [`
-    .form-layout { display:flex; flex-direction:column; gap:20px; }
-    .form-row { display:grid; gap:20px; grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    .form-row.two-cols { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    .form-row.three-cols { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    .description-row { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    .field-block { display:flex; flex-direction:column; gap:6px; }
-    .field-label { font-size:0.7rem; text-transform:uppercase; font-weight:600; color:#475569; letter-spacing:0.08em; line-height:1.2; }
-  .field-error { font-size:0.75rem; color:#e11d48; margin-top:4px; }
-  textarea { min-height:132px; resize:vertical; }
-    .amenities-field { position:relative; }
-  .amenities-trigger { display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; }
-    .amenities-trigger svg { flex-shrink:0; }
-    .amenities-summary { font-size:0.95rem; color:#1f2937; }
-  .amenities-trigger.invalid { border-color:#f97373; box-shadow:0 0 0 1px rgba(248,113,113,0.25); }
-    .amenities-menu {
-      position:absolute;
-      top:calc(100% + 8px);
-      right:0;
-      min-width:240px;
-      background:#fff;
-      border:1px solid rgba(148,163,184,0.4);
-      border-radius:14px;
-      box-shadow:0 18px 40px -26px rgba(15,23,42,0.4);
-      padding:12px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      z-index:50;
+    /* Form Layout */
+    .form-layout { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 24px; 
     }
-    .amenity-option { display:flex; align-items:center; gap:10px; font-size:0.92rem; color:#334155; cursor:pointer; }
-    .amenity-option input { width:16px; height:16px; }
-    .uploader-block { display:flex; flex-direction:column; gap:10px; align-items:flex-start; }
+    
+    .form-row { 
+      display: grid; 
+      gap: 20px; 
+      grid-template-columns: repeat(1, minmax(0, 1fr)); 
+    }
+    
+    .form-row.two-cols { 
+      grid-template-columns: repeat(1, minmax(0, 1fr)); 
+    }
+    
+    .form-row.three-cols { 
+      grid-template-columns: repeat(1, minmax(0, 1fr)); 
+    }
+    
+    .description-row { 
+      grid-template-columns: repeat(1, minmax(0, 1fr)); 
+    }
+    
+    .field-block { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 6px; 
+    }
+    
+    /* Amenities Dropdown - Premium Style */
+    .amenities-field { 
+      position: relative; 
+    }
+    
+    .amenities-trigger { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      gap: 12px; 
+      cursor: pointer; 
+      text-align: left;
+    }
+    
+    .amenities-trigger svg { 
+      flex-shrink: 0;
+      transition: transform 0.25s ease;
+    }
+    
+    .amenities-trigger:hover svg {
+      transform: translateY(2px);
+    }
+    
+    .amenities-summary { 
+      font-size: 0.9375rem; 
+      color: #1f2937; 
+      font-weight: 500;
+    }
+    
+    .amenities-menu-premium {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 14px;
+      box-shadow: 
+        0 12px 32px -8px rgba(0, 0, 0, 0.12),
+        0 4px 12px rgba(0, 0, 0, 0.06);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 50;
+      animation: dropdownSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes dropdownSlideIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .uploader-block { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 10px; 
+      align-items: flex-start; 
+    }
 
+    /* Responsive Grid */
     @media (min-width: 768px) {
-      .form-layout { gap:24px; }
-      .form-row { gap:24px; }
+      .form-layout { gap: 28px; }
+      .form-row { gap: 24px; }
       .form-row.two-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .form-row.three-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .description-row { grid-template-columns: 2fr 1fr; align-items:start; }
+      .description-row { 
+        grid-template-columns: 1.8fr 1fr; 
+        align-items: start; 
+      }
     }
+    
     @media (min-width: 1200px) {
-      .form-layout { gap:28px; }
-      .form-row { gap:28px; }
-      .form-row.three-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .form-layout { gap: 32px; }
+      .form-row { gap: 28px; }
+      .form-row.three-cols { grid-template-columns: 1fr 1fr 1fr; }
     }
+    
+    /* Mobile Adjustments */
     @media (max-width: 767px) {
-      .amenities-field { position:static; }
-      .amenities-menu {
-        position:static;
-        margin-top:8px;
-        width:100%;
-        max-height:240px;
-        overflow-y:auto;
+      .amenities-field { position: static; }
+      
+      .amenities-menu-premium {
+        position: static;
+        margin-top: 8px;
+        width: 100%;
+        max-height: 280px;
+        overflow-y: auto;
       }
     }
   `]

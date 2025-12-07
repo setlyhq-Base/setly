@@ -1,0 +1,887 @@
+/* =============================================
+   🎨 PREMIUM INPUT SYSTEM - SETLY
+   Modern, Clean, Premium UI for all form inputs
+   ============================================= */
+
+/* =============================================
+   BASE INPUT STYLES - Premium Foundation
+   ============================================= */
+
+.input-field-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Premium Input Base - Enhanced Version */
+.input-premium,
+.select-premium,
+.textarea-premium {
+  width: 100%;
+  padding: 16px 18px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #1f2937;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Placeholder Styling */
+.input-premium::placeholder,
+.textarea-premium::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+/* Focus State - Premium Glow */
+.input-premium:focus,
+.select-premium:focus,
+.textarea-premium:focus {
+  border-color: #6366f1;
+  background: #ffffff;
+  box-shadow: 
+    0 0 0 4px rgba(99, 102, 241, 0.1),
+    0 4px 12px rgba(99, 102, 241, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.input-premium:focus::placeholder,
+.textarea-premium:focus::placeholder {
+  opacity: 0.6;
+}
+
+/* Hover State - Subtle Enhancement */
+.input-premium:hover:not(:focus):not(:disabled),
+.select-premium:hover:not(:focus):not(:disabled),
+.textarea-premium:hover:not(:focus):not(:disabled) {
+  border-color: #d1d5db;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Disabled State */
+.input-premium:disabled,
+.select-premium:disabled,
+.textarea-premium:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+/* Error State */
+.input-premium.error,
+.select-premium.error,
+.textarea-premium.error {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.input-premium.error:focus,
+.select-premium.error:focus,
+.textarea-premium.error:focus {
+  box-shadow: 
+    0 0 0 4px rgba(239, 68, 68, 0.1),
+    0 4px 12px rgba(239, 68, 68, 0.08);
+}
+
+/* Success State */
+.input-premium.success,
+.select-premium.success,
+.textarea-premium.success {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+/* =============================================
+   FLOATING LABEL DESIGN
+   ============================================= */
+
+.input-floating-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-floating-label {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #6b7280;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  padding: 0 4px;
+  z-index: 1;
+}
+
+.input-floating-wrapper .input-premium:focus ~ .input-floating-label,
+.input-floating-wrapper .input-premium:not(:placeholder-shown) ~ .input-floating-label {
+  top: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6366f1;
+  background: linear-gradient(to bottom, transparent 50%, #ffffff 50%);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.input-floating-wrapper .input-premium:hover:not(:focus) ~ .input-floating-label {
+  color: #4b5563;
+}
+
+/* =============================================
+   INPUT WITH ICONS
+   ============================================= */
+
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon-left {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+  transition: color 0.25s ease;
+  z-index: 2;
+}
+
+.input-icon-right {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  transition: color 0.25s ease;
+  z-index: 2;
+}
+
+.input-icon-wrapper .input-premium {
+  padding-left: 48px;
+}
+
+.input-icon-wrapper.icon-right .input-premium {
+  padding-right: 48px;
+  padding-left: 18px;
+}
+
+.input-icon-wrapper .input-premium:focus ~ .input-icon-left,
+.input-icon-wrapper .input-premium:focus ~ .input-icon-right {
+  color: #6366f1;
+}
+
+/* =============================================
+   PREMIUM SELECT DROPDOWN
+   ============================================= */
+
+.select-premium {
+  cursor: pointer;
+  padding-right: 48px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%236b7280' d='M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06L8.53 10.78a.75.75 0 0 1-1.06 0L4.47 7.28a.75.75 0 0 1 0-1.06Z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 18px;
+}
+
+.select-premium:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%236366f1' d='M4.47 6.22a.75.75 0 0 1 1.06 0L8 8.69l2.47-2.47a.75.75 0 1 1 1.06 1.06L8.53 10.78a.75.75 0 0 1-1.06 0L4.47 7.28a.75.75 0 0 1 0-1.06Z'/%3E%3C/svg%3E");
+}
+
+/* =============================================
+   TEXTAREA PREMIUM
+   ============================================= */
+
+.textarea-premium {
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.textarea-premium.no-resize {
+  resize: none;
+}
+
+/* =============================================
+   PREMIUM CHECKBOX DESIGN
+   ============================================= */
+
+.checkbox-premium-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkbox-premium {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.checkbox-premium:hover:not(:disabled) {
+  border-color: #9ca3af;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.checkbox-premium:checked {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-color: #6366f1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.checkbox-premium:checked::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+  animation: checkmarkSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes checkmarkSlide {
+  0% {
+    transform: rotate(45deg) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.checkbox-premium:focus-visible {
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+.checkbox-premium:disabled {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.checkbox-premium-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.5;
+  user-select: none;
+}
+
+.checkbox-premium-description {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* =============================================
+   PREMIUM RADIO BUTTON DESIGN
+   ============================================= */
+
+.radio-premium-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-premium {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.radio-premium:hover:not(:disabled) {
+  border-color: #9ca3af;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.radio-premium:checked {
+  background: #ffffff;
+  border-color: #6366f1;
+  border-width: 2px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.radio-premium:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  animation: radioScaleIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes radioScaleIn {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.radio-premium:focus-visible {
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+.radio-premium:disabled {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.radio-premium-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.5;
+  user-select: none;
+}
+
+/* =============================================
+   RADIO CARD DESIGN (For room types, etc.)
+   ============================================= */
+
+.radio-card-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.radio-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.radio-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.radio-card:hover:not(.selected) {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.radio-card.selected {
+  border-color: #6366f1;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8f9ff 100%);
+  box-shadow: 
+    0 8px 24px rgba(99, 102, 241, 0.15),
+    inset 0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+.radio-card.selected::before {
+  transform: scaleX(1);
+}
+
+.radio-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  margin-bottom: 8px;
+  transition: all 0.25s ease;
+}
+
+.radio-card.selected .radio-card-icon {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+}
+
+.radio-card-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #6b7280;
+  transition: color 0.25s ease;
+}
+
+.radio-card.selected .radio-card-icon svg {
+  color: #ffffff;
+}
+
+.radio-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.radio-card-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.radio-card.selected .radio-card-title {
+  color: #6366f1;
+}
+
+/* =============================================
+   FIELD LABEL & HELPER TEXT
+   ============================================= */
+
+.field-label-premium {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #475569;
+  margin-bottom: 8px;
+  line-height: 1.2;
+  user-select: none;
+}
+
+.field-label-premium.required::after {
+  content: ' *';
+  color: #ef4444;
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-top: -4px;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.field-helper {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-top: 6px;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.field-helper svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #9ca3af;
+}
+
+/* =============================================
+   FIELD ERROR MESSAGE
+   ============================================= */
+
+.field-error {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #ef4444;
+  margin-top: 6px;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  animation: errorSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes errorSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.field-error svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* =============================================
+   DATE & TIME INPUTS - Enhanced
+   ============================================= */
+
+input[type="date"].input-premium,
+input[type="time"].input-premium,
+input[type="datetime-local"].input-premium {
+  position: relative;
+  cursor: pointer;
+  color-scheme: light;
+}
+
+input[type="date"].input-premium::-webkit-calendar-picker-indicator,
+input[type="time"].input-premium::-webkit-calendar-picker-indicator,
+input[type="datetime-local"].input-premium::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+input[type="date"].input-premium:hover::-webkit-calendar-picker-indicator,
+input[type="time"].input-premium:hover::-webkit-calendar-picker-indicator,
+input[type="datetime-local"].input-premium:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+/* =============================================
+   NUMBER INPUT - Hide Spinners Option
+   ============================================= */
+
+input[type="number"].input-premium.no-spinner::-webkit-inner-spin-button,
+input[type="number"].input-premium.no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"].input-premium.no-spinner {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* =============================================
+   SEARCH INPUT WITH CLEAR BUTTON
+   ============================================= */
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-wrapper .input-premium {
+  padding-right: 48px;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 8px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.search-input-wrapper .input-premium:not(:placeholder-shown) ~ .search-clear-btn {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.search-clear-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* =============================================
+   AUTOCOMPLETE DROPDOWN
+   ============================================= */
+
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 
+    0 12px 32px -8px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.06);
+  z-index: 50;
+  animation: dropdownSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 6px;
+}
+
+@keyframes dropdownSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.autocomplete-item {
+  padding: 12px 14px;
+  font-size: 0.9375rem;
+  color: #374151;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.autocomplete-item:hover {
+  background: linear-gradient(to right, #f8f9ff 0%, #f3f4f6 100%);
+  color: #6366f1;
+}
+
+.autocomplete-item:active {
+  background: #f0f1ff;
+  transform: scale(0.98);
+}
+
+/* =============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================= */
+
+@media (max-width: 768px) {
+  .input-premium,
+  .select-premium,
+  .textarea-premium {
+    padding: 14px 16px;
+    font-size: 1rem; /* Better for mobile */
+    border-radius: 12px;
+  }
+
+  .checkbox-premium,
+  .radio-premium {
+    width: 24px;
+    height: 24px;
+  }
+
+  .radio-card {
+    padding: 16px;
+  }
+
+  .field-label-premium {
+    font-size: 0.6875rem;
+  }
+
+  .autocomplete-dropdown {
+    max-height: 240px;
+  }
+}
+
+/* =============================================
+   DARK MODE SUPPORT (Optional)
+   ============================================= */
+
+@media (prefers-color-scheme: dark) {
+  .input-premium,
+  .select-premium,
+  .textarea-premium {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+  }
+
+  .input-premium:focus,
+  .select-premium:focus,
+  .textarea-premium:focus {
+    background: #1f2937;
+    border-color: #6366f1;
+  }
+
+  .field-label-premium {
+    color: #9ca3af;
+  }
+
+  .field-helper {
+    color: #9ca3af;
+  }
+
+  .checkbox-premium,
+  .radio-premium {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .radio-card {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .radio-card.selected {
+    background: linear-gradient(to bottom, #1f2937 0%, #1e254e 100%);
+  }
+
+  .autocomplete-dropdown {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .autocomplete-item {
+    color: #f9fafb;
+  }
+
+  .autocomplete-item:hover {
+    background: #374151;
+  }
+}
+
+/* =============================================
+   ACCESSIBILITY ENHANCEMENTS
+   ============================================= */
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .input-premium,
+  .select-premium,
+  .textarea-premium {
+    border-width: 2px;
+  }
+
+  .input-premium:focus,
+  .select-premium:focus,
+  .textarea-premium:focus {
+    border-width: 3px;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .input-premium,
+  .select-premium,
+  .textarea-premium,
+  .checkbox-premium,
+  .radio-premium,
+  .radio-card {
+    transition: none;
+  }
+
+  @keyframes checkmarkSlide {
+    from, to {
+      transform: rotate(45deg) scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes radioScaleIn {
+    from, to {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes errorSlideIn {
+    from, to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes dropdownSlideIn {
+    from, to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+/* Focus Visible for Keyboard Navigation */
+.input-premium:focus-visible,
+.select-premium:focus-visible,
+.textarea-premium:focus-visible {
+  outline: 3px solid #6366f1;
+  outline-offset: 2px;
+}

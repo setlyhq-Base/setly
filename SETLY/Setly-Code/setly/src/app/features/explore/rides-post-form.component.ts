@@ -9,75 +9,187 @@ import { GooglePlaceInputComponent } from '../../shared/ui/google-place-input.co
   imports: [CommonModule, ReactiveFormsModule, GooglePlaceInputComponent],
   template: `
     <div [formGroup]="form" class="form-layout">
+      <!-- Pickup & Destination Row -->
       <div class="form-row two-cols">
         <div class="field-block">
-          <label class="field-label">Pickup location</label>
-          <app-google-place-input
-            [initialAddress]="form.controls['pickup']?.value || ''"
-            (picked)="onPicked('pickup', $event)"
-            placeholder="Enter pickup location"
-          ></app-google-place-input>
-          <p *ngIf="showError('pickup')" class="field-error">Pickup location is required.</p>
+          <label class="field-label-premium required">Pickup Location</label>
+          <span class="field-hint">Where you'll pick up riders</span>
+          <div class="input-icon-wrapper">
+            <svg class="input-icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" stroke-dasharray="2 3"/>
+            </svg>
+            <app-google-place-input
+              [initialAddress]="form.controls['pickup']?.value || ''"
+              (picked)="onPicked('pickup', $event)"
+              placeholder="Enter pickup location"
+            ></app-google-place-input>
+          </div>
+          <p *ngIf="showError('pickup')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            Pickup location required
+          </p>
         </div>
+        
         <div class="field-block">
-          <label class="field-label">Destination</label>
-          <app-google-place-input
-            [initialAddress]="form.controls['destination']?.value || ''"
-            (picked)="onPicked('destination', $event)"
-            placeholder="Enter destination"
-          ></app-google-place-input>
-          <p *ngIf="showError('destination')" class="field-error">Destination is required.</p>
+          <label class="field-label-premium required">Destination</label>
+          <span class="field-hint">Where you're heading</span>
+          <div class="input-icon-wrapper">
+            <svg class="input-icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+            </svg>
+            <app-google-place-input
+              [initialAddress]="form.controls['destination']?.value || ''"
+              (picked)="onPicked('destination', $event)"
+              placeholder="Enter destination"
+            ></app-google-place-input>
+          </div>
+          <p *ngIf="showError('destination')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            Destination required
+          </p>
         </div>
       </div>
+
+      <!-- DateTime, Seats & Luggage Row -->
       <div class="form-row three-cols">
+        <!-- Date & Time -->
         <div class="field-block">
-          <label class="field-label">Date &amp; time</label>
-          <input type="datetime-local" class="input-premium w-full" formControlName="departure" />
-          <p *ngIf="showError('departure')" class="field-error">Choose a departure date and time.</p>
+          <label class="field-label-premium required">Departure Date & Time</label>
+          <span class="field-hint">When you're leaving</span>
+          <div class="input-icon-wrapper icon-right">
+            <input 
+              type="datetime-local" 
+              class="input-premium w-full" 
+              formControlName="departure"
+              [min]="minDateTime"
+            />
+            <svg class="input-icon-right" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <p *ngIf="showError('departure')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            Departure time required
+          </p>
         </div>
+
+        <!-- Seats Available -->
         <div class="field-block">
-          <label class="field-label">Seats available</label>
-          <input type="number" class="input-premium w-full" formControlName="seatsAvailable" min="1" max="4" />
-          <p *ngIf="showError('seatsAvailable')" class="field-error">Between 1 and 4 seats.</p>
+          <label class="field-label-premium required">Seats Available</label>
+          <span class="field-hint">Number of passengers</span>
+          <div class="input-icon-wrapper">
+            <svg class="input-icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <input 
+              type="number" 
+              class="input-premium w-full no-spinner" 
+              formControlName="seatsAvailable" 
+              min="1" 
+              max="4"
+              placeholder="1-4"
+              style="padding-left: 48px;"
+            />
+          </div>
+          <p *ngIf="showError('seatsAvailable')" class="field-error">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM7 5.5v4a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-1 0zM8 11a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+            </svg>
+            Enter 1-4 seats
+          </p>
         </div>
-        <div class="field-block luggage-block">
-          <label class="field-label">&nbsp;</label>
-          <label class="checkbox">
-            <input type="checkbox" formControlName="luggage" />
-            <span>Luggage allowed</span>
+
+        <!-- Luggage Allowed -->
+        <div class="field-block luggage-field">
+          <label class="field-label-premium">Preferences</label>
+          <span class="field-hint">Optional settings</span>
+          <label class="checkbox-premium-wrapper">
+            <input 
+              type="checkbox" 
+              class="checkbox-premium"
+              formControlName="luggage" 
+            />
+            <span class="checkbox-premium-label">Luggage Allowed</span>
           </label>
         </div>
       </div>
+
+      <!-- Notes -->
       <div class="form-row single">
         <div class="field-block">
-          <label class="field-label">Notes</label>
-          <textarea class="input-premium w-full" rows="3" formControlName="notes" placeholder="Add helpful details"></textarea>
+          <label class="field-label-premium">Additional Notes</label>
+          <span class="field-hint">Share helpful details for riders</span>
+          <textarea 
+            class="textarea-premium w-full" 
+            rows="3" 
+            formControlName="notes" 
+            placeholder="E.g., preferred meeting spot, car details, flexible timing..."
+          ></textarea>
+          <div class="field-helper">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 7v4M8 5h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Optional: Add details about your vehicle, preferred stops, or flexibility
+          </div>
         </div>
       </div>
     </div>
   `,
   styles: [`
-    .form-layout { display:flex; flex-direction:column; gap:20px; }
-    .form-row { display:grid; gap:20px; grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    .form-row.two-cols { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    .form-row.three-cols { grid-template-columns: repeat(1, minmax(0, 1fr)); align-items:end; }
-    .field-block { display:flex; flex-direction:column; gap:6px; }
-    .checkbox { display:flex; align-items:center; gap:10px; font-size:0.9rem; color:#4b5563; padding:10px 12px; border-radius:16px; border:1px dashed rgba(148,163,184,0.35); transition:border-color .18s, background .18s; }
-    .checkbox:hover { border-color: rgba(99,102,241,0.4); background: rgba(99,102,241,0.06); }
-    .luggage-block .field-label { display:none; }
-    .field-label { font-size:0.7rem; text-transform:uppercase; font-weight:600; color:#475569; letter-spacing:0.08em; line-height:1.2; }
-    .field-error { font-size:0.75rem; color:#e11d48; margin-top:4px; }
-    textarea { min-height:120px; resize:vertical; }
+    .form-layout { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 24px; 
+    }
+    
+    .form-row { 
+      display: grid; 
+      gap: 20px; 
+      grid-template-columns: repeat(1, minmax(0, 1fr)); 
+    }
+    
+    .form-row.two-cols { 
+      grid-template-columns: repeat(1, minmax(0, 1fr)); 
+    }
+    
+    .form-row.three-cols { 
+      grid-template-columns: repeat(1, minmax(0, 1fr)); 
+      align-items: end; 
+    }
+    
+    .form-row.single {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    
+    .field-block { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 6px; 
+    }
+    
+    .luggage-field {
+      padding-top: 4px;
+    }
+    
     @media (min-width: 768px) {
-      .form-layout { gap:24px; }
-      .form-row { gap:24px; }
+      .form-layout { gap: 28px; }
+      .form-row { gap: 24px; }
       .form-row.two-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .form-row.three-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .checkbox { padding:12px 16px; }
     }
+    
     @media (min-width: 1200px) {
-      .form-layout { gap:28px; }
-      .form-row { gap:28px; }
+      .form-layout { gap: 32px; }
+      .form-row { gap: 28px; }
       .form-row.three-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
   `]
@@ -85,8 +197,15 @@ import { GooglePlaceInputComponent } from '../../shared/ui/google-place-input.co
 export class RidesPostFormComponent {
   @Input() form!: FormGroup;
 
+  get minDateTime(): string {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  }
+
   setControl(control: 'pickup' | 'destination', value: string) {
     this.form.controls[control]?.setValue(value);
+    this.form.controls[control]?.markAsTouched();
   }
 
   onPicked(control: 'pickup' | 'destination', evt: { address: string; lat?: number; lng?: number }) {

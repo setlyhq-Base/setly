@@ -6,13 +6,14 @@ import { AssistantWidgetComponent } from './features/assistant/assistant-widget.
 import { PresenceIndicatorComponent } from './shared/ui/presence-indicator.component';
 import { FabComponent } from './shared/ui/fab.component';
 import { ToastContainerComponent } from './shared/ui/toast-container.component';
+import { BottomNavComponent } from './shared/ui/bottom-nav.component';
 import { environment as env } from '../environments/environment';
 import { UserStore } from './core/state/user.store';
 import { AuthSyncService } from './core/services/auth-sync.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, FooterComponent, AssistantWidgetComponent, FabComponent, ToastContainerComponent, PresenceIndicatorComponent],
+  imports: [RouterOutlet, HeaderComponent, FooterComponent, AssistantWidgetComponent, FabComponent, ToastContainerComponent, PresenceIndicatorComponent, BottomNavComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

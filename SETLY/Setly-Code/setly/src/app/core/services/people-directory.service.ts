@@ -18,6 +18,7 @@ export interface DirectoryUser {
   profileComplete?: boolean;
   badges: { email?: boolean; phone?: boolean; university?: boolean; photo?: boolean };
   interests?: string[];
+  isConnected?: boolean;
 }
 
 interface DirectoryResponse {

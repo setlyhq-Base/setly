@@ -30,8 +30,15 @@ export const routes: Routes = [
     loadComponent: () => import('./features/people/people.page').then(m => m.PeoplePage),
     title: 'People - Setly'
   },
+  // Default landing page: Redirect root to Explore
   {
     path: '',
+    redirectTo: 'explore',
+    pathMatch: 'full'
+  },
+  // Keep home page accessible at /home for backward compatibility
+  {
+    path: 'home',
     loadComponent: () => import('./features/home/home.page').then(m => m.HomePage),
     title: 'Setly - Find Your next Room'
   },

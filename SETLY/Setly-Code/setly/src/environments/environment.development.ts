@@ -46,5 +46,7 @@ export const environment = {
   },
   universityApiBase: 'https://universities.hipolabs.com',
   // Load prebuilt dataset from S3 for fast and reliable autocomplete
-  universitiesDataUrl: 'https://setly-s3-bucket.s3.us-east-2.amazonaws.com/universities/us_in_universities.json'
+  universitiesDataUrl: 'https://setly-s3-bucket.s3.us-east-2.amazonaws.com/universities/us_in_universities.json',
+  // Google Maps API key for location features
+  googleMapsApiKey: 'AIzaSyDLk2hmPHVtlBdxu0Rctfh2G5FnAIHpq64' // Replace with actual Maps API key
 };

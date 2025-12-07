@@ -4,15 +4,41 @@
   <meta charset="utf-8">
   <title>Setly</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <!-- PWA / Mobile App Meta -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Setly">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Setly">
   <!-- Modern favicon & app icons -->
   <link rel="icon" type="image/svg+xml" href="assets/setly-logo.svg">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <!-- iOS Splash Screens - placeholder references -->
+  <link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="assets/splash/iphone-14-pro-max.png">
+  <link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" href="assets/splash/iphone-14-pro.png">
+  <link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" href="assets/splash/iphone-13.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0A1A3F" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0A1A3F" media="(prefers-color-scheme: dark)">
   <meta name="description" content="Setly – Your next move. Find trusted homes & rides in a verified community.">
+  <!-- Google Maps API with callback -->
+  <script>
+    window.initGoogleMaps = function() {
+      console.log('✅ Google Maps API loaded via callback');
+      window.googleMapsLoaded = true;
+    };
+    
+    // Handle Google Maps errors
+    window.gm_authFailure = function() {
+      console.error('❌ Google Maps authentication failed - invalid API key');
+      window.googleMapsError = 'Invalid Google Maps API key';
+    };
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCFLTEaQ9rLghZ4hUG6LPXSkS7SEka5vYY&libraries=places,geometry&callback=initGoogleMaps" 
+          onerror="console.error('❌ Failed to load Google Maps script')"></script>
 </head>
 <body>
   <app-root></app-root>

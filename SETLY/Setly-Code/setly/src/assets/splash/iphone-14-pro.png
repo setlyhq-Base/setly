@@ -1,0 +1,13 @@
+<svg width="1179" height="2556" viewBox="0 0 1179 2556" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- iPhone 14 Pro splash (393x852 @3x) -->
+  <rect width="1179" height="2556" fill="#0A1A3F"/>
+  
+  <!-- Centered logo -->
+  <g transform="translate(490, 1078)">
+    <path d="M100 0L115.278 46.722L162 62L115.278 77.278L100 124L84.722 77.278L38 62L84.722 46.722L100 0Z" fill="#F5C75D"/>
+    <path d="M100 90C82 90 68 104 68 122C68 140 82 154 100 154C112 154 122 148 128 138C134 128 134 116 128 106C122 96 112 90 100 90C88 90 78 100 78 112C78 124 88 134 100 134" stroke="white" stroke-width="8" stroke-linecap="round" fill="none"/>
+  </g>
+  
+  <text x="590" y="1340" font-family="Open Sans, sans-serif" font-size="60" font-weight="700" fill="white" text-anchor="middle">Setly</text>
+  <text x="590" y="1395" font-family="Open Sans, sans-serif" font-size="26" font-weight="400" fill="#F5C75D" text-anchor="middle">Your next move</text>
+</svg>

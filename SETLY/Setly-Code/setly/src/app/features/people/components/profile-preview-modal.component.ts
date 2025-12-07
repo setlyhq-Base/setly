@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DummyUser } from '../../../core/services/dummy-people.service';
 
@@ -9,13 +9,13 @@ import { DummyUser } from '../../../core/services/dummy-people.service';
   template: `
     <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in"
          *ngIf="user"
-         (click)="close()">
+         (click)="onClose()">
       <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-premium-lg animate-scale-in"
            (click)="$event.stopPropagation()">
         
         <!-- Header -->
         <div class="relative h-32 bg-gradient-to-r from-brand-midnight via-brand-azure to-brand-aqua">
-          <button (click)="close()"
+          <button (click)="onClose()"
                   class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white hover:bg-white/30 transition">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -182,10 +182,15 @@ import { DummyUser } from '../../../core/services/dummy-people.service';
 export class ProfilePreviewModalComponent {
   @Input() user: DummyUser | null = null;
   @Input() isSaved: boolean = false;
-  @Output() closed = new EventEmitter<void>();
+  @Output() close = new EventEmitter<void>();
   @Output() connect = new EventEmitter<DummyUser>();
   @Output() message = new EventEmitter<DummyUser>();
   @Output() save = new EventEmitter<DummyUser>();
+
+  @HostListener('document:keydown.escape')
+  handleEscapeKey() {
+    this.onClose();
+  }
 
   get isOnline(): boolean {
     if (!this.user?.lastSeen) return false;
@@ -247,8 +252,8 @@ export class ProfilePreviewModalComponent {
     return icons[role] || '✨';
   }
 
-  close() {
-    this.closed.emit();
+  onClose() {
+    this.close.emit();
   }
 
   onConnect() {

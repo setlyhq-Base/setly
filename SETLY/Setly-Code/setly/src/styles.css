@@ -1,6 +1,9 @@
 /* Brand font import must precede other rules */
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap');
 
+/* Import premium input system */
+@import url('./premium-inputs.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -66,6 +69,139 @@
   --font-hero: clamp(2.4rem, 6vw, 3.4rem);
 }
 
+/* Global box sizing, overflow protection and safe-area support */
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root, app-root { height: 100%; }
+html, body { overflow-x: hidden; }
+
+/* iPhone notch / safe area support */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --mobile-header-height: calc(56px + var(--safe-top));
+}
+
+/* Touch-friendly defaults */
+button, .btn-primary, .btn-secondary, .btn-accent, .btn-ghost { min-height:44px; min-width:44px; touch-action: manipulation; -webkit-tap-highlight-color: rgba(0,0,0,0); }
+a { touch-action: manipulation; }
+img, video { max-width: 100%; height: auto; display:block; }
+
+/* Prevent layout shifts on webfonts: use font-display in import or keep fallback stack above */
+
+/* Smooth interactions & reduced layout shift */
+* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+/* Map responsive helper: keeps map visible on mobile with safe area and header reserved */
+.map-responsive { width:100%; height: calc(40vh + 220px - var(--safe-bottom)); min-height: 220px; }
+
+/* Utility: app-like container with safe-area padding */
+.app-shell { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
+
+/* Ensure interactive lists and carousels don't produce horizontal scroll on mobile */
+.carousel-card-unified { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+
+/* Small-screen layout tweaks */
+@media (max-width: 768px) {
+  .mx-auto { padding-left: 16px; padding-right: 16px; }
+  .px-10 { padding-left: 16px; padding-right: 16px; }
+  /* fallback: ensure oversized container doesn't break on small screens */
+  .global-full { max-width: 100%; }
+  .w\[280px\], .w\[380px\] { width: 100% !important; }
+  aside.w\[280px\] { margin: 0; }
+  .flex { flex-wrap: wrap; }
+  .flex > aside, .flex > main { width: 100%; }
+  .sticky { position: static !important; }
+  .top-24 { top: auto !important; }
+  /* Ensure card paddings are slightly reduced on smaller screens */
+  .card, .card-premium { padding: 1rem; }
+  /* Responsive grid fixes */
+  .grid-cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .grid-cols-2 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  /* Touch-friendly spacing */
+  .gap-8 { gap: 1rem; }
+  .gap-10 { gap: 1.25rem; }
+}
+
+/* Smooth page transitions */
+@keyframes pageSlideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes drawerSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.page-transition {
+  animation: pageSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-enter {
+  animation: drawerSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.backdrop-enter {
+  animation: backdropFadeIn 0.2s ease-out;
+}
+
+/* Mobile bottom sheet */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+  max-height: 85vh;
+  overflow: hidden;
+  z-index: 100;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bottom-sheet.active {
+  transform: translateY(0);
+}
+
+.bottom-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #D1D5DB;
+  border-radius: 2px;
+  margin: 12px auto 16px;
+}
+
+/* Optimized card hover on mobile (reduce transform) */
+@media (hover: none) {
+  .hover-lift:hover {
+    transform: none;
+  }
+  .hover-lift:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Lazy load fade-in */
+@keyframes lazyFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+img[loading="lazy"] {
+  animation: lazyFadeIn 0.4s ease-in;
+}
+
+
 @layer base {
   html { font-family: 'Open Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
   body { background: var(--neutral-bg); color: var(--text); -webkit-font-smoothing:antialiased; font-smooth:always; }
@@ -103,10 +239,32 @@
   /* Premium shadow utilities */
   .shadow-premium { box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -3px rgba(0, 0, 0, 0.05); }
   .shadow-premium-lg { box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 8px 16px -6px rgba(0, 0, 0, 0.08); }
-  .input-premium { width:100%; padding:0.75rem 1rem; border:1px solid #d1d5db; border-radius:0.75rem; font-size:0.875rem; transition:border-color .25s, box-shadow .25s; }
-  .input-premium::placeholder { color:#9ca3af; }
-  .input-premium:focus { outline:none; border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,0.4); }
-  .label-premium { display:block; font-size:0.75rem; font-weight:600; letter-spacing:.02em; text-transform:uppercase; color:#374151; margin-bottom:0.35rem; }
+  
+  /* Legacy input-premium class - now enhanced by premium-inputs.css */
+  /* Keeping for backward compatibility but premium-inputs.css provides superior styling */
+  .input-premium { 
+    width: 100%; 
+    padding: 16px 18px; 
+    border: 1.5px solid #e5e7eb; 
+    border-radius: 14px; 
+    font-size: 0.9375rem; 
+    font-weight: 500;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .input-premium::placeholder { color: #9ca3af; font-weight: 400; }
+  .input-premium:focus { 
+    outline: none; 
+    border-color: #6366f1; 
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), 0 4px 12px rgba(99, 102, 241, 0.08);
+    transform: translateY(-1px);
+  }
+  .input-premium:hover:not(:focus):not(:disabled) {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  
+  .label-premium { display:block; font-size:0.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#475569; margin-bottom:8px; line-height:1.2; }
   .help-text { font-size:0.65rem; color:#6b7280; margin-top:0.25rem; }
   /* Media grid & add-tile */
   .media-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0.75rem; }
@@ -261,6 +419,66 @@
 @keyframes stagger-fade { to { opacity:1; transform:translateY(0); } }
 @keyframes scale-in { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
 @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+/* 🎨 Premium Home Page Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  33% { transform: translateY(-20px) translateX(10px); }
+  66% { transform: translateY(10px) translateX(-10px); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  33% { transform: translateY(15px) translateX(-15px); }
+  66% { transform: translateY(-10px) translateX(10px); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes pulse-slower {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+.animate-float { animation: float 8s ease-in-out infinite; }
+.animate-float-delayed { animation: float-delayed 10s ease-in-out infinite; }
+.animate-fade-in-up { animation: fade-in-up 0.6s ease-out forwards; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animate-gradient { background-size: 200% auto; animation: gradient 8s ease infinite; }
+.animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+.animate-pulse-slower { animation: pulse-slower 6s ease-in-out infinite; }
+
+/* Ripple effect for buttons */
+.ripple { position: relative; overflow: hidden; }
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+.ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
 
 @media (max-width:640px) {
   .section-premium { padding-top:3rem; padding-bottom:3rem; }

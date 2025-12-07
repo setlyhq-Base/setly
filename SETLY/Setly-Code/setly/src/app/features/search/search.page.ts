@@ -16,22 +16,71 @@ import { SharedDataService } from '../../core/services/shared-data.service';
   standalone: true,
   imports: [CommonModule, UnifiedSearchComponent, FilterPanelComponent, RoomResultCardComponent, RideResultCardComponent, MarketResultCardComponent, RideDetailModalComponent],
   template: `
-  <main class="explore-page min-h-screen relative">
-      <!-- soft floating background elements -->
-      <div class="floating-orb orb-1" aria-hidden="true"></div>
-      <div class="floating-orb orb-2" aria-hidden="true"></div>
+  <main class="explore-page min-h-screen relative overflow-x-hidden">
+      <!-- 🌟 Dynamic Background with Floating Elements -->
+      <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#FAFBFF] via-white to-[#F8FAFF]"></div>
+        <div class="floating-orb orb-1 absolute top-[-8rem] right-[10%] w-[30rem] h-[30rem] rounded-full bg-gradient-to-tr from-blue-400/10 via-indigo-400/5 to-transparent blur-3xl animate-float"></div>
+        <div class="floating-orb orb-2 absolute bottom-[-6rem] left-[15%] w-[25rem] h-[25rem] rounded-full bg-gradient-to-tl from-purple-400/10 via-pink-400/5 to-transparent blur-3xl animate-float-delayed"></div>
+        <div class="absolute top-[30%] right-[20%] w-2 h-2 rounded-full bg-blue-400/20 animate-float"></div>
+        <div class="absolute top-[50%] left-[10%] w-3 h-3 rounded-full bg-indigo-400/20 animate-float-delayed"></div>
+        <div class="absolute bottom-[20%] right-[30%] w-2.5 h-2.5 rounded-full bg-purple-400/20 animate-float"></div>
+      </div>
 
-      <section class="hero-strip max-w-7xl mx-auto px-6 pt-8 pb-8">
-        <div class="hero-inner rounded-xl px-6 py-5">
-          <app-unified-search (activeTabChange)="onTabChange($event)" (performedSearch)="onSearch($event)"></app-unified-search>
+      <!-- 🎯 Premium Hero Banner -->
+      <section class="relative isolate pt-8 pb-6 md:pt-12 md:pb-8">
+        <div class="max-w-7xl mx-auto px-4 md:px-6">
+          <!-- Greeting Header -->
+          <div class="mb-6 md:mb-8 animate-fade-in-up">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur-xl border border-gray-200/50 shadow-lg mb-4">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+              </span>
+              <span class="text-xs md:text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Welcome to SETLY
+              </span>
+            </div>
+            <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
+              Find your <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">next move</span>
+            </h1>
+            <p class="text-base md:text-lg text-gray-600 max-w-2xl">
+              Discover trusted rooms, instant rides, and connect with your community — all in one place.
+            </p>
+          </div>
+
+          <!-- Premium Search Card -->
+          <div class="relative group animate-fade-in-up animation-delay-200">
+            <!-- Glow effect -->
+            <div class="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-500"></div>
+            
+            <!-- Search Container -->
+            <div class="relative rounded-3xl border-2 border-white/60 bg-white/90 backdrop-blur-2xl shadow-2xl overflow-hidden">
+              <!-- Gradient header accent -->
+              <div class="h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600"></div>
+              
+              <div class="p-4 md:p-6">
+                <app-unified-search (activeTabChange)="onTabChange($event)" (performedSearch)="onSearch($event)"></app-unified-search>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- Results / Filters layout -->
-    <section class="max-w-7xl mx-auto px-6 pb-24">
-  <div class="layout-container" [class.filters-visible]="!filtersHidden()" [class.mobile-filters-open]="mobileFiltersOpen()">
-          <!-- Left Sidebar - Sticky Filter Panel (Desktop Only) -->
-          <aside id="filtersPanel" class="filter-sidebar" [class.visible]="!filtersHidden()" [class.mobile-panel]="mobileFiltersOpen()" aria-label="Filters" [attr.role]="mobileFiltersOpen() ? 'dialog' : null" [attr.aria-modal]="mobileFiltersOpen() ? 'true' : null" tabindex="-1">
+      <!-- 📊 Results Section with Premium Layout -->
+      <section class="relative max-w-7xl mx-auto px-4 md:px-6 pb-24">
+        <div class="layout-container" [class.filters-visible]="!filtersHidden()" [class.mobile-filters-open]="mobileFiltersOpen()">
+          
+          <!-- 🎨 Left Sidebar - Premium Filter Panel (Desktop) -->
+          <aside 
+            id="filtersPanel" 
+            class="filter-sidebar" 
+            [class.visible]="!filtersHidden()" 
+            [class.mobile-panel]="mobileFiltersOpen()" 
+            aria-label="Filters" 
+            [attr.role]="mobileFiltersOpen() ? 'dialog' : null" 
+            [attr.aria-modal]="mobileFiltersOpen() ? 'true' : null" 
+            tabindex="-1">
             <app-filter-panel
               [activeTab]="activeTab()"
               [roomsFilters]="roomsFilters()"
@@ -45,79 +94,122 @@ import { SharedDataService } from '../../core/services/shared-data.service';
             />
           </aside>
 
-          <!-- Right Content - Scrollable Results -->
+          <!-- 📱 Right Content - Premium Results Grid -->
           <div class="results-container">
+            
+            <!-- Control Bar -->
             <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+              <!-- Filter Buttons -->
               <div class="flex items-center gap-3">
-                <button *ngIf="filtersHidden()" class="text-sm px-5 py-2.5 rounded-xl bg-[#3E8FFF] text-white font-semibold shadow-lg shadow-[#3E8FFF]/25 hover:shadow-xl hover:shadow-[#3E8FFF]/35 hover:scale-105 transition-all duration-200" (click)="toggleFilters()" aria-controls="filtersPanel" [attr.aria-expanded]="!filtersHidden()">
-                  <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                <button 
+                  *ngIf="filtersHidden()" 
+                  class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200" 
+                  (click)="toggleFilters()" 
+                  aria-controls="filtersPanel" 
+                  [attr.aria-expanded]="!filtersHidden()">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                   </svg>
                   Show Filters
                 </button>
-                <button *ngIf="!filtersHidden()" class="md:hidden text-sm px-5 py-2.5 rounded-xl bg-[#3E8FFF] text-white font-semibold shadow-lg shadow-[#3E8FFF]/25 hover:shadow-xl hover:shadow-[#3E8FFF]/35 hover:scale-105 transition-all duration-200" (click)="openMobileFilters()" aria-controls="filtersPanel" [attr.aria-expanded]="mobileFiltersOpen()">
-                  <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                <button 
+                  *ngIf="!filtersHidden()" 
+                  class="md:hidden inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200" 
+                  (click)="openMobileFilters()" 
+                  aria-controls="filtersPanel" 
+                  [attr.aria-expanded]="mobileFiltersOpen()">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                   </svg>
                   Filters
                 </button>
               </div>
-              <div class="text-sm text-[#6F7785]">Showing <span class="font-semibold text-[#0A1A3F]">{{ results().length }}</span> {{ activeTab() }}</div>
-              <div class="flex items-center gap-2">
-                <select class="text-sm rounded-xl px-4 py-2.5 bg-white backdrop-blur-sm border border-[#ECECEC] text-[#0A1A3F] font-medium shadow-sm hover:shadow-md hover:border-[#3E8FFF] focus:outline-none focus:border-[#3E8FFF] focus:ring-4 focus:ring-[#3E8FFF]/10 transition-all cursor-pointer">
+
+              <!-- Results Count & Sort -->
+              <div class="flex items-center gap-4">
+                <div class="text-sm text-gray-600">
+                  Showing <span class="font-bold text-gray-900">{{ results().length }}</span> {{ activeTab() }}
+                </div>
+                <select class="text-sm rounded-xl px-4 py-2.5 bg-white/90 backdrop-blur-sm border-2 border-gray-200 text-gray-900 font-semibold shadow-sm hover:shadow-md hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer">
                   <option>Most relevant</option>
                   <option>Newest</option>
                   <option>Price low-high</option>
+                  <option>Price high-low</option>
+                  <option>Highest rated</option>
                 </select>
               </div>
             </div>
 
-            <!-- Grid -->
-            <div *ngIf="!loading() && results().length > 0" class="results-grid" [class.filters-visible]="!filtersHidden()">
+            <!-- Premium Results Grid with Animation -->
+            <div *ngIf="!loading() && results().length > 0" class="results-grid animate-fade-in-up" [class.filters-visible]="!filtersHidden()">
               <ng-container [ngSwitch]="activeTab()">
                 <ng-container *ngSwitchCase="'rooms'">
                   <app-room-result-card 
-                    *ngFor="let item of results()" 
+                    *ngFor="let item of results(); trackBy: trackById" 
                     [item]="item"
                     [isSelected]="selectedCardId() === item.id"
-                    (cardClick)="onRoomCardClick(item)">
+                    (cardClick)="onRoomCardClick(item)"
+                    class="animate-scale-in">
                   </app-room-result-card>
                 </ng-container>
                 <ng-container *ngSwitchCase="'rides'">
                   <app-ride-result-card 
-                    *ngFor="let item of results()" 
+                    *ngFor="let item of results(); trackBy: trackById" 
                     [item]="item"
                     [isSelected]="selectedCardId() === item.id"
-                    (cardClick)="openRideModal(item)">
+                    (cardClick)="openRideModal(item)"
+                    class="animate-scale-in">
                   </app-ride-result-card>
                 </ng-container>
                 <ng-container *ngSwitchCase="'market'">
                   <app-market-result-card 
-                    *ngFor="let item of results()" 
+                    *ngFor="let item of results(); trackBy: trackById" 
                     [item]="item"
                     [isSelected]="selectedCardId() === item.id"
-                    (cardClick)="onMarketCardClick(item)">
+                    (cardClick)="onMarketCardClick(item)"
+                    class="animate-scale-in">
                   </app-market-result-card>
                 </ng-container>
               </ng-container>
             </div>
 
-            <!-- Loading skeleton -->
+            <!-- Premium Loading Skeletons -->
             <div *ngIf="loading()" class="results-grid" [class.filters-visible]="!filtersHidden()">
-              <div *ngFor="let i of skeleton" class="card-result animate-pulse">
-                <div class="thumb bg-gray-200"></div>
-                <div class="p-3 space-y-2">
-                  <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div class="h-3 bg-gray-200 rounded w-1/2"></div>
-                  <div class="h-4 bg-gray-200 rounded w-2/5"></div>
+              <div *ngFor="let i of skeleton" class="group">
+                <div class="rounded-3xl border-2 border-gray-100 bg-white shadow-lg overflow-hidden">
+                  <div class="loading-shimmer w-full h-56 md:h-64 bg-gray-200"></div>
+                  <div class="p-6 space-y-4">
+                    <div class="loading-shimmer h-6 w-3/4 rounded-lg bg-gray-200"></div>
+                    <div class="loading-shimmer h-4 w-full rounded bg-gray-200"></div>
+                    <div class="loading-shimmer h-4 w-5/6 rounded bg-gray-200"></div>
+                    <div class="flex justify-between items-center pt-2">
+                      <div class="loading-shimmer h-10 w-10 rounded-full bg-gray-200"></div>
+                      <div class="loading-shimmer h-9 w-24 rounded-xl bg-gray-200"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Empty state -->
-            <div *ngIf="!loading() && results().length === 0" class="text-center py-24">
-              <h3 class="text-xl font-semibold text-gray-900 mb-3">No {{ activeTab() }} found</h3>
-              <p class="text-sm text-gray-600 max-w-sm mx-auto">Try adjusting your search or filters for a broader match.</p>
+            <!-- Premium Empty State -->
+            <div *ngIf="!loading() && results().length === 0" class="text-center py-32">
+              <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 mb-6">
+                <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900 mb-3">No {{ activeTab() }} found</h3>
+              <p class="text-base text-gray-600 max-w-md mx-auto mb-6">
+                Try adjusting your search or filters to discover more options.
+              </p>
+              <button 
+                (click)="clearAllFilters()" 
+                class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gray-900 text-white font-bold hover:bg-black hover:scale-105 active:scale-95 transition-all shadow-lg">
+                Clear all filters
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -129,100 +221,115 @@ import { SharedDataService } from '../../core/services/shared-data.service';
         [isOpen]="isRideModalOpen()"
         (closeModal)="closeRideModal()">
       </app-ride-detail-modal>
-    </main>
    `,
    styles: [ `
-    /* CSS Variables for sticky positioning 
-       --sticky-filter-offset: Distance from top when filters become sticky
-       --filter-max-height-offset: Used to calculate max height of filter panel
-       
-       To adjust if filter gets cut off:
-       1. Increase --sticky-filter-offset (e.g., 200px, 220px)
-       2. Increase --filter-max-height-offset by same amount
-       
-       Current calculation:
-       - Header: ~64px
-       - Hero strip padding (pt-8 + pb-8): ~64px  
-       - Search component: ~60-80px
-       - Spacing: ~20px
-       Total: ~180-200px
-    */
+    /* 🎨 Premium Explore Page Styles */
     :host {
-      --sticky-filter-offset: 160px;
-      --filter-max-height-offset: 180px;
+      --sticky-filter-offset: 140px;
+      --filter-max-height-offset: 160px;
     }
 
-    /* Smooth scrolling for the entire page */
     * {
       scroll-behavior: smooth;
     }
 
-    /* Clean white background for Explore page */
+    /* Premium Background */
     .explore-page { 
-      background: #FFFFFF;
+      background: linear-gradient(to bottom, #FAFBFF, #FFFFFF, #F8FAFF);
       position: relative;
-    }
-    
-    /* Subtle decorative orbs - minimal and neutral */
-    .floating-orb { 
-      display: none; /* Hidden for clean white background */
+      min-height: 100vh;
     }
 
-    /* Hero strip - clean white card with soft shadow */
-    .hero-strip .hero-inner { 
-      background: #FFFFFF; 
-      border-radius: 20px; 
-      border: 1px solid #ECECEC; 
-      box-shadow: 0 4px 20px -8px rgba(10, 26, 63, 0.08), 0 2px 10px -4px rgba(0, 0, 0, 0.04); 
+    /* Floating Animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      33% { transform: translateY(-15px) translateX(8px); }
+      66% { transform: translateY(8px) translateX(-8px); }
     }
 
-    /* Layout Container - Flexbox for filters + results */
+    @keyframes float-delayed {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      33% { transform: translateY(10px) translateX(-12px); }
+      66% { transform: translateY(-8px) translateX(8px); }
+    }
+
+    .animate-float {
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .animate-float-delayed {
+      animation: float-delayed 10s ease-in-out infinite;
+    }
+
+    /* Fade in animations */
+    @keyframes fade-in-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-in-up {
+      animation: fade-in-up 0.6s ease-out forwards;
+    }
+
+    .animation-delay-200 {
+      animation-delay: 200ms;
+    }
+
+    /* Scale in animation for cards */
+    @keyframes scale-in {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .animate-scale-in {
+      animation: scale-in 0.3s ease-out forwards;
+    }
+
+    /* Premium Layout Container */
     .layout-container {
       display: flex;
-      gap: 40px;
+      gap: 32px;
       position: relative;
-      align-items: flex-start; /* Align items to top for sticky to work */
-      transition: all 0.3s ease;
+      align-items: flex-start;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Filter Sidebar - Sticky on Desktop */
+    /* Filter Sidebar - Sticky Premium Panel */
     .filter-sidebar {
       width: 0;
       flex-shrink: 0;
       overflow: hidden;
       opacity: 0;
       transform: translateX(-20px);
-      transition: width 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                  opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                  transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .filter-sidebar.visible {
-      width: 288px; /* 18rem / w-72 */
+      width: 300px;
       opacity: 1;
       transform: translateX(0);
       position: sticky;
-      top: var(--sticky-filter-offset); /* Use CSS variable for easy adjustment */
-      align-self: flex-start; /* Critical for sticky positioning */
-      max-height: calc(100vh - var(--filter-max-height-offset)); /* Prevents overflow, allows internal scrolling */
-      overflow-y: auto; /* Allow scrolling if filter content is tall */
-      /* Ensure sticky works properly */
+      top: var(--sticky-filter-offset);
+      align-self: flex-start;
+      max-height: calc(100vh - var(--filter-max-height-offset));
+      overflow-y: auto;
       will-change: transform;
       z-index: 10;
-      /* Hide scrollbar but keep functionality */
       scrollbar-width: thin;
       scrollbar-color: rgba(62, 143, 255, 0.3) transparent;
-      /* Ensure content doesn't get cut off */
       display: flex;
       flex-direction: column;
     }
 
-    /* Ensure filter panel content scrolls internally */
     .filter-sidebar.visible > * {
       flex: 1;
       min-height: 0;
       overflow-y: auto;
     }
 
-    /* Webkit scrollbar styling for filter panel */
+    /* Premium scrollbar */
     .filter-sidebar.visible::-webkit-scrollbar {
       width: 6px;
     }
@@ -240,39 +347,47 @@ import { SharedDataService } from '../../core/services/shared-data.service';
       background: rgba(62, 143, 255, 0.5);
     }
 
-    /* Results Container - Scrolls Normally */
+    /* Results Container */
     .results-container {
       flex: 1;
       min-width: 0;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Results Grid - Dynamic columns based on filter state */
+    /* Premium Results Grid - Mobile First */
     .results-grid {
       display: grid;
-      gap: 28px;
+      gap: 20px;
       grid-template-columns: repeat(1, minmax(0, 1fr));
-      transition: grid-template-columns 0.3s ease, gap 0.3s ease;
+      transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                  gap 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Small screens */
+    /* Small screens (sm: 640px+) */
     @media (min-width: 640px) {
       .results-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+    }
+
+    /* Medium screens (md: 768px+) */
+    @media (min-width: 768px) {
+      .results-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px;
+      }
+      
+      .results-grid.filters-visible {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
-    /* Medium screens - 3 columns when filters shown, 3 columns default */
-    @media (min-width: 768px) {
-      .results-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    /* Large screens - 4 columns when filters hidden, 3 when shown */
+    /* Large screens (lg: 1024px+) */
     @media (min-width: 1024px) {
       .results-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 28px;
       }
       
       .results-grid.filters-visible {
@@ -280,7 +395,7 @@ import { SharedDataService } from '../../core/services/shared-data.service';
       }
     }
 
-    /* Extra large screens - maintain proper spacing */
+    /* Extra large screens (xl: 1280px+) */
     @media (min-width: 1280px) {
       .results-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -292,24 +407,18 @@ import { SharedDataService } from '../../core/services/shared-data.service';
         gap: 28px;
       }
     }
-    
-    .filter-label { @apply block text-xs font-semibold uppercase tracking-wide mb-1; color: #0A1A3F; }
-    .filter-input { @apply w-full border rounded-md px-2 py-1 text-sm focus:outline-none; border-color: #ECECEC; color: #1B1C1E; }
-    .filter-input:focus { border-color: #3E8FFF; box-shadow: 0 0 0 2px rgba(62,143,255,0.1); }
-    .pill { @apply px-3 py-1 text-xs rounded-full border bg-white focus:outline-none; border-color: #ECECEC; color: #0A1A3F; }
-    .pill.on { border-color: #3E8FFF; background: rgba(62,143,255,0.08); color: #0A1A3F; font-weight: 600; }
-    
-    /* Mobile filters overlay */
+
+    /* Mobile Filters Overlay */
     .mobile-filters-open .mobile-panel { 
       position: fixed;
       inset: 0 auto 0 0;
-      z-index: 40;
-      width: 288px;
+      z-index: 50;
+      width: 300px;
       background: white;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
       overflow-y: auto;
-      padding: 20px 16px 32px;
-      border-right: 1px solid #ECECEC;
+      padding: 24px 20px 40px;
+      border-right: 1px solid #E5E7EB;
       opacity: 1;
       transform: translateX(0);
     }
@@ -318,75 +427,98 @@ import { SharedDataService } from '../../core/services/shared-data.service';
       content: '';
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.3);
-      z-index: 30;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 40;
       display: none;
     }
 
     @media (max-width: 767px) {
       .filter-sidebar.visible {
-        position: relative; /* Not sticky on mobile */
+        position: relative;
         width: 0;
         opacity: 0;
         transform: translateX(-20px);
-        top: auto; /* Remove sticky positioning */
-        max-height: none; /* Remove height constraint */
+        top: auto;
+        max-height: none;
         z-index: auto;
       }
 
       .mobile-filters-open::before {
         display: block;
       }
+
+      .results-grid {
+        gap: 16px;
+      }
     }
 
-    /* Tablet - sticky with adjusted offset */
+    /* Tablet adjustments */
     @media (min-width: 768px) and (max-width: 1023px) {
       :host {
-        --sticky-filter-offset: 140px;
-        --filter-max-height-offset: 160px;
-      }
-      
-      .filter-sidebar.visible {
-        position: sticky;
-        top: var(--sticky-filter-offset);
-        max-height: calc(100vh - var(--filter-max-height-offset));
+        --sticky-filter-offset: 120px;
+        --filter-max-height-offset: 140px;
       }
     }
 
-    /* Desktop - optimal sticky behavior */
-    @media (min-width: 1024px) {
-      :host {
-        --sticky-filter-offset: 160px;
-        --filter-max-height-offset: 180px;
-      }
-      
-      .filter-sidebar.visible {
-        position: sticky;
-        top: var(--sticky-filter-offset);
-        max-height: calc(100vh - var(--filter-max-height-offset));
-      }
-    }
-    
-    /* Clean white cards with soft shadows */
-    .explore-page .card-premium { 
-      background: #FFFFFF; 
-      border-radius: 20px; 
-      border: 1px solid #ECECEC;
-      box-shadow: 0 4px 16px -4px rgba(10, 26, 63, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04); 
-      overflow: hidden; 
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease; 
-    }
-    .explore-page .card-premium:hover { 
-      transform: translateY(-6px); 
-      box-shadow: 0 12px 40px -8px rgba(10, 26, 63, 0.12), 0 8px 24px -4px rgba(62, 143, 255, 0.12); 
-      border-color: #3E8FFF;
-    }
-    .explore-page .hover-lift:hover { 
-      transform: translateY(-6px); 
+    /* Loading shimmer effect */
+    .loading-shimmer {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(
+        90deg,
+        #f0f0f0 0%,
+        #f8f8f8 50%,
+        #f0f0f0 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
     }
 
-    @media (max-width: 768px) {
-      .orb-1, .orb-2 { display:none; }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Touch-friendly mobile adjustments */
+    @media (max-width: 640px) {
+      .layout-container {
+        gap: 20px;
+      }
+
+      button {
+        min-height: 44px; /* iOS touch target */
+      }
+    }
+
+    /* High contrast focus states for accessibility */
+    button:focus-visible {
+      outline: 2px solid #3E8FFF;
+      outline-offset: 2px;
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Print styles */
+    @media print {
+      .filter-sidebar,
+      button {
+        display: none;
+      }
+
+      .results-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
     }
   ` ]
 })
@@ -547,6 +679,41 @@ export class SearchPage {
   
   openMobileFilters(){ this.mobileFiltersOpen.set(true); }
   closeMobileFilters(){ this.mobileFiltersOpen.set(false); }
+
+  // Clear all filters
+  clearAllFilters() {
+    this.roomsFilters.set({ 
+      price: 1500, 
+      place: '', 
+      type: '', 
+      property: '', 
+      amenities: [], 
+      studentVerified: false, 
+      rating: '' 
+    });
+    this.ridesFilters.set({ 
+      from: '', 
+      to: '', 
+      date: '', 
+      time: '', 
+      priceMax: 0, 
+      seats: 1, 
+      radius: 0, 
+      rating: '' 
+    });
+    this.marketFilters.set({ 
+      category: '', 
+      maxPrice: 0, 
+      condition: '', 
+      place: '', 
+      seller: '' 
+    });
+  }
+
+  // Track by function for performance
+  trackById(index: number, item: any): string {
+    return item.id || index;
+  }
 
   // Ride modal methods
   openRideModal(ride: any) {

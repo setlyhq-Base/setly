@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import {
   Auth,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   GoogleAuthProvider,
   FacebookAuthProvider,
   OAuthProvider,

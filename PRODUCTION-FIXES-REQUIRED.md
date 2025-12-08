@@ -1,5 +1,21 @@
 # Firebase & Google OAuth Configuration - Action Required
 
+## ✅ COMPLETED: Google OAuth Mobile-App Flow (commit 737d293)
+
+**Changes Made:**
+- ✅ Removed `signInWithRedirect()` fallback - no more new tabs
+- ✅ Always use `signInWithPopup()` for mobile-app experience  
+- ✅ Clear error handling for popup blockers
+- ✅ No more API keys in URLs
+- ✅ No more blank screens
+
+**What Users Will Experience:**
+- Google account chooser appears as popup (not new tab)
+- Signs in within same app window
+- Clean mobile-app feel (just like native apps)
+
+---
+
 ## 🔥 Issue #3: Google Sign-In / Firebase OAuth Domain Authorization
 
 Your Google Sign-In is failing because `setly.in` and `www.setly.in` are not authorized in your Firebase/Google Cloud project.

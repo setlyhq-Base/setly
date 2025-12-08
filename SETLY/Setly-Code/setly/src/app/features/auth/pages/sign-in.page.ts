@@ -184,7 +184,16 @@ export class SignInPage {
       .catch(err => {
         console.error(err);
         this.analytics.fire('auth_failed', { provider: name, reason: err?.code || err?.message });
-        this.toast(this.humanError(err?.code), 'error');
+        
+        // Handle popup blocker specifically
+        const errorMessage = err?.message || '';
+        if (errorMessage.includes('POPUP_BLOCKED')) {
+          this.toast('Please allow popups for Setly and try again', 'error');
+        } else if (errorMessage === 'Sign-in cancelled') {
+          this.toast('Sign-in was cancelled', 'error');
+        } else {
+          this.toast(this.humanError(err?.code), 'error');
+        }
       })
       .finally(() => {
         this.loading.set(false);

@@ -63,29 +63,28 @@ export class FirebaseAuthService {
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
+      // Always use popup for mobile-app experience - no redirects
       const result = await signInWithPopup(this.auth, provider);
       return result.user;
     } catch (err: any) {
       const code = err?.code || '';
-      const ua = navigator.userAgent || '';
-      const isIOS = /iPad|iPhone|iPod/.test(ua);
-      const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-      const isEmbedded = (window as any).navigator?.standalone === true || /FBAN|FBAV|Instagram|Line|Twitter/i.test(ua);
-      // Known cases where popup fails due to environment restrictions -> fallback to redirect
-      const shouldRedirect = [
-        'auth/popup-blocked',
-        'auth/operation-not-supported-in-this-environment',
-        'auth/cookie-not-supported',
-        'auth/internal-error'
-      ].some(c => code.includes(c)) || isIOS || isSafari || isEmbedded;
-      if (shouldRedirect) {
-        try {
-          await signInWithRedirect(this.auth, provider);
-          return new Promise<FirebaseUser>(() => {});
-        } catch (e) {
-          throw e;
-        }
+      
+      // Handle popup blocker with clear user-facing error
+      if (code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request') {
+        throw new Error('POPUP_BLOCKED: Please allow popups for setly.in to sign in with Google');
       }
+      
+      // Handle popup closed by user
+      if (code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign-in cancelled');
+      }
+      
+      // Handle network errors
+      if (code === 'auth/network-request-failed') {
+        throw new Error('Network error. Please check your connection and try again');
+      }
+      
+      // Other errors - preserve original message
       throw err;
     }
   }

@@ -1,0 +1,653 @@
+/* ============================================
+   POST RIDE - SHARED MOBILE-FIRST STYLES
+   Premium mobile wizard matching Post Room design
+============================================ */
+
+/* ============================================
+   MAIN WIZARD CONTAINER
+============================================ */
+
+.mobile-wizard-content {
+  padding: 24px 20px 120px 20px; /* Extra bottom padding for fixed button bar */
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+  min-height: calc(100vh - 140px);
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================
+   INTRO CARD (Premium card at top of each step)
+============================================ */
+
+.section-intro-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+  border-radius: 24px;
+  padding: 32px 24px;
+  margin-bottom: 28px;
+  text-align: center;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.intro-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px auto;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  color: white;
+}
+
+.intro-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.intro-subtitle {
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.5;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* ============================================
+   FORM SECTIONS
+============================================ */
+
+.form-section {
+  margin-bottom: 32px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16px;
+  padding-left: 4px;
+}
+
+.section-header svg {
+  flex-shrink: 0;
+  color: #3B82F6;
+}
+
+/* ============================================
+   FIELD GROUPS & LABELS
+============================================ */
+
+.mobile-field-group {
+  margin-bottom: 20px;
+}
+
+.mobile-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.required-star {
+  color: #EF4444;
+  margin-left: 2px;
+}
+
+/* ============================================
+   INPUT FIELDS (iOS-style)
+============================================ */
+
+.mobile-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.mobile-input {
+  width: 100%;
+  height: 56px;
+  padding: 0 16px 0 48px; /* Left padding for icon */
+  font-size: 16px;
+  font-weight: 500;
+  color: #111827;
+  background: white;
+  border: 2px solid #E5E7EB;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.mobile-input::placeholder {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+.mobile-input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  background: #FAFBFC;
+}
+
+.mobile-input:hover:not(:focus) {
+  border-color: #D1D5DB;
+}
+
+/* Input with suffix (e.g., "/per seat") */
+.input-suffix {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.mobile-input:has(+ .input-suffix) {
+  padding-right: 100px;
+}
+
+/* ============================================
+   DATE/TIME FIELD GRID
+============================================ */
+
+.date-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* Mobile date/time inputs */
+input[type="date"].mobile-input,
+input[type="time"].mobile-input {
+  padding: 0 16px 0 48px;
+  cursor: pointer;
+}
+
+input[type="date"].mobile-input::-webkit-calendar-picker-indicator,
+input[type="time"].mobile-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  color: #3B82F6;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+input[type="date"].mobile-input::-webkit-calendar-picker-indicator:hover,
+input[type="time"].mobile-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* ============================================
+   SEATS SELECTOR (Counter with +/- buttons)
+============================================ */
+
+.seats-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: white;
+  border: 2px solid #E5E7EB;
+  border-radius: 16px;
+  gap: 16px;
+  transition: all 0.2s ease;
+}
+
+.seats-selector:hover {
+  border-color: #D1D5DB;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.seat-button {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F3F4F6;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.seat-button:hover:not(:disabled) {
+  background: #3B82F6;
+  border-color: #3B82F6;
+  color: white;
+  transform: scale(1.05);
+}
+
+.seat-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.seat-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.seat-count {
+  flex: 1;
+  text-align: center;
+}
+
+.seat-number {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.seat-label {
+  display: block;
+  font-size: 13px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+/* ============================================
+   ERROR & HINT MESSAGES
+============================================ */
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #FEF2F2;
+  border-left: 3px solid #EF4444;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #DC2626;
+  line-height: 1.4;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.field-error svg {
+  flex-shrink: 0;
+  color: #EF4444;
+}
+
+/* Hint text below fields */
+.field-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6B7280;
+  line-height: 1.4;
+}
+
+/* ============================================
+   CAR TYPE CARDS (2x2 Grid)
+============================================ */
+
+.car-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.car-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: white;
+  border: 2px solid #E5E7EB;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 100px;
+}
+
+.car-type-card svg {
+  color: #6B7280;
+  transition: color 0.2s ease;
+}
+
+.car-type-card span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  transition: color 0.2s ease;
+}
+
+.car-type-card:hover {
+  border-color: #3B82F6;
+  background: #EFF6FF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.car-type-card.selected {
+  border-color: #3B82F6;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.car-type-card.selected svg {
+  color: #3B82F6;
+}
+
+.car-type-card.selected span {
+  color: #1E40AF;
+}
+
+.car-type-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ============================================
+   IOS TOGGLE SWITCHES
+============================================ */
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: white;
+  border: 2px solid #E5E7EB;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.toggle-row:hover {
+  border-color: #D1D5DB;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.toggle-label-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.toggle-icon {
+  flex-shrink: 0;
+  color: #6B7280;
+}
+
+.toggle-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.toggle-sublabel {
+  font-size: 13px;
+  color: #6B7280;
+}
+
+/* iOS-style toggle switch */
+.ios-toggle {
+  position: relative;
+  display: inline-block;
+  width: 51px;
+  height: 31px;
+  flex-shrink: 0;
+}
+
+.ios-toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.ios-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #E5E7EB;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 31px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ios-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 27px;
+  width: 27px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ios-toggle-input:checked + .ios-toggle-slider {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.ios-toggle-input:checked + .ios-toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.ios-toggle-input:focus + .ios-toggle-slider {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* ============================================
+   SEGMENTED CONTROLS (3-button style)
+============================================ */
+
+.segmented-control {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.segment {
+  flex: 1;
+  padding: 12px 8px;
+  background: white;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.segment-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.segment-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  transition: color 0.2s ease;
+}
+
+.segment-subtitle {
+  font-size: 12px;
+  color: #9CA3AF;
+  transition: color 0.2s ease;
+}
+
+.segment:hover {
+  border-color: #3B82F6;
+  background: #EFF6FF;
+  transform: translateY(-1px);
+}
+
+.segment.active {
+  border-color: #3B82F6;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.segment.active .segment-title {
+  color: #1E40AF;
+}
+
+.segment.active .segment-subtitle {
+  color: #3B82F6;
+}
+
+.segment:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ============================================
+   TEXTAREA WITH CHAR COUNT
+============================================ */
+
+.mobile-textarea-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.mobile-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  padding-bottom: 36px; /* Space for char count */
+  font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #111827;
+  background: white;
+  border: 2px solid #E5E7EB;
+  border-radius: 16px;
+  resize: vertical;
+  transition: all 0.2s ease;
+  line-height: 1.5;
+}
+
+.mobile-textarea::placeholder {
+  color: #9CA3AF;
+}
+
+.mobile-textarea:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  background: #FAFBFC;
+}
+
+.char-count-textarea {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  font-size: 12px;
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+/* ============================================
+   UTILITY CLASSES
+============================================ */
+
+.text-gray-400 {
+  color: #9CA3AF;
+}
+
+.section-icon {
+  flex-shrink: 0;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+============================================ */
+
+@media (max-width: 375px) {
+  .mobile-wizard-content {
+    padding: 20px 16px 120px 16px;
+  }
+
+  .section-intro-card {
+    padding: 24px 20px;
+  }
+
+  .intro-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .intro-title {
+    font-size: 22px;
+  }
+
+  .mobile-input {
+    height: 52px;
+    font-size: 15px;
+  }
+
+  .seat-button {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .seat-number {
+    font-size: 24px;
+  }
+}

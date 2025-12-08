@@ -129,8 +129,8 @@ export const routes: Routes = [
   },
   {
     path: 'ride',
-    loadComponent: () => import('./features/ride/ride.page').then(m => m.RidePage),
-    title: 'SetlyRide - Setly',
+    loadComponent: () => import('./features/post-ride/post-ride.page').then(m => m.PostRidePage),
+    title: 'Post a Ride - Setly',
     canActivate: [AuthGuard, TrustedActionGuard]
   },
   {

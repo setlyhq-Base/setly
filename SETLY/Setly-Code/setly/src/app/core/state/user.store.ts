@@ -110,10 +110,20 @@ export class UserStore {
       const headers = idToken ? { Authorization: `Bearer ${idToken}` } : undefined;
       // Call new unprotected sync endpoint explicitly with idToken duplication (header + body)
       if (idToken) {
-        await this.http.post('/api/auth/sync', { idToken }, headers ? { headers } : undefined).toPromise();
+        try {
+          await this.http.post('/api/auth/sync', { idToken }, headers ? { headers } : undefined).toPromise();
+        } catch (syncError) {
+          console.warn('[UserStore] Backend sync failed (backend may not be available):', syncError);
+          // Continue anyway - OAuth succeeded even if backend is unavailable
+        }
       }
-      const meDto = await this.http.get<BackendUserDto>('/api/users/me', headers ? { headers } : undefined).toPromise();
-      if (meDto && typeof meDto === 'object' && 'id' in meDto) this._user.set(this.mapToUser(meDto as BackendUserDto));
+      try {
+        const meDto = await this.http.get<BackendUserDto>('/api/users/me', headers ? { headers } : undefined).toPromise();
+        if (meDto && typeof meDto === 'object' && 'id' in meDto) this._user.set(this.mapToUser(meDto as BackendUserDto));
+      } catch (meError) {
+        console.warn('[UserStore] Failed to fetch user profile from backend (backend may not be available):', meError);
+        // OAuth succeeded but backend unavailable - don't block the user
+      }
     } finally {
       this._loading.set(false);
     }

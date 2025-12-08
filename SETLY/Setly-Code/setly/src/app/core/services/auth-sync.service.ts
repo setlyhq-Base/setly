@@ -76,8 +76,8 @@ export class AuthSyncService {
         // Begin presence heartbeat (immediate + interval)
         this.startHeartbeat();
       } catch (e: any) {
-        console.error('[AuthSync] sync failed', e);
-        // Graceful degrade: hydrate stores from Firebase user so app remains usable
+        console.warn('[AuthSync] Backend sync failed - using Firebase user data only (backend may not be available):', e);
+        // Graceful degrade: hydrate stores from Firebase user so app remains usable even without backend
         try {
           this.authStore.setUser({
             userId: fbUser.uid,

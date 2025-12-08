@@ -18,6 +18,10 @@ interface PresenceStatusDetail { status: string; intervalMs?: number; failures?:
     .presence-indicator.degraded .dot { background: #fbbf24; }
     .presence-indicator.stopped .dot, .presence-indicator.disabled .dot { background: #f87171; }
     .presence-indicator .label { white-space: nowrap; }
+    /* Hide on mobile to avoid overlap with bottom nav */
+    @media (max-width: 767px) {
+      .presence-indicator { display: none; }
+    }
   `]
 })
 export class PresenceIndicatorComponent implements OnDestroy {

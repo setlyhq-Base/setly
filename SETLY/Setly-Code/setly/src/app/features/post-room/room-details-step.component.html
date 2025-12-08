@@ -1,210 +1,588 @@
-<div class="space-y-6">
-  <!-- Title -->
-  <div class="form-group">
-    <label for="title" class="form-label">Room Title <span class="text-red-500">*</span></label>
-    <input id="title" type="text" class="form-input" placeholder="e.g., Cozy Room Near Campus"
-      [(ngModel)]="title" (ngModelChange)="onTitleChange($event)" maxlength="80" data-testid="pr-title"
-      [class.border-red-500]="titleError()" />
-    @if (titleError()) { <p class="form-error">{{ titleError() }}</p> }
-  </div>
-
-  <!-- Description -->
-  <div class="form-group">
-    <label for="description" class="form-label">Description <span class="text-red-500">*</span></label>
-    <textarea id="description" rows="6" class="form-input resize-none"
-      placeholder="Describe your room, amenities, neighborhood, and what makes it special..."
-      [(ngModel)]="description" (ngModelChange)="onDescriptionChange($event)" maxlength="1200"
-      data-testid="pr-description" [class.border-red-500]="descriptionError()"></textarea>
-    @if (descriptionError()) { <p class="form-error">{{ descriptionError() }}</p> }
-  </div>
-
-  <!-- University (filtered by selected city if chosen) -->
-  <div class="form-group">
-    <label for="university" class="form-label">Near University <span class="text-red-500">*</span></label>
-    <div class="relative">
-      <input id="university" type="text" class="form-input" placeholder="Start typing university name..."
-        [(ngModel)]="universityQuery" (ngModelChange)="onUniversitySearch($event)" (focus)="showUniSuggestions = true"
-        (blur)="onUniversityBlur()" data-testid="pr-university" [class.border-red-500]="universityError()" />
-      @if (showUniSuggestions && universitySuggestions().length > 0) {
-        <ul class="autocomplete-dropdown">
-          @for (uni of universitySuggestions(); track uni.id) {
-            <li (mousedown)="selectUniversity(uni)" class="autocomplete-item">
-              <div class="font-medium">{{ uni.name }}</div>
-              <div class="text-xs text-gray-600" *ngIf="selectedCity()">Filtered: {{ selectedCity() }}</div>
-              <div class="text-sm text-gray-600" *ngIf="!selectedCity()">{{ uni.city }}, {{ uni.state }}</div>
-            </li>
-          }
-        </ul>
-      }
+<!-- Premium Mobile-First Room Details -->
+<div class="mobile-wizard-content">
+  
+  <!-- Intro Card -->
+  <div class="section-intro-card">
+    <div class="intro-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 22V12h6v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
-    @if (universityError()) { <p class="form-error">{{ universityError() }}</p> }
+    <h2 class="intro-title">Room Details</h2>
+    <p class="intro-subtitle">Tell us about your listing</p>
   </div>
 
-  <!-- City (typeahead) -->
-  <div class="form-group" data-testid="pr-location">
-    <label class="form-label">City <span class="text-red-500">*</span></label>
-    <div class="relative">
-      <input id="city" type="text" class="form-input" [value]="cityQuery()"
-        (input)="onCityType($any($event.target).value)" placeholder="Start typing a US city..." />
-      @if (showCitySuggestions() && citySuggestions().length > 0) {
-        <ul class="autocomplete-dropdown mt-1">
-          @for (c of citySuggestions(); track c) {
-            <li (mousedown)="pickCity(c)" class="autocomplete-item">{{ c }}</li>
-          }
-        </ul>
-      }
-      @if (!selectedCity() && cityError()) { <p class="form-error mt-1">{{ cityError() }}</p> }
-      @if (selectedCity()) { <p class="text-xs text-green-600 mt-1">Selected city: {{ selectedCity() }}</p> }
-    </div>
-    <p class="text-xs text-gray-500 mt-1">Selecting a city narrows the university list above.</p>
-  </div>
-
-  <!-- Address (after city) -->
-  <div class="form-group">
-    <label class="form-label">Street Address</label>
-    <app-google-place-input (picked)="onAddressPicked($event)" [initialAddress]="address"
-      [disabled]="!selectedCity()" [placeholder]="selectedCity() ? 'Street address' : 'Select city first'">
-    </app-google-place-input>
-    @if (addressError()) { <p class="form-error mt-1">{{ addressError() }}</p> }
-  </div>
-
-  <!-- Room Type -->
-  <div class="form-group">
-    <fieldset>
-      <legend class="form-label">Room Type <span class="text-red-500">*</span></legend>
-      <div class="grid grid-cols-2 gap-4" data-testid="pr-room-type">
-        <label class="radio-card" [class.selected]="roomType === 'private'">
-          <input type="radio" name="roomType" value="private" [(ngModel)]="roomType"
-            (ngModelChange)="onRoomTypeChange($event)" class="sr-only" />
-          <div class="radio-card-content">
-            <div class="text-lg font-semibold">Private Room</div>
-            <div class="text-sm text-gray-600">Your own space</div>
-          </div>
-        </label>
-        <label class="radio-card" [class.selected]="roomType === 'shared'">
-          <input type="radio" name="roomType" value="shared" [(ngModel)]="roomType"
-            (ngModelChange)="onRoomTypeChange($event)" class="sr-only" />
-          <div class="radio-card-content">
-            <div class="text-lg font-semibold">Shared Room</div>
-            <div class="text-sm text-gray-600">With roommates</div>
-          </div>
-        </label>
-      </div>
-      @if (roomTypeError()) { <p class="form-error">{{ roomTypeError() }}</p> }
-    </fieldset>
-  </div>
-
-  <!-- Bathroom -->
-  <div class="form-group">
-    <fieldset>
-      <legend class="form-label">Bathroom <span class="text-red-500">*</span></legend>
-      <div class="grid grid-cols-2 gap-4" data-testid="pr-bath">
-        <label class="radio-card" [class.selected]="bath === 'private'">
-          <input type="radio" name="bath" value="private" [(ngModel)]="bath"
-            (ngModelChange)="onBathChange($event)" class="sr-only" />
-          <div class="radio-card-content">
-            <div class="text-base font-semibold">Private Bath</div>
-            <div class="text-xs text-gray-600">Ensuite</div>
-          </div>
-        </label>
-        <label class="radio-card" [class.selected]="bath === 'shared'">
-          <input type="radio" name="bath" value="shared" [(ngModel)]="bath"
-            (ngModelChange)="onBathChange($event)" class="sr-only" />
-          <div class="radio-card-content">
-            <div class="text-base font-semibold">Shared Bath</div>
-            <div class="text-xs text-gray-600">Common</div>
-          </div>
-        </label>
-      </div>
-      @if (bathError()) { <p class="form-error">{{ bathError() }}</p> }
-    </fieldset>
-  </div>
-
-  <!-- Furnished Toggle -->
-  <div class="form-group">
-    <label class="flex items-center justify-between cursor-pointer" data-testid="pr-furnished">
-      <span class="form-label mb-0">Furnished</span>
-      <div class="relative">
-        <input type="checkbox" class="sr-only" [(ngModel)]="furnished"
-          (ngModelChange)="onFurnishedChange($event)" />
-        <div class="toggle-bg w-14 h-8 rounded-full transition-colors" [class.bg-blue-500]="furnished"
-          [class.bg-gray-300]="!furnished">
-          <div class="toggle-dot absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform"
-            [class.translate-x-6]="furnished"></div>
-        </div>
-      </div>
-    </label>
-  </div>
-
-  <!-- Rules -->
-  <div class="form-group">
-    <div class="collapsible-header" (click)="toggleRules()" role="button" tabindex="0"
-      (keydown.enter)="toggleRules()" (keydown.space)="$event.preventDefault(); toggleRules()">
-      <div class="flex items-center justify-between w-full">
-        <span class="font-medium">House Rules</span>
-        <div class="flex items-center gap-2 text-xs text-gray-500">
-          <span *ngIf="selectedRulesCount() > 0">{{ selectedRulesCount() }} selected</span>
-          <svg class="w-3 h-3 transition-transform" [class.rotate-180]="showRules()" viewBox="0 0 20 20" fill="none"
-            stroke="currentColor">
-            <path d="M6 8l4 4 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Section: Listing Basics -->
+  <div class="form-section">
+    <h3 class="section-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="section-icon">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Listing Basics
+    </h3>
+    
+    <!-- Title -->
+    <div class="mobile-field-group">
+      <label for="title" class="mobile-label">
+        Room Title <span class="required-star">*</span>
+      </label>
+      <div class="mobile-input-wrapper">
+        <div class="input-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
+        <input 
+          id="title" 
+          type="text" 
+          class="mobile-input" 
+          placeholder="e.g., Cozy Room Near Campus"
+          [(ngModel)]="title" 
+          (ngModelChange)="onTitleChange($event)" 
+          (focus)="onInputFocus($event)"
+          (blur)="onInputBlur($event)"
+          maxlength="80" 
+          data-testid="pr-title"
+          [class.error]="titleError()" />
+        <div class="char-count">{{ title.length }}/80</div>
+      </div>
+      @if (titleError()) { 
+        <div class="field-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ titleError() }}
+        </div> 
+      }
+    </div>
+
+    <!-- Description -->
+    <div class="mobile-field-group">
+      <label for="description" class="mobile-label">
+        Description <span class="required-star">*</span>
+      </label>
+      <div class="mobile-textarea-wrapper">
+        <textarea 
+          id="description" 
+          rows="5" 
+          class="mobile-textarea"
+          placeholder="Describe your room, amenities, neighborhood, and what makes it special..."
+          [(ngModel)]="description" 
+          (ngModelChange)="onDescriptionChange($event)"
+          (focus)="onInputFocus($event)"
+          (blur)="onInputBlur($event)"
+          maxlength="1200"
+          data-testid="pr-description" 
+          [class.error]="descriptionError()"></textarea>
+        <div class="char-count-textarea">{{ description.length }}/1200</div>
+      </div>
+      @if (descriptionError()) { 
+        <div class="field-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ descriptionError() }}
+        </div> 
+      }
+      <p class="field-hint">Minimum 30 characters for a great listing</p>
+    </div>
+  </div>
+
+  <!-- Section: Location -->
+  <div class="form-section">
+    <h3 class="section-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="section-icon">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Location
+    </h3>
+
+    <!-- Near University -->
+    <div class="mobile-field-group">
+      <label for="university" class="mobile-label">
+        Near University <span class="required-star">*</span>
+      </label>
+      <div class="mobile-input-wrapper">
+        <div class="input-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <input 
+          id="university" 
+          type="text" 
+          class="mobile-input" 
+          placeholder="Start typing university name..."
+          [(ngModel)]="universityQuery" 
+          (ngModelChange)="onUniversitySearch($event)" 
+          (focus)="showUniSuggestions = true"
+          (blur)="onUniversityBlur()" 
+          data-testid="pr-university" 
+          [class.error]="universityError()" />
+        @if (showUniSuggestions && universitySuggestions().length > 0) {
+          <ul class="mobile-dropdown">
+            @for (uni of universitySuggestions(); track uni.id) {
+              <li (mousedown)="selectUniversity(uni)" class="mobile-dropdown-item">
+                <div class="dropdown-item-main">{{ uni.name }}</div>
+                <div class="dropdown-item-sub" *ngIf="selectedCity()">Filtered: {{ selectedCity() }}</div>
+                <div class="dropdown-item-sub" *ngIf="!selectedCity()">{{ uni.city }}, {{ uni.state }}</div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+      @if (universityError()) { 
+        <div class="field-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ universityError() }}
+        </div> 
+      }
+    </div>
+
+    <!-- City -->
+    <div class="mobile-field-group" data-testid="pr-location">
+      <label class="mobile-label">
+        City <span class="required-star">*</span>
+      </label>
+      <div class="mobile-input-wrapper">
+        <div class="input-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <input 
+          id="city" 
+          type="text" 
+          class="mobile-input" 
+          [value]="cityQuery()"
+          (input)="onCityType($any($event.target).value)" 
+          placeholder="Start typing a US city..." 
+          [class.error]="!selectedCity() && cityError()" />
+        @if (showCitySuggestions() && citySuggestions().length > 0) {
+          <ul class="mobile-dropdown">
+            @for (c of citySuggestions(); track c) {
+              <li (mousedown)="pickCity(c)" class="mobile-dropdown-item">
+                <div class="dropdown-item-main">{{ c }}</div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+      @if (!selectedCity() && cityError()) { 
+        <div class="field-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ cityError() }}
+        </div> 
+      }
+      @if (selectedCity()) { 
+        <div class="field-success">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Selected: {{ selectedCity() }}
+        </div> 
+      }
+      <p class="field-hint">Selecting a city narrows the university list</p>
+    </div>
+
+    <!-- Street Address -->
+    <div class="mobile-field-group">
+      <label class="mobile-label">
+        Street Address <span class="required-star">*</span>
+      </label>
+      <div class="mobile-input-wrapper address-input-wrapper">
+        <app-google-place-input 
+          (picked)="onAddressPicked($event)" 
+          [initialAddress]="address"
+          [disabled]="!selectedCity()" 
+          [placeholder]="selectedCity() ? 'Enter street address' : 'Select city first'">
+        </app-google-place-input>
+      </div>
+      @if (addressError()) { 
+        <div class="field-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ addressError() }}
+        </div> 
+      }
+    </div>
+
+    <!-- Distance from Campus -->
+    <div class="mobile-field-group">
+      <label for="distanceMi" class="mobile-label">Distance from Campus</label>
+      <div class="mobile-input-wrapper">
+        <div class="input-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M2 12h20" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <input 
+          id="distanceMi" 
+          type="number" 
+          step="0.1" 
+          min="0" 
+          max="50" 
+          placeholder="1.5" 
+          class="mobile-input"
+          [(ngModel)]="distanceMiles" 
+          (ngModelChange)="onDistanceMilesChange($event)" 
+          data-testid="pr-distance" />
+        <div class="input-suffix">miles</div>
+      </div>
+      <p class="field-hint">Walking or driving distance to campus</p>
+    </div>
+  </div>
+
+  <!-- Section: Room Type & Features -->
+  <div class="form-section">
+    <h3 class="section-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="section-icon">
+        <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Room Type & Features
+    </h3>
+
+    <!-- Room Type (Premium Segmented Control) -->
+    <div class="mobile-field-group">
+      <label class="mobile-label">
+        Room Type <span class="required-star">*</span>
+      </label>
+      <div class="segmented-control" data-testid="pr-room-type">
+        <button 
+          type="button"
+          class="segment" 
+          [class.active]="roomType === 'private'"
+          (click)="roomType = 'private'; onRoomTypeChange('private')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="segment-icon">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 22V12h6v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="segment-content">
+            <div class="segment-title">Private</div>
+            <div class="segment-subtitle">Your own space</div>
+          </div>
+        </button>
+        <button 
+          type="button"
+          class="segment" 
+          [class.active]="roomType === 'shared'"
+          (click)="roomType = 'shared'; onRoomTypeChange('shared')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="segment-icon">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="segment-content">
+            <div class="segment-title">Shared</div>
+            <div class="segment-subtitle">With roommates</div>
+          </div>
+        </button>
+      </div>
+      @if (roomTypeError()) { 
+        <div class="field-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ roomTypeError() }}
+        </div> 
+      }
+    </div>
+
+    <!-- Bathroom Type -->
+    <div class="mobile-field-group">
+      <label class="mobile-label">
+        Bathroom <span class="required-star">*</span>
+      </label>
+      <div class="segmented-control" data-testid="pr-bath">
+        <button 
+          type="button"
+          class="segment" 
+          [class.active]="bath === 'private'"
+          (click)="bath = 'private'; onBathChange('private')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="segment-icon">
+            <path d="M9 6V2M15 6V2M9 22V18M15 22V18M20 9h4M20 15h4M0 9h4M0 15h4M6 6h12a3 3 0 013 3v6a3 3 0 01-3 3H6a3 3 0 01-3-3V9a3 3 0 013-3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="segment-content">
+            <div class="segment-title">Private</div>
+            <div class="segment-subtitle">Ensuite</div>
+          </div>
+        </button>
+        <button 
+          type="button"
+          class="segment" 
+          [class.active]="bath === 'shared'"
+          (click)="bath = 'shared'; onBathChange('shared')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="segment-icon">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <div class="segment-content">
+            <div class="segment-title">Shared</div>
+            <div class="segment-subtitle">Common</div>
+          </div>
+        </button>
+      </div>
+      @if (bathError()) { 
+        <div class="field-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ bathError() }}
+        </div> 
+      }
+    </div>
+
+    <!-- Furnished Toggle (iOS Style) -->
+    <div class="mobile-field-group">
+      <div class="toggle-row" data-testid="pr-furnished">
+        <div class="toggle-label-group">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="toggle-icon">
+            <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <div class="toggle-label">Furnished</div>
+            <div class="toggle-sublabel">Bed, desk, and basic furniture included</div>
+          </div>
+        </div>
+        <label class="ios-toggle">
+          <input 
+            type="checkbox" 
+            class="ios-toggle-input" 
+            [(ngModel)]="furnished"
+            (ngModelChange)="onFurnishedChange($event)" />
+          <span class="ios-toggle-slider"></span>
+        </label>
       </div>
     </div>
-    <fieldset *ngIf="showRules()" class="mt-2">
-      <div class="space-y-3" data-testid="pr-rules">
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-            [(ngModel)]="rules.vegetarian" (ngModelChange)="onRulesChange()" />
-          <span class="text-gray-700">Vegetarian household required</span>
-        </label>
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-            [(ngModel)]="rules.smoking" (ngModelChange)="onRulesChange()" />
-          <span class="text-gray-700">No smoking</span>
-        </label>
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-            [(ngModel)]="rules.petsOk" (ngModelChange)="onRulesChange()" />
-          <span class="text-gray-700">Pets allowed</span>
-        </label>
+  </div>
+
+  <!-- Section: Amenities & Rules -->
+  <div class="form-section">
+    <h3 class="section-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="section-icon">
+        <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Amenities & Rules
+    </h3>
+
+    <!-- Amenities (Multi-select Pills) -->
+    <div class="mobile-field-group" *ngIf="environment.featureFlags.enableAmenitySuggestions">
+      <label class="mobile-label">
+        Amenities <span class="required-star">*</span>
+      </label>
+      <div class="amenity-pills" data-testid="pr-amenity-suggestions">
+        <button 
+          type="button" 
+          *ngFor="let a of amenitySuggestions" 
+          (click)="toggleAmenity(a)"
+          class="amenity-pill" 
+          [class.selected]="hasAmenity(a)"
+          [attr.aria-pressed]="hasAmenity(a)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" *ngIf="hasAmenity(a)" class="pill-check">
+            <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ a }}
+        </button>
       </div>
-    </fieldset>
+      @if (amenitiesError()) { 
+        <div class="field-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ amenitiesError() }}
+        </div> 
+      }
+      <p class="field-hint">Select all amenities included with your listing</p>
+    </div>
+
+    <!-- House Rules (Expandable) -->
+    <div class="mobile-field-group">
+      <button 
+        type="button"
+        class="expandable-header" 
+        (click)="toggleRules()" 
+        [attr.aria-expanded]="showRules()">
+        <div class="expandable-header-content">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="expandable-icon">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <div class="expandable-title">House Rules</div>
+            <div class="expandable-subtitle" *ngIf="selectedRulesCount() > 0">
+              {{ selectedRulesCount() }} rule{{ selectedRulesCount() > 1 ? 's' : '' }} selected
+            </div>
+            <div class="expandable-subtitle" *ngIf="selectedRulesCount() === 0">
+              Optional preferences
+            </div>
+          </div>
+        </div>
+        <svg 
+          class="expandable-chevron" 
+          [class.rotated]="showRules()" 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="none">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      
+      <div class="expandable-content" *ngIf="showRules()" @slideDown>
+        <div class="rules-list" data-testid="pr-rules">
+          <label class="rule-item">
+            <div class="rule-checkbox-wrapper">
+              <input 
+                type="checkbox" 
+                class="rule-checkbox"
+                [(ngModel)]="rules.vegetarian" 
+                (ngModelChange)="onRulesChange()" />
+              <span class="rule-checkmark">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="rule-label-group">
+              <div class="rule-label">Vegetarian household</div>
+              <div class="rule-sublabel">Meat-free living space</div>
+            </div>
+          </label>
+
+          <label class="rule-item">
+            <div class="rule-checkbox-wrapper">
+              <input 
+                type="checkbox" 
+                class="rule-checkbox"
+                [(ngModel)]="rules.smoking" 
+                (ngModelChange)="onRulesChange()" />
+              <span class="rule-checkmark">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="rule-label-group">
+              <div class="rule-label">No smoking</div>
+              <div class="rule-sublabel">Smoke-free environment</div>
+            </div>
+          </label>
+
+          <label class="rule-item">
+            <div class="rule-checkbox-wrapper">
+              <input 
+                type="checkbox" 
+                class="rule-checkbox"
+                [(ngModel)]="rules.petsOk" 
+                (ngModelChange)="onRulesChange()" />
+              <span class="rule-checkmark">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="rule-label-group">
+              <div class="rule-label">Pets allowed</div>
+              <div class="rule-sublabel">Pet-friendly space</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Distance -->
-  <div class="form-group">
-    <label for="distanceMi" class="form-label">Distance from Campus (miles)</label>
-    <input id="distanceMi" type="number" step="0.1" min="0" max="50" placeholder="1.5" class="form-input"
-      [(ngModel)]="distanceMiles" (ngModelChange)="onDistanceMilesChange($event)" data-testid="pr-distance" />
+  <!-- Section: Availability -->
+  <div class="form-section">
+    <h3 class="section-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="section-icon">
+        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Availability
+    </h3>
+
+    <div class="date-fields-grid">
+      <!-- Available From -->
+      <div class="mobile-field-group">
+        <label for="availableFrom" class="mobile-label">
+          Available From <span class="required-star">*</span>
+        </label>
+        <div class="mobile-input-wrapper">
+          <div class="input-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <input 
+            id="availableFrom" 
+            type="date" 
+            class="mobile-input date-input"
+            [(ngModel)]="availableFrom"
+            (ngModelChange)="onAvailableFromChange($event)" 
+            [min]="minDate" 
+            data-testid="pr-available-from"
+            [class.error]="availableFromError()" />
+        </div>
+        @if (availableFromError()) { 
+          <div class="field-error">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            {{ availableFromError() }}
+          </div> 
+        }
+      </div>
+
+      <!-- Available To -->
+      <div class="mobile-field-group">
+        <label for="availableTo" class="mobile-label">
+          Available To <span class="text-gray-400">(Optional)</span>
+        </label>
+        <div class="mobile-input-wrapper">
+          <div class="input-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <input 
+            id="availableTo" 
+            type="date" 
+            class="mobile-input date-input"
+            [(ngModel)]="availableTo"
+            (ngModelChange)="onAvailableToChange($event)" 
+            [min]="availableFrom || minDate" 
+            data-testid="pr-available-to" />
+        </div>
+        <p class="field-hint">Leave blank for ongoing availability</p>
+      </div>
+    </div>
   </div>
 
-  <!-- Availability -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="form-group">
-      <label for="availableFrom" class="form-label">Available From <span class="text-red-500">*</span></label>
-      <input id="availableFrom" type="date" class="form-input" [(ngModel)]="availableFrom"
-        (ngModelChange)="onAvailableFromChange($event)" [min]="minDate" data-testid="pr-available-from"
-        [class.border-red-500]="availableFromError()" />
-      @if (availableFromError()) { <p class="form-error">{{ availableFromError() }}</p> }
-    </div>
-    <div class="form-group">
-      <label for="availableTo" class="form-label">Available To</label>
-      <input id="availableTo" type="date" class="form-input" [(ngModel)]="availableTo"
-        (ngModelChange)="onAvailableToChange($event)" [min]="availableFrom || minDate" data-testid="pr-available-to" />
-    </div>
-  </div>
-
-  <!-- Amenity Suggestions -->
-  <div class="form-group" *ngIf="environment.featureFlags.enableAmenitySuggestions">
-    <label class="form-label">Amenities <span class="text-red-500">*</span></label>
-    <div class="flex flex-wrap gap-2" data-testid="pr-amenity-suggestions">
-      <button type="button" *ngFor="let a of amenitySuggestions" (click)="toggleAmenity(a)"
-        class="px-2 py-1 rounded border text-xs transition"
-        [class.bg-blue-600]="hasAmenity(a)" [class.text-white]="hasAmenity(a)" [class.border-blue-600]="hasAmenity(a)"
-        [attr.aria-pressed]="hasAmenity(a)">{{ a }}</button>
-    </div>
-    @if (amenitiesError()) { <p class="form-error mt-1">{{ amenitiesError() }}</p> }
-    <p class="text-xs text-gray-500 mt-1">Select all that apply. Helps search relevance.</p>
-  </div>
 </div>

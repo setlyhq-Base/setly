@@ -1,4 +1,5 @@
 import { Component, inject, signal, effect } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../../../environments/environment';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -13,7 +14,18 @@ import { GeoSuggestion } from '../../core/services/geocoding.service';
   standalone: true,
   imports: [FormsModule, CommonModule, GooglePlaceInputComponent],
   templateUrl: './room-details-step.component.html',
-  styleUrls: ['./room-details-step.component.css']
+  styleUrls: ['./room-details-step.component.css'],
+  animations: [
+    trigger('slideDown', [
+      transition(':enter', [
+        style({ height: '0', opacity: 0, overflow: 'hidden' }),
+        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('200ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '0', opacity: 0, overflow: 'hidden' }))
+      ])
+    ])
+  ]
 })
 export class RoomDetailsStepComponent {
   private uniLookup = inject(UniversityLookupService);
@@ -303,5 +315,16 @@ export class RoomDetailsStepComponent {
   // Optional explicit validator if needed later
   private validateAddress(): void {
     this.addressError.set(this.address && this.address.trim() ? '' : 'Address is required');
+  }
+
+  // Input focus/blur animations for premium feel
+  onInputFocus(event: Event): void {
+    const input = event.target as HTMLElement;
+    input.closest('.mobile-input-wrapper')?.classList.add('focused');
+  }
+
+  onInputBlur(event: Event): void {
+    const input = event.target as HTMLElement;
+    input.closest('.mobile-input-wrapper')?.classList.remove('focused');
   }
 }

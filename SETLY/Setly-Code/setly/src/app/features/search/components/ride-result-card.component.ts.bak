@@ -1,0 +1,1414 @@
+import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+
+// Compact mobile-first ride card inspired by Uber/BlaBlaCar
+@Component({
+  selector: 'app-ride-result-card',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="compact-ride-card" 
+         [class.selected]="isSelected"
+         [class.expanded]="isExpanded()"
+         tabindex="0" 
+         (click)="onCardClick()"
+         (keydown.enter)="onCardClick()" 
+         (keydown.space)="$event.preventDefault(); onCardClick()">
+      
+      <!-- Main Content: Single Row Layout -->
+      <div class="card-main">
+        
+        <!-- Left: Route + Time (Primary Info) -->
+        <div class="route-column">
+          <div class="route-row">
+            <div class="location from">
+              <span class="location-name">{{ item.fromLine1 }}</span>
+              <span class="location-time">{{ item.departureTime }}</span>
+            </div>
+            <div class="route-divider">
+              <div class="route-line"></div>
+              <svg class="route-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
+            <div class="location to">
+              <span class="location-name">{{ item.toLine1 }}</span>
+              <span class="location-time">{{ item.arrivalTime || 'Est.' }}</span>
+            </div>
+          </div>
+          <div class="date-row">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+              <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+              <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+              <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+            </svg>
+            <span>{{ item.departureDate }}</span>
+          </div>
+        </div>
+
+        <!-- Middle: Driver Info -->
+        <div class="driver-column">
+          <div class="driver-avatar-small">
+            <img 
+              *ngIf="item.driver.avatar" 
+              [src]="item.driver.avatar" 
+              [alt]="item.driver.name" 
+            />
+            <div *ngIf="!item.driver.avatar" class="avatar-initial">
+              {{ item.driver.name.charAt(0) }}
+            </div>
+            <div class="verified-dot" *ngIf="item.driver.verified"></div>
+          </div>
+          <div class="driver-meta">
+            <span class="driver-name">{{ item.driver.name }}</span>
+            <div class="rating-compact" *ngIf="item.rating">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <span>{{ item.rating }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Price + Action -->
+        <div class="action-column">
+          <div class="price-compact">
+            <span class="price-value">\${{ item.priceNum || 0 }}</span>
+          </div>
+          <div class="seats-compact">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span>{{ item.seatsAvailable }}</span>
+          </div>
+          <button class="favorite-icon" 
+                  [class.active]="isFavorite()"
+                  (click)="onFavorite($event)" 
+                  aria-label="Favorite">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Actions (appears on hover/tap) -->
+      <div class="quick-actions" *ngIf="isExpanded()">
+        <button class="action-btn primary" (click)="onViewDetails($event)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          View Details
+        </button>
+        <button class="action-btn secondary" (click)="onQuickBook($event)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Book Now
+        </button>
+      </div>
+
+      <!-- Expand Indicator (Mobile) -->
+      <div class="expand-indicator">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+    </div>
+  `,
+  styles: [`
+    :host {
+      --brand-midnight: #0A1A3F;
+      --brand-azure: #3E8FFF;
+      --brand-slate: #6F7785;
+      --brand-light: #F8F9FB;
+      --border-light: #E5E7EB;
+      --success-green: #10B981;
+      --gradient-blue: linear-gradient(135deg, #3E8FFF 0%, #5EA3FF 100%);
+      --shadow-compact: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-lifted: 0 4px 12px rgba(62, 143, 255, 0.15);
+    }
+
+    /* ===== COMPACT RIDE CARD (Mobile-First) ===== */
+    .compact-ride-card {
+      position: relative;
+      background: white;
+      border-radius: 16px;
+      border: 1.5px solid var(--border-light);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-compact);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      min-height: 90px;
+      max-height: 90px;
+      overflow: hidden;
+    }
+
+    .compact-ride-card:hover {
+      border-color: rgba(62, 143, 255, 0.3);
+      box-shadow: var(--shadow-lifted);
+      transform: translateY(-2px);
+    }
+
+    .compact-ride-card.expanded {
+      max-height: 160px;
+      border-color: var(--brand-azure);
+      box-shadow: 0 6px 20px rgba(62, 143, 255, 0.2);
+    }
+
+    .compact-ride-card.selected {
+      border-color: var(--brand-azure);
+      background: linear-gradient(135deg, rgba(62, 143, 255, 0.02) 0%, rgba(139, 92, 246, 0.02) 100%);
+      box-shadow: 0 0 0 2px rgba(62, 143, 255, 0.15), var(--shadow-lifted);
+    }
+
+    .compact-ride-card:focus {
+      outline: none;
+      border-color: var(--brand-azure);
+      box-shadow: 0 0 0 3px rgba(62, 143, 255, 0.15);
+    }
+
+    /* ===== MAIN CONTENT (Single Row) ===== */
+    .card-main {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ===== ROUTE COLUMN (Left - Primary) ===== */
+    .route-column {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .route-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .location {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .location-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--brand-midnight);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -0.01em;
+    }
+
+    .location-time {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--brand-slate);
+      line-height: 1;
+    }
+
+    .route-divider {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      position: relative;
+      padding: 0 4px;
+    }
+
+    .route-line {
+      width: 20px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--brand-azure) 0%, rgba(62, 143, 255, 0.3) 100%);
+      border-radius: 2px;
+    }
+
+    .route-icon {
+      color: var(--brand-azure);
+      stroke-width: 3;
+      flex-shrink: 0;
+    }
+
+    .date-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--brand-slate);
+    }
+
+    .date-row svg {
+      stroke-width: 2;
+      color: var(--brand-slate);
+      flex-shrink: 0;
+    }
+
+    /* ===== DRIVER COLUMN (Middle) ===== */
+    .driver-column {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .driver-avatar-small {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+    }
+
+    .driver-avatar-small img,
+    .avatar-initial {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border-light);
+    }
+
+    .avatar-initial {
+      background: var(--gradient-blue);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .verified-dot {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 12px;
+      height: 12px;
+      background: var(--success-green);
+      border: 2px solid white;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.4);
+    }
+
+    .driver-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .driver-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-midnight);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rating-compact {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--brand-slate);
+    }
+
+    .rating-compact svg {
+      fill: #FBBF24;
+      color: #FBBF24;
+    }
+
+    /* ===== ACTION COLUMN (Right) ===== */
+    .action-column {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .price-compact {
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+    }
+
+    .price-value {
+      font-size: 22px;
+      font-weight: 900;
+      background: var(--gradient-blue);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .seats-compact {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: rgba(62, 143, 255, 0.08);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--brand-azure);
+    }
+
+    .seats-compact svg {
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .favorite-icon {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      z-index: 10;
+    }
+
+    .favorite-icon:hover {
+      transform: scale(1.1);
+      background: white;
+    }
+
+    .favorite-icon svg {
+      stroke: var(--brand-slate);
+      fill: none;
+      transition: all 0.3s ease;
+    }
+
+    .favorite-icon:hover svg {
+      stroke: #EF4444;
+    }
+
+    .favorite-icon.active {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    }
+
+    .favorite-icon.active svg {
+      stroke: white;
+      fill: white;
+      animation: heart-pop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes heart-pop {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    /* ===== QUICK ACTIONS (Expandable) ===== */
+    .quick-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 12px;
+      margin-top: 12px;
+      border-top: 1px solid var(--border-light);
+      animation: slide-down 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slide-down {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .action-btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      white-space: nowrap;
+    }
+
+    .action-btn svg {
+      stroke-width: 2.5;
+      flex-shrink: 0;
+    }
+
+    .action-btn.primary {
+      background: var(--gradient-blue);
+      color: white;
+      box-shadow: 0 2px 8px rgba(62, 143, 255, 0.3);
+    }
+
+    .action-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(62, 143, 255, 0.4);
+    }
+
+    .action-btn.secondary {
+      background: white;
+      color: var(--brand-azure);
+      border: 1.5px solid var(--brand-azure);
+    }
+
+    .action-btn.secondary:hover {
+      background: rgba(62, 143, 255, 0.05);
+      transform: translateY(-2px);
+    }
+
+    /* ===== EXPAND INDICATOR ===== */
+    .expand-indicator {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.4;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .compact-ride-card:hover .expand-indicator {
+      opacity: 0.7;
+    }
+
+    .compact-ride-card.expanded .expand-indicator {
+      transform: translateX(-50%) rotate(180deg);
+      opacity: 0.6;
+    }
+
+    .expand-indicator svg {
+      color: var(--brand-slate);
+      stroke-width: 2.5;
+    }
+
+    /* Hide on desktop hover */
+    @media (hover: hover) {
+      .expand-indicator {
+        display: none;
+      }
+    }
+
+    /* ===== RESPONSIVE MOBILE ===== */
+    @media (max-width: 768px) {
+      .compact-ride-card {
+        padding: 12px 14px;
+        min-height: 85px;
+        max-height: 85px;
+      }
+
+      .compact-ride-card.expanded {
+        max-height: 155px;
+      }
+
+      .card-main {
+        gap: 10px;
+      }
+
+      .location-name {
+        font-size: 14px;
+      }
+
+      .location-time {
+        font-size: 10px;
+      }
+
+      .date-row {
+        font-size: 10px;
+      }
+
+      .driver-avatar-small img,
+      .avatar-initial {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+      }
+
+      .driver-avatar-small {
+        width: 32px;
+        height: 32px;
+      }
+
+      .driver-name {
+        font-size: 12px;
+      }
+
+      .rating-compact {
+        font-size: 10px;
+      }
+
+      .price-value {
+        font-size: 20px;
+      }
+
+      .seats-compact {
+        font-size: 10px;
+        padding: 3px 7px;
+      }
+
+      .favorite-icon {
+        width: 28px;
+        height: 28px;
+        top: 10px;
+        right: 10px;
+      }
+
+      .favorite-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .action-btn {
+        padding: 9px 14px;
+        font-size: 12px;
+      }
+    }
+
+    /* ===== TABLET ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .driver-meta {
+        display: none;
+      }
+      
+      .driver-column {
+        gap: 0;
+      }
+    }
+
+    /* ===== ACCESSIBILITY ===== */
+    @media (prefers-reduced-motion: reduce) {
+      .compact-ride-card,
+      .favorite-icon,
+      .action-btn,
+      * {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+
+    @media (prefers-contrast: high) {
+      .compact-ride-card {
+        border-width: 2px;
+        border-color: var(--brand-midnight);
+      }
+    }
+  `]
+})
+export class RideResultCardComponent {
+  @Input() item: any;
+  @Input() isSelected: boolean = false;
+  @Output() cardClick = new EventEmitter<any>();
+  
+  isFavorite = signal(false);
+  isExpanded = signal(false);
+  
+  constructor(private router: Router) {}
+  
+  onCardClick() {
+    // Toggle expand on mobile, emit on desktop
+    if (window.innerWidth <= 768) {
+      this.isExpanded.set(!this.isExpanded());
+    } else {
+      this.cardClick.emit(this.item);
+    }
+  }
+
+  onFavorite(event: Event) {
+    event.stopPropagation();
+    this.isFavorite.set(!this.isFavorite());
+    console.log('Favorite toggled for ride:', this.item.id);
+  }
+
+  onViewDetails(event: Event) {
+    event.stopPropagation();
+    this.cardClick.emit(this.item);
+  }
+
+  onQuickBook(event: Event) {
+    event.stopPropagation();
+    console.log('Quick book triggered for ride:', this.item.id);
+    // Handle quick booking flow
+  }
+}
+
+      border-radius: 20px;
+      border: 2px solid transparent;
+      padding: 24px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .premium-ride-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient-blue);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Enhanced hover with subtle glow */
+    .premium-ride-card:hover,
+    .premium-ride-card.hovered {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 40px rgba(62, 143, 255, 0.15), 0 0 0 1px rgba(62, 143, 255, 0.1);
+      border-color: rgba(62, 143, 255, 0.2);
+    }
+
+    .premium-ride-card:hover::before {
+      opacity: 1;
+    }
+
+    /* Subtle content dim on hover to highlight interactive elements */
+    .premium-ride-card:hover .card-header,
+    .premium-ride-card:hover .route-section,
+    .premium-ride-card:hover .card-footer {
+      opacity: 0.95;
+    }
+
+    .premium-ride-card.selected {
+      border-color: var(--brand-azure);
+      box-shadow: 0 0 0 3px rgba(62, 143, 255, 0.1), var(--shadow-lg);
+      transform: translateY(-6px);
+    }
+
+    .premium-ride-card.selected::before {
+      opacity: 1;
+    }
+
+    .premium-ride-card:focus {
+      outline: none;
+      border-color: var(--brand-azure);
+      box-shadow: 0 0 0 3px rgba(62, 143, 255, 0.2);
+    }
+
+    /* ===== CARD HEADER ===== */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .driver-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .avatar-container {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .driver-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--brand-light);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+
+    .premium-ride-card:hover .driver-avatar {
+      border-color: rgba(62, 143, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .avatar-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--gradient-blue);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      border: 3px solid var(--brand-light);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+    .premium-ride-card:hover .avatar-placeholder {
+      border-color: rgba(62, 143, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .verified-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 20px;
+      height: 20px;
+      background: var(--success-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+      animation: badge-pop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .verified-badge svg {
+      color: white;
+      fill: white;
+    }
+
+    @keyframes badge-pop {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .driver-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .driver-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--brand-midnight);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -0.01em;
+    }
+
+    .driver-rating {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand-slate);
+    }
+
+    .driver-rating svg {
+      color: #FBBF24;
+      fill: #FBBF24;
+      filter: drop-shadow(0 1px 2px rgba(251, 191, 36, 0.3));
+    }
+
+    /* ===== FAVORITE BUTTON ===== */
+    .favorite-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--border-light);
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .favorite-button:hover {
+      transform: scale(1.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(254, 242, 242, 0.8);
+    }
+
+    .favorite-button.active {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      border-color: #EF4444;
+      animation: heart-beat 0.6s ease;
+    }
+
+    .favorite-button .heart-icon {
+      stroke: var(--brand-slate);
+      fill: none;
+      transition: all 0.3s ease;
+    }
+
+    .favorite-button:hover .heart-icon {
+      stroke: #EF4444;
+      transform: scale(1.1);
+    }
+
+    .favorite-button.active .heart-icon {
+      stroke: white;
+      fill: white;
+    }
+
+    @keyframes heart-beat {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.2); }
+      50% { transform: scale(0.95); }
+      75% { transform: scale(1.1); }
+    }
+
+    /* ===== ROUTE SECTION ===== */
+    .route-section {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(62, 143, 255, 0.03) 0%, rgba(139, 92, 246, 0.03) 100%);
+      border-radius: 16px;
+      border: 1px solid rgba(62, 143, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .premium-ride-card:hover .route-section {
+      background: linear-gradient(135deg, rgba(62, 143, 255, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+      border-color: rgba(62, 143, 255, 0.15);
+    }
+
+    .route-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 10% 20%, rgba(62, 143, 255, 0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .route-timeline {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+    }
+
+    .location-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      position: relative;
+      padding: 4px 0;
+    }
+
+    .location-marker {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .marker-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid var(--brand-azure);
+      box-shadow: 0 2px 8px rgba(62, 143, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .arrival .marker-dot {
+      border-color: var(--success-green);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .premium-ride-card:hover .marker-dot {
+      transform: scale(1.15);
+      box-shadow: 0 3px 12px rgba(62, 143, 255, 0.4);
+    }
+
+    .location-details {
+      flex: 1;
+      padding-top: 2px;
+    }
+
+    .location-city {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--brand-midnight);
+      line-height: 1.3;
+      margin-bottom: 5px;
+      letter-spacing: -0.02em;
+    }
+
+    .location-time {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--brand-slate);
+      line-height: 1.2;
+    }
+
+    /* ===== JOURNEY CONNECTOR ===== */
+    .journey-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 0;
+      margin: 8px 0;
+      position: relative;
+    }
+
+    .journey-line {
+      position: absolute;
+      left: 16px;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--brand-azure) 0%, var(--success-green) 100%);
+      opacity: 0.3;
+    }
+
+    .journey-icon {
+      position: relative;
+      z-index: 1;
+      width: 32px;
+      height: 32px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid rgba(62, 143, 255, 0.2);
+      margin-left: 0px;
+    }
+
+    .journey-icon svg {
+      color: var(--brand-azure);
+      stroke-width: 2.5;
+    }
+
+    /* ===== DATE BADGE ===== */
+    .date-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: white;
+      border: 1.5px solid var(--border-light);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand-midnight);
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      transition: all 0.3s ease;
+    }
+
+    .date-badge svg {
+      color: var(--brand-azure);
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .premium-ride-card:hover .date-badge {
+      border-color: rgba(62, 143, 255, 0.3);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+    }
+
+    /* ===== CARD FOOTER ===== */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 2px solid rgba(62, 143, 255, 0.08);
+      transition: border-color 0.3s ease;
+    }
+
+    .premium-ride-card:hover .card-footer {
+      border-top-color: rgba(62, 143, 255, 0.12);
+    }
+
+    .ride-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .price-tag {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .price-amount {
+      font-size: 28px;
+      font-weight: 900;
+      background: var(--gradient-blue);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .price-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand-slate);
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .seats-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 16px;
+      background: rgba(62, 143, 255, 0.08);
+      border: 1.5px solid rgba(62, 143, 255, 0.15);
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand-azure);
+      transition: all 0.3s ease;
+    }
+
+    .seats-info svg {
+      stroke-width: 2.5;
+      flex-shrink: 0;
+    }
+
+    .premium-ride-card:hover .seats-info {
+      background: rgba(62, 143, 255, 0.12);
+      border-color: rgba(62, 143, 255, 0.25);
+      transform: scale(1.02);
+    }
+
+    .seats-count {
+      white-space: nowrap;
+    }
+
+    /* ===== BOOK BUTTON ===== */
+    .book-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--gradient-blue);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(62, 143, 255, 0.25);
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+
+    .book-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(62, 143, 255, 0.35);
+      gap: 10px;
+    }
+
+    .book-button:active {
+      transform: translateY(0);
+    }
+
+    .book-button svg {
+      stroke-width: 2.5;
+      transition: transform 0.3s ease;
+    }
+
+    .book-button:hover svg {
+      transform: translateX(3px);
+    }
+
+    /* ===== QUICK VIEW BADGE (Desktop Only) ===== */
+    .quick-view-badge {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border: 2px solid rgba(62, 143, 255, 0.2);
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-azure);
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(10px) scale(0.95);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      z-index: 20;
+      letter-spacing: 0.01em;
+    }
+
+    .premium-ride-card:hover .quick-view-badge {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .quick-view-badge:hover {
+      background: var(--gradient-blue);
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 12px 32px rgba(62, 143, 255, 0.3);
+    }
+
+    .quick-view-badge svg {
+      stroke-width: 2.5;
+      transition: transform 0.3s ease;
+    }
+
+    .quick-view-badge:hover svg {
+      transform: scale(1.1);
+    }
+
+    /* Hide Quick View badge on mobile/touch devices */
+    @media (hover: none) and (pointer: coarse) {
+      .quick-view-badge {
+        display: none;
+      }
+    }
+
+    /* ===== RESPONSIVE DESIGN ===== */
+    @media (max-width: 768px) {
+      .premium-ride-card {
+        padding: 20px;
+        gap: 16px;
+        border-radius: 16px;
+      }
+
+      /* Disable hover effects on mobile */
+      .premium-ride-card:hover {
+        transform: none;
+        box-shadow: var(--shadow-sm);
+        border-color: transparent;
+      }
+
+      .premium-ride-card:hover .card-header,
+      .premium-ride-card:hover .route-section,
+      .premium-ride-card:hover .card-footer {
+        opacity: 1;
+      }
+
+      .card-header {
+        gap: 12px;
+      }
+
+      .driver-avatar,
+      .avatar-placeholder {
+        width: 42px;
+        height: 42px;
+        font-size: 16px;
+      }
+
+      .verified-badge {
+        width: 18px;
+        height: 18px;
+      }
+
+      .verified-badge svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      .driver-name {
+        font-size: 15px;
+      }
+
+      .driver-rating {
+        font-size: 12px;
+      }
+
+      .favorite-button {
+        width: 38px;
+        height: 38px;
+      }
+
+      .favorite-button .heart-icon {
+        width: 18px;
+        height: 18px;
+      }
+
+      .route-section {
+        padding: 18px;
+        gap: 16px;
+      }
+
+      .location-city {
+        font-size: 16px;
+      }
+
+      .location-time {
+        font-size: 13px;
+      }
+
+      .date-badge {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+
+      .card-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        padding-top: 14px;
+      }
+
+      .ride-info {
+        justify-content: space-between;
+      }
+
+      .price-amount {
+        font-size: 26px;
+      }
+
+      .seats-info {
+        font-size: 13px;
+        padding: 9px 14px;
+      }
+
+      .book-button {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 15px;
+      }
+
+      /* Prevent hover lift on mobile tap */
+      .book-button:hover {
+        transform: none;
+      }
+    }
+
+    /* ===== ACCESSIBILITY ===== */
+    @media (prefers-reduced-motion: reduce) {
+      .premium-ride-card,
+      .driver-avatar,
+      .avatar-placeholder,
+      .marker-dot,
+      .book-button,
+      * {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+
+    /* ===== HIGH CONTRAST MODE ===== */
+    @media (prefers-contrast: high) {
+      .premium-ride-card {
+        border-color: var(--brand-midnight);
+      }
+
+      .book-button {
+        background: var(--brand-midnight);
+      }
+    }
+  `]
+})
+export class RideResultCardComponent {
+  @Input() item: any;
+  @Input() isSelected: boolean = false;
+  @Output() cardClick = new EventEmitter<any>();
+  
+  isFavorite = signal(false);
+  isHovered = signal(false);
+  
+  constructor(private router: Router) {}
+  
+  onClick() {
+    this.cardClick.emit(this.item);
+  }
+
+  onFavorite(event: Event) {
+    event.stopPropagation();
+    this.isFavorite.set(!this.isFavorite());
+    console.log('Favorite toggled for ride:', this.item.id);
+  }
+
+  onViewDetails(event: Event) {
+    event.stopPropagation();
+    this.cardClick.emit(this.item);
+  }
+
+  onQuickView(event: Event) {
+    event.stopPropagation();
+    console.log('Quick view triggered for ride:', this.item.id);
+    // Could open a modal or expand card details
+  }
+}

@@ -15,8 +15,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   selector: 'app-header',
   imports: [CommonModule, RouterLink, RouterLinkActive, SearchBarComponent],
   template: `
-  <header class="app-header sticky top-0 z-50 bg-white/85 backdrop-blur px-4 py-2 md:py-3" [class.header-dark]="useDark">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-8">
+  <header class="app-header sticky top-0 z-50 bg-white/85 backdrop-blur px-4 py-2 md:py-3 hidden md:block" [class.dark]="useDark">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-8">
         <div class="flex items-center gap-3 flex-1 md:flex-none">
           <a routerLink="/" class="flex min-w-0 items-center gap-2 font-semibold text-lg text-gray-900 md:text-xl" (click)="closeMobileNav()">
             <span class="northstar"></span>

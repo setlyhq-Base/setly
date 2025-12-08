@@ -165,6 +165,14 @@ import { ActiveTabService } from '../../core/services/active-tab.service';
       transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
       z-index: 1000;
     }
+    
+    /* Mobile: Position FAB above bottom navigation */
+    @media (max-width: 767px) {
+      .fab-button {
+        bottom: 92px;
+        right: 20px;
+      }
+    }
     .fab-button:hover {
       transform: scale(1.05);
       box-shadow: 0 8px 30px rgba(62, 143, 255, 0.5);
@@ -228,6 +236,14 @@ import { ActiveTabService } from '../../core/services/active-tab.service';
       flex-direction: column;
       gap: 4px;
       border: 1px solid #e2e8f0;
+    }
+    
+    /* Mobile: Position popover above FAB which is above bottom nav */
+    @media (max-width: 767px) {
+      .fab-popover {
+        bottom: 160px;
+        right: 20px;
+      }
     }
     .fab-popover::after {
       content: '';
@@ -300,7 +316,7 @@ import { ActiveTabService } from '../../core/services/active-tab.service';
       left: 0;
       right: 0;
       bottom: 0;
-      z-index: 999;
+      z-index: 998;
     }
 
     .modal-overlay {

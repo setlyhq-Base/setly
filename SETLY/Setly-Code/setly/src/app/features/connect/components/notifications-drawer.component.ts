@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface Notification {
@@ -489,7 +489,10 @@ export class NotificationsDrawerComponent {
   constructor() {
     // Initialize filtered notifications and count
     this.updateFiltered();
-    this.activeTab.subscribe(() => this.updateFiltered());
+    effect(() => {
+      this.activeTab();
+      this.updateFiltered();
+    });
   }
 
   updateFiltered() {

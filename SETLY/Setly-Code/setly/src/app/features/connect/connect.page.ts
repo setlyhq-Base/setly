@@ -60,12 +60,6 @@ export class ConnectPage implements OnDestroy {
   pullDistance = signal<number>(0);
   mapViewOpen = signal<boolean>(false);
   notificationsOpen = signal<boolean>(false);
-  
-  // Instagram-style interactions
-  isRefreshing = signal<boolean>(false);
-  pullDistance = signal<number>(0);
-  mapViewOpen = signal<boolean>(false);
-  notificationsOpen = signal<boolean>(false);
 
   // Feed state
   feed: Signal<ConnectFeedResponse> = this.feedService.feed;
@@ -381,7 +375,7 @@ export class ConnectPage implements OnDestroy {
     this.analytics.track('connect_pull_refresh');
     
     const filters = this.filtersService.filters()();
-    await this.feedService.fetchFeed({ ...filters }).toPromise();
+    this.feedService.fetchFeed({ ...filters });
     
     // Reset states
     this.newAvailable.set(false);

@@ -5,7 +5,6 @@ import { ConnectFeedService } from '../../core/services/connect-feed.service';
 import { ConnectFiltersService } from '../../core/services/connect-filters.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { AnyConnectPost, ConnectFeedResponse } from './models/connect.models';
-import { ConnectFiltersPanelComponent } from './components/connect-filters-panel.component';
 import { ConnectFeedComponent } from './components/connect-feed.component';
 import { PeopleDirectoryComponent } from './components/people-directory.component';
 import { ToastContainerComponent } from '../../shared/ui/toast-container.component';
@@ -23,7 +22,6 @@ import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.
   imports: [
     CommonModule, 
     RouterModule, 
-    ConnectFiltersPanelComponent, 
     ConnectFeedComponent, 
     PeopleDirectoryComponent, 
     ToastContainerComponent,

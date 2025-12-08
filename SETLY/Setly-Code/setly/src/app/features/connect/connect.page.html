@@ -273,8 +273,11 @@
     </aside>
   </div>
 
-  <!-- Mobile Feed -->
-  <div class="mobile-feed lg:hidden">
+  <!-- Mobile Feed (Instagram-style with Pull-to-Refresh) -->
+  <div 
+    class="mobile-feed lg:hidden"
+    appPullToRefresh
+    (refresh)="refreshFeed()">
     <!-- Campus Highlights -->
     <app-campus-highlights></app-campus-highlights>
     

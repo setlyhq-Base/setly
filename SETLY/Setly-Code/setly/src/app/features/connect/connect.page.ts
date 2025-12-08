@@ -15,6 +15,7 @@ import { TrendingTopicsComponent } from './components/trending-topics.component'
 import { FilterDrawerComponent } from './components/filter-drawer.component';
 import { MapViewComponent } from './components/map-view.component';
 import { NotificationsDrawerComponent } from './components/notifications-drawer.component';
+import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.directive';
 
 @Component({
   selector: 'app-connect',
@@ -31,7 +32,8 @@ import { NotificationsDrawerComponent } from './components/notifications-drawer.
     TrendingTopicsComponent,
     FilterDrawerComponent,
     MapViewComponent,
-    NotificationsDrawerComponent
+    NotificationsDrawerComponent,
+    PullToRefreshDirective
   ],
   templateUrl: './connect.page.html',
   styleUrls: ['./connect.page.scss']

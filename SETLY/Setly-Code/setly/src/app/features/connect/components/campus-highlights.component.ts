@@ -20,12 +20,6 @@ interface Highlight {
   imports: [CommonModule],
   template: `
     <div class="campus-highlights">
-      <!-- Title -->
-      <div class="flex items-center justify-between mb-4 px-1">
-        <h2 class="text-base font-semibold text-[#0A1A3F]">Campus Highlights</h2>
-        <button class="text-xs text-[#3E8FFF] font-medium hover:underline">See All</button>
-      </div>
-
       <!-- Horizontal Scroll -->
       <div class="highlights-scroll">
         <div class="highlights-container">

@@ -803,7 +803,7 @@ export class MapViewComponent implements AfterViewInit, OnDestroy {
     infoWindow.open(this.map, marker);
   }
 
-  private isOnline(person: any): boolean {
+  isOnline(person: any): boolean {
     return this.presenceSvc.online().has(person.uid);
   }
 

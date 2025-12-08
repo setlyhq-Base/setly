@@ -97,7 +97,7 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
     <!-- Mutual Connections -->
     <div *ngIf="post.mutuals" class="mutuals-section">
       <div class="mutuals-avatars">
-        <div class="mutual-avatar" *ngFor="let i of [1,2,3].slice(0, Math.min(post.mutuals, 3))"></div>
+          <div class="mutual-avatar" *ngFor="let i of [1,2,3].slice(0, getMutualsCount())"></div>
       </div>
       <span class="mutuals-text">{{post.mutuals}} mutual connection{{post.mutuals > 1 ? 's' : ''}}</span>
     </div>
@@ -616,4 +616,8 @@ export class PostPersonCardComponent implements OnInit {
   hide(){ this.menuOpen.set(false); this.feed.hide(this.post.id); this.toast.info('Person hidden'); }
   report(){ this.menuOpen.set(false); this.feed.report(this.post.id); this.toast.warning('Reported'); }
   toggleMenu(){ this.menuOpen.update(v => !v); }
+
+  getMutualsCount(): number {
+    return Math.min(this.post.mutuals || 0, 3);
+  }
 }

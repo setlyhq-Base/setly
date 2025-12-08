@@ -50,10 +50,21 @@ export class FirebaseAuthService {
 
   // Social Login Methods
   async signInWithGoogle(): Promise<FirebaseUser> {
+    console.log('🔐 [Firebase Auth] Starting Google sign-in...');
+    
     if (this.mockEnabled && this.mockUser) {
-      // Immediately resolve with mock user for tests
+      console.log('🎭 [Firebase Auth] Using mock user for testing');
       return this.mockUser as FirebaseUser;
     }
+
+    // Validate Firebase config
+    if (!this.auth?.app?.options?.authDomain) {
+      console.error('❌ [Firebase Auth] Missing Firebase authDomain configuration');
+      throw new Error('Firebase authentication is not properly configured');
+    }
+
+    console.log('📝 [Firebase Auth] Auth domain:', this.auth.app.options.authDomain);
+    
     const provider = new GoogleAuthProvider();
     provider.addScope('email');
     provider.addScope('profile');
@@ -61,11 +72,14 @@ export class FirebaseAuthService {
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
+      console.log('🚀 [Firebase Auth] Opening Google sign-in popup...');
       // Always use popup for mobile-app experience - no redirects
       const result = await signInWithPopup(this.auth, provider);
+      console.log('✅ [Firebase Auth] Sign-in successful:', result.user.email);
       return result.user;
     } catch (err: any) {
       const code = err?.code || '';
+      console.error('❌ [Firebase Auth] Sign-in failed:', code, err.message);
       
       // Handle popup blocker with clear user-facing error
       if (code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request') {
@@ -80,6 +94,18 @@ export class FirebaseAuthService {
       // Handle network errors
       if (code === 'auth/network-request-failed') {
         throw new Error('Network error. Please check your connection and try again');
+      }
+
+      // Handle unauthorized domain
+      if (code === 'auth/unauthorized-domain') {
+        console.error('❌ [Firebase Auth] Domain not authorized in Firebase console');
+        throw new Error('This domain is not authorized for OAuth sign-in. Please contact support');
+      }
+
+      // Handle internal errors (often config issues)
+      if (code === 'auth/internal-error') {
+        console.error('❌ [Firebase Auth] Internal error - likely configuration issue');
+        throw new Error('Authentication configuration error. Please contact support');
       }
       
       // Other errors - preserve original message

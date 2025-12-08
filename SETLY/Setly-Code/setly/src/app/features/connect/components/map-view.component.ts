@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Output, inject, signal, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { LocationService } from '../../../core/services/location.service';
 import { DummyPeopleService, DummyUser } from '../../../core/services/dummy-people.service';
 import { PresenceService } from '../../../core/services/presence.service';
@@ -21,6 +22,17 @@ interface MapPerson {
   selector: 'app-map-view',
   standalone: true,
   imports: [CommonModule],
+  animations: [
+    trigger('slideUp', [
+      transition(':enter', [
+        style({ transform: 'translateY(100%)', opacity: 0 }),
+        animate('400ms cubic-bezier(0.22, 1, 0.36, 1)', style({ transform: 'translateY(0)', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-out', style({ transform: 'translateY(100%)', opacity: 0 }))
+      ])
+    ])
+  ],
   template: `
     <div class="map-view-overlay" (click)="close.emit()">
       <div class="map-view-container" (click)="$event.stopPropagation()">
@@ -32,10 +44,13 @@ interface MapPerson {
             </svg>
           </button>
           <h2>People Nearby</h2>
-          <button class="center-btn" (click)="recenterMap()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-              <circle cx="12" cy="12" r="3" fill="currentColor"/>
+          <button class="dark-mode-toggle" (click)="toggleDarkMode()" title="Toggle dark mode">
+            <svg *ngIf="!isDarkMode()" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <svg *ngIf="isDarkMode()" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2"/>
             </svg>
           </button>
         </div>
@@ -43,12 +58,15 @@ interface MapPerson {
         <!-- Map Container -->
         <div class="map-canvas">
           <!-- Google Map -->
-          <div #googleMap class="google-map"></div>
+          <div #googleMap class="google-map" [class.dark-mode]="isDarkMode()"></div>
 
-          <!-- Loading state -->
+          <!-- Loading state with animation -->
           <div *ngIf="isLoadingMap()" class="map-loading">
             <div class="loading-spinner"></div>
-            <p>Loading map...</p>
+            <p>Finding people near you...</p>
+            <div class="loading-dots">
+              <span></span><span></span><span></span>
+            </div>
           </div>
 
           <!-- Error state -->
@@ -59,29 +77,105 @@ interface MapPerson {
             <p>{{ mapError() }}</p>
             <button (click)="initializeMap()" class="retry-btn">Retry</button>
           </div>
+
+          <!-- Floating Action Stack (Right Side) -->
+          <div class="floating-actions" *ngIf="!isLoadingMap() && !mapError()">
+            <button class="action-btn" (click)="recenterMap()" title="Recenter on my location">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" fill="currentColor"/>
+              </svg>
+            </button>
+            <button class="action-btn" (click)="openFilters()" title="Filter people">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button class="action-btn" (click)="refreshMap()" title="Refresh map" [class.spinning]="isRefreshing()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Search This Area Button (appears when map is dragged) -->
+          <button 
+            *ngIf="showSearchAreaBtn() && !isLoadingMap()" 
+            class="search-area-btn"
+            (click)="searchThisArea()">
+            🔍 Search this area
+          </button>
+
+          <!-- Bottom Hint -->
+          <div class="bottom-hint" *ngIf="!isLoadingMap() && !mapError() && !selectedPerson()">
+            <p>Tap any pin to see profile · Swipe up for details</p>
+          </div>
         </div>
 
-        <!-- List Toggle -->
-        <button class="list-toggle" (click)="showList.set(!showList())" *ngIf="!isLoadingMap() && !mapError()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="4" width="18" height="4" rx="1" fill="currentColor"/>
-            <rect x="3" y="10" width="18" height="4" rx="1" fill="currentColor"/>
-            <rect x="3" y="16" width="18" height="4" rx="1" fill="currentColor"/>
-          </svg>
-          {{ showList() ? 'Map' : 'List' }}
-        </button>
+        <!-- Bottom Sheet - Selected Person Preview -->
+        <div class="person-preview-sheet" *ngIf="selectedPerson()" [@slideUp]>
+          <div class="sheet-handle"></div>
+          <div class="preview-content" (click)="openFullProfile(selectedPerson()!)">
+            <div class="preview-left">
+              <div class="preview-avatar">
+                <img [src]="selectedPerson()!.avatarUrl || '/assets/default-avatar.svg'" [alt]="selectedPerson()!.name">
+                <div class="status-ring" [class.online]="isOnline(selectedPerson()!)" [class.active]="isActive(selectedPerson()!)"></div>
+              </div>
+              <div class="preview-info">
+                <h3>
+                  {{ selectedPerson()!.name }}
+                  <svg *ngIf="selectedPerson()!.badges?.university" width="16" height="16" viewBox="0 0 24 24" fill="#3b82f6">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </h3>
+                <p class="university">{{ selectedPerson()!.organization || 'Student' }}</p>
+                <p class="distance">📍 {{ calculateDistance(selectedPerson()!) }} km away</p>
+                <div class="mutuals" *ngIf="getMutualCount(selectedPerson()!) > 0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  {{ getMutualCount(selectedPerson()!) }} mutual connections
+                </div>
+                <div class="interests-preview" *ngIf="selectedPerson()!.interests?.length">
+                  <span *ngFor="let interest of selectedPerson()!.interests?.slice(0, 3)" class="interest-tag">
+                    {{ interest }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="preview-actions">
+              <button class="connect-btn-mini" (click)="connectWithPerson($event, selectedPerson()!)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M12.5 7.5a4 4 0 11-8 0 4 4 0 018 0zM20 8v6M23 11h-6" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </button>
+              <button class="arrow-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- List View -->
         <div class="people-list" *ngIf="showList()">
           <div class="list-header">
             <h3>{{ filteredPeople().length }} people nearby</h3>
+            <button class="close-list-btn" (click)="showList.set(false)">×</button>
           </div>
           <div class="list-items">
             <div 
               *ngFor="let person of filteredPeople()" 
               class="list-item"
-              (click)="focusOnPerson(person)">
-              <img [src]="person.avatarUrl || '/assets/default-avatar.svg'" [alt]="person.name">
+              (click)="selectPersonFromList(person)">
+              <div class="list-item-avatar">
+                <img [src]="person.avatarUrl || '/assets/default-avatar.svg'" [alt]="person.name">
+                <div class="status-dot" [class.online]="isOnline(person)" [class.active]="isActive(person)"></div>
+              </div>
               <div class="item-info">
                 <h4>
                   {{ person.name }}
@@ -95,6 +189,16 @@ interface MapPerson {
             </div>
           </div>
         </div>
+
+        <!-- List Toggle FAB -->
+        <button class="list-toggle-fab" (click)="showList.set(!showList())" *ngIf="!isLoadingMap() && !mapError() && !selectedPerson()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="4" rx="1" fill="currentColor"/>
+            <rect x="3" y="10" width="18" height="4" rx="1" fill="currentColor"/>
+            <rect x="3" y="16" width="18" height="4" rx="1" fill="currentColor"/>
+          </svg>
+          <span>{{ showList() ? 'Map' : 'List' }}</span>
+        </button>
       </div>
     </div>
   `,
@@ -369,26 +473,38 @@ export class MapViewComponent implements AfterViewInit, OnDestroy {
   private dummySvc = inject(DummyPeopleService);
   private presenceSvc = inject(PresenceService);
 
+  // UI State
   showList = signal<boolean>(false);
   isLoadingMap = signal<boolean>(true);
   mapError = signal<string | null>(null);
   filteredPeople = signal<DummyUser[]>([]);
   userLocation = signal<{ lat: number; lng: number } | null>(null);
+  selectedPerson = signal<DummyUser | null>(null);
+  isDarkMode = signal<boolean>(false);
+  isRefreshing = signal<boolean>(false);
+  showSearchAreaBtn = signal<boolean>(false);
 
+  // Map instances
   private map: any = null;
   private markers: any[] = [];
   private userLocationMarker: any = null;
+  private markerClusterer: any = null;
+  private lastMapCenter: { lat: number; lng: number } | null = null;
+  private animationFrame: number | null = null;
 
   ngAfterViewInit(): void {
-    // Initialize map after view is ready
+    // Animate map entrance with staggered pin drops
     setTimeout(() => this.initializeMap(), 100);
   }
 
   ngOnDestroy(): void {
-    // Cleanup markers
+    // Cleanup
     this.markers.forEach((marker: any) => marker.setMap(null));
     if (this.userLocationMarker) {
       this.userLocationMarker.setMap(null);
+    }
+    if (this.animationFrame) {
+      cancelAnimationFrame(this.animationFrame);
     }
   }
 
@@ -413,31 +529,48 @@ export class MapViewComponent implements AfterViewInit, OnDestroy {
       }
 
       this.userLocation.set({ lat: location.lat, lng: location.lng });
+      this.lastMapCenter = { lat: location.lat, lng: location.lng };
       console.log('✅ Map will center on YOUR location:', location);
 
-      // Initialize map
+      // Initialize map with smooth fade-in
       const mapOptions = {
         center: { lat: location.lat, lng: location.lng },
-        zoom: 13,
+        zoom: 13, // Perfect zoom for neighborhood-level view
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
-        styles: this.getMapStyles(),
+        styles: this.isDarkMode() ? this.getDarkMapStyles() : this.getMapStyles(),
         gestureHandling: 'greedy',
         zoomControl: true
       };
 
       this.map = new google.maps.Map(this.mapContainer.nativeElement, mapOptions);
-      this.map.setCenter({ lat: location.lat, lng: location.lng });
 
-      // Add user's location marker
-      this.addUserLocationMarker();
+      // Add map drag listener for "Search this area" feature
+      this.map.addListener('dragend', () => {
+        const center = this.map.getCenter();
+        const newCenter = { lat: center.lat(), lng: center.lng() };
+        const distance = this.locationSvc.calculateDistance(
+          this.lastMapCenter!.lat,
+          this.lastMapCenter!.lng,
+          newCenter.lat,
+          newCenter.lng
+        );
+        
+        // Show "Search this area" if dragged more than 1 km
+        if (distance > 1) {
+          this.showSearchAreaBtn.set(true);
+        }
+      });
+
+      // Add pulsing user location marker
+      this.addUserLocationMarkerWithPulse();
       
-      // Add people markers
-      await this.addPeopleMarkers();
+      // Add people markers with staggered animation
+      await this.addPeopleMarkersAnimated();
 
       this.isLoadingMap.set(false);
-      console.log('✅ Map loaded successfully');
+      console.log('✅ Map loaded successfully with animations');
     } catch (error: any) {
       console.error('Error initializing map:', error);
       this.mapError.set(error instanceof Error ? error.message : 'Failed to load map');
@@ -707,5 +840,296 @@ export class MapViewComponent implements AfterViewInit, OnDestroy {
     );
     
     return distance.toFixed(1);
+  }
+
+  // ========== PREMIUM MAP FEATURES ==========
+
+  toggleDarkMode(): void {
+    this.isDarkMode.update(val => !val);
+    if (this.map) {
+      this.map.setOptions({
+        styles: this.isDarkMode() ? this.getDarkMapStyles() : []
+      });
+    }
+  }
+
+  getDarkMapStyles(): any[] {
+    return [
+      { elementType: "geometry", stylers: [{ color: "#212121" }] },
+      { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+      {
+        featureType: "administrative",
+        elementType: "geometry",
+        stylers: [{ color: "#757575" }],
+      },
+      {
+        featureType: "poi",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#757575" }],
+      },
+      {
+        featureType: "poi.park",
+        elementType: "geometry",
+        stylers: [{ color: "#181818" }],
+      },
+      {
+        featureType: "poi.park",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#616161" }],
+      },
+      {
+        featureType: "road",
+        elementType: "geometry.fill",
+        stylers: [{ color: "#2c2c2c" }],
+      },
+      {
+        featureType: "road",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#8a8a8a" }],
+      },
+      {
+        featureType: "road.arterial",
+        elementType: "geometry",
+        stylers: [{ color: "#373737" }],
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry",
+        stylers: [{ color: "#3c3c3c" }],
+      },
+      {
+        featureType: "water",
+        elementType: "geometry",
+        stylers: [{ color: "#000000" }],
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#3d3d3d" }],
+      },
+    ];
+  }
+
+  async refreshMap(): Promise<void> {
+    this.isRefreshing.set(true);
+    
+    // Clear existing markers
+    this.markers.forEach(marker => marker.setMap(null));
+    this.markers = [];
+    
+    // Reload people
+    const people = this.dummySvc.getAllUsers();
+    this.filteredPeople.set(people);
+    
+    // Re-add markers with animation
+    await this.addPeopleMarkersAnimated();
+    
+    setTimeout(() => {
+      this.isRefreshing.set(false);
+    }, 1000);
+  }
+
+  searchThisArea(): void {
+    if (!this.map) return;
+    
+    const center = this.map.getCenter();
+    if (!center) return;
+
+    // Update last center
+    this.lastMapCenter = { lat: center.lat(), lng: center.lng() };
+    
+    // Fetch people in this new area (mock implementation)
+    // In real app, call API with new center coordinates
+    const allPeople = this.dummySvc.getAllUsers();
+    const filteredPeople = allPeople.filter((person: DummyUser) => {
+      if (!person.lat || !person.lng) return false;
+      const distance = this.locationSvc.calculateDistance(
+        center.lat(),
+        center.lng(),
+        person.lat,
+        person.lng
+      );
+      return distance < 10; // Within 10km of new center
+    });
+    
+    this.filteredPeople.set(filteredPeople);
+    
+    // Clear and re-add markers
+    this.markers.forEach(marker => marker.setMap(null));
+    this.markers = [];
+    this.addPeopleMarkersAnimated();
+    
+    // Hide the button
+    this.showSearchAreaBtn.set(false);
+  }
+
+  openFilters(): void {
+    // Emit event to parent component to open filter drawer
+    // In real implementation, use @Output or service to communicate with parent
+    console.log('Open filters drawer');
+  }
+
+  connectWithPerson(event: Event, person: any): void {
+    event.stopPropagation();
+    console.log('Connecting with:', person);
+    // In real app, trigger connection request via service
+  }
+
+  openFullProfile(person: any): void {
+    console.log('Opening full profile:', person);
+    // Close map view and navigate to profile page
+    // In real app, use Router: this.router.navigate(['/profile', person.id]);
+  }
+
+  selectPersonFromList(person: any): void {
+    this.selectedPerson.set(person);
+    this.showList.set(false);
+    
+    // Pan to person's location
+    if (this.map && person.lat && person.lng) {
+      this.map.panTo({ lat: person.lat, lng: person.lng });
+      this.map.setZoom(15);
+    }
+  }
+
+  getMutualCount(person: any): number {
+    return person.mutualInterests?.length || 0;
+  }
+
+  isActive(person: any): boolean {
+    if (!person.lastSeen) return false;
+    
+    const now = new Date();
+    const lastSeen = new Date(person.lastSeen);
+    const hoursSince = (now.getTime() - lastSeen.getTime()) / (1000 * 60 * 60);
+    
+    return hoursSince < 24; // Active within last 24 hours
+  }
+
+  private async addUserLocationMarkerWithPulse(): Promise<void> {
+    if (!this.map) return;
+    const loc = this.userLocation();
+    if (!loc) return;
+
+    // Create pulsing dot for user location
+    const pulseIcon = {
+      path: google.maps.SymbolPath.CIRCLE,
+      fillColor: '#4285F4',
+      fillOpacity: 1,
+      strokeColor: '#FFFFFF',
+      strokeWeight: 3,
+      scale: 10,
+    };
+
+    const userMarker = new google.maps.Marker({
+      position: { lat: loc.lat, lng: loc.lng },
+      map: this.map,
+      icon: pulseIcon,
+      zIndex: 1000,
+    });
+
+    this.markers.push(userMarker);
+
+    // Add pulse animation using CSS (create custom overlay)
+    const pulseDiv = document.createElement('div');
+    pulseDiv.style.cssText = `
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(66, 133, 244, 0.3);
+      position: absolute;
+      animation: pulse 2s infinite;
+    `;
+
+    // Add keyframe animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.7;
+        }
+        50% {
+          transform: scale(1.5);
+          opacity: 0.3;
+        }
+        100% {
+          transform: scale(2);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  private async addPeopleMarkersAnimated(): Promise<void> {
+    if (!this.map) return;
+    
+    const people = this.filteredPeople();
+    const animationDelay = 50; // ms between each marker drop
+
+    for (let i = 0; i < people.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, animationDelay));
+      
+      const person = people[i];
+      if (!person.lat || !person.lng) continue;
+
+      const isOnline = this.presenceSvc.online().has(person.id);
+      const isActive = this.isActive(person);
+      const status = isOnline ? 'online' : (isActive ? 'active' : 'offline');
+      
+      const markerIcon = this.createPersonMarkerIconWithStatus(person, status);
+      
+      const marker = new google.maps.Marker({
+        position: { lat: person.lat, lng: person.lng },
+        map: this.map,
+        icon: markerIcon,
+        title: person.name,
+        animation: google.maps.Animation.DROP,
+      });
+
+      marker.addListener('click', () => {
+        this.selectedPerson.set(person);
+      });
+
+      this.markers.push(marker);
+    }
+  }
+
+  private createPersonMarkerIconWithStatus(person: any, status: 'online' | 'active' | 'offline'): any {
+    const statusColors = {
+      online: '#10b981',   // green
+      active: '#3b82f6',   // blue
+      offline: '#9ca3af'   // gray
+    };
+    
+    const ringColor = statusColors[status];
+    
+    // Create SVG with colored ring
+    const svg = `
+      <svg width="48" height="48" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="circleClip">
+            <circle cx="24" cy="24" r="16"/>
+          </clipPath>
+        </defs>
+        <circle cx="24" cy="24" r="20" fill="${ringColor}" opacity="0.3"/>
+        <circle cx="24" cy="24" r="18" fill="white" stroke="${ringColor}" stroke-width="3"/>
+        <circle cx="24" cy="24" r="16" fill="url(#img)" clip-path="url(#circleClip)"/>
+        <defs>
+          <pattern id="img" patternUnits="userSpaceOnUse" width="32" height="32">
+            <image href="${person.avatar}" x="0" y="0" width="32" height="32"/>
+          </pattern>
+        </defs>
+      </svg>
+    `;
+
+    return {
+      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+      scaledSize: new google.maps.Size(48, 48),
+      anchor: new google.maps.Point(24, 24),
+    };
   }
 }

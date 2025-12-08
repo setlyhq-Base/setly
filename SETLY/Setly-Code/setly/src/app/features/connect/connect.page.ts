@@ -9,11 +9,26 @@ import { ConnectFiltersPanelComponent } from './components/connect-filters-panel
 import { ConnectFeedComponent } from './components/connect-feed.component';
 import { PeopleDirectoryComponent } from './components/people-directory.component';
 import { ToastContainerComponent } from '../../shared/ui/toast-container.component';
+import { CampusHighlightsComponent } from './components/campus-highlights.component';
+import { PeopleNearYouComponent } from './components/people-near-you.component';
+import { TrendingTopicsComponent } from './components/trending-topics.component';
+import { FilterDrawerComponent } from './components/filter-drawer.component';
 
 @Component({
   selector: 'app-connect',
   standalone: true,
-  imports: [CommonModule, RouterModule, ConnectFiltersPanelComponent, ConnectFeedComponent, PeopleDirectoryComponent, ToastContainerComponent],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    ConnectFiltersPanelComponent, 
+    ConnectFeedComponent, 
+    PeopleDirectoryComponent, 
+    ToastContainerComponent,
+    CampusHighlightsComponent,
+    PeopleNearYouComponent,
+    TrendingTopicsComponent,
+    FilterDrawerComponent
+  ],
   templateUrl: './connect.page.html',
   styleUrls: ['./connect.page.scss']
 })
@@ -32,6 +47,7 @@ export class ConnectPage implements OnDestroy {
   showMobileFilters = signal<boolean>(false);
   showSkeleton = signal<boolean>(false);
   createOpen = signal<boolean>(false);
+  filterDrawerOpen = signal<boolean>(false);
 
   // Feed state
   feed: Signal<ConnectFeedResponse> = this.feedService.feed;
@@ -315,6 +331,29 @@ export class ConnectPage implements OnDestroy {
     this.showSkeleton.set(true);
     this.feedService.fetchFeed({ ...current });
     this.analytics.track('feed_manual_refresh', { tab: this.activeTab() });
+  }
+
+  onTopicSelected(topic: any) {
+    // Apply topic filter
+    this.analytics.track('trending_topic_selected', { topic: topic.name });
+    this.filtersService.setFilters({ interests: [topic.name] });
+  }
+
+  onQuickFilterApplied(filterData: any) {
+    // Apply quick filter from trending topics component
+    this.analytics.track('quick_filter_applied', { filter: filterData.filter });
+    if (filterData.filter === 'verified') {
+      this.filtersService.setFilters({ verifiedOnly: filterData.active });
+    } else if (filterData.filter === 'nearby') {
+      this.sort.set('near');
+    } else if (filterData.filter === 'new') {
+      this.sort.set('new');
+    }
+  }
+
+  onFilterDrawerChange(filters: any) {
+    // Apply filters from mobile drawer
+    this.filtersService.setFilters(filters);
   }
 
   ngOnDestroy(): void {

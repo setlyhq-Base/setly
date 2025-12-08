@@ -1,101 +1,202 @@
-<div class="min-h-screen bg-white text-gray-900" aria-label="Connect page">
-  <!-- Top loading bar over feed on re-query -->
-  <div class="h-0.5 bg-[#3E8FFF] fixed left-0 right-0 transition-opacity duration-300" [class.opacity-0]="!loading()" [class.opacity-100]="loading()" style="top: var(--header-height)"></div>
+<div class="premium-connect-page" aria-label="Connect page">
+  <!-- Loading Bar -->
+  <div 
+    class="loading-bar" 
+    [class.active]="loading()" 
+    style="top: var(--header-height)">
+  </div>
 
-  <!-- Sticky in-page header for mobile quick filters -->
-  <div class="sticky top-0 z-20 bg-white border-b border-[#ECECEC] px-4 py-2 md:hidden">
-    <div class="flex items-center gap-3">
-      <button (click)="toggleFilters()" class="text-sm px-4 py-2 rounded-xl bg-[#3E8FFF] text-white font-semibold shadow-md hover:shadow-lg transition-all" aria-label="Toggle filters">Filters</button>
-      <select [value]="sort()" (change)="onSortSelect($event)" aria-label="Sort posts" class="text-sm border border-[#ECECEC] rounded-xl px-3 py-2 focus:border-[#3E8FFF] focus:ring-2 focus:ring-[#3E8FFF]/10">
-        <option value="trending">Trending</option>
-        <option value="new">New</option>
-        <option value="near">Near you</option>
+  <!-- Mobile Sticky Header -->
+  <div class="mobile-sticky-header lg:hidden">
+    <div class="mobile-header-content">
+      <button 
+        (click)="filterDrawerOpen.set(true)" 
+        class="filter-btn"
+        aria-label="Open filters">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        Filters
+      </button>
+      
+      <select 
+        [value]="sort()" 
+        (change)="onSortSelect($event)" 
+        class="sort-select-mobile"
+        aria-label="Sort posts">
+        <option value="trending">🔥 Trending</option>
+        <option value="new">✨ New</option>
+        <option value="near">📍 Near you</option>
       </select>
-      <button (click)="viewMode('map')" class="text-sm px-3 py-2 border border-[#ECECEC] rounded-xl hover:border-[#3E8FFF] transition-colors" aria-label="Map view">Map</button>
-    </div>
-    <!-- Horizontal filter chips -->
-    <div class="mt-2 -mx-4 px-4 overflow-x-auto">
-      <div class="flex items-center gap-2 pb-1" style="min-height: 32px;">
-        <button *ngIf="filters().city" (click)="toggleFilters()" class="px-3 py-1.5 rounded-full bg-white border border-[#ECECEC] text-xs whitespace-nowrap text-[#0A1A3F] font-medium">{{filters().city}}</button>
-        <button *ngIf="filters().roomType" (click)="toggleFilters()" class="px-3 py-1.5 rounded-full bg-white border border-[#ECECEC] text-xs whitespace-nowrap text-[#0A1A3F] font-medium">{{filters().roomType}} room</button>
-        <button *ngIf="filters().maxPrice" (click)="toggleFilters()" class="px-3 py-1.5 rounded-full bg-white border border-[#ECECEC] text-xs whitespace-nowrap text-[#0A1A3F] font-medium">Under {{'$'}}{{filters().maxPrice}}</button>
-        <button *ngIf="filters().verifiedOnly" (click)="toggleFilters()" class="px-3 py-1.5 rounded-full bg-white border border-[#ECECEC] text-xs whitespace-nowrap text-[#0A1A3F] font-medium">Verified only</button>
-        <button *ngFor="let tag of filters().interests || []" (click)="toggleFilters()" class="px-3 py-1.5 rounded-full bg-white border border-[#ECECEC] text-xs whitespace-nowrap text-[#0A1A3F] font-medium">{{tag}}</button>
-      </div>
+      
+      <button 
+        (click)="viewMode('map')" 
+        class="map-btn"
+        aria-label="Map view">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
   </div>
 
-  <!-- Desktop 3 column layout with airy premium rails - Matching Explore -->
-  <div class="connect-grid mx-auto max-w-7xl px-6 py-10 hidden lg:grid" aria-label="Desktop 3 column layout">
+  <!-- Desktop 3 Column Premium Layout -->
+  <div class="desktop-layout hidden lg:grid">
     <!-- Left Rail -->
-    <aside class="space-y-6 sticky self-start" style="top: calc(var(--header-height) + 32px);" aria-label="Filters panel" role="complementary">
+    <aside class="left-rail">
       <!-- Filters Card -->
       <div class="rail-card">
-        <h2 class="rail-title">Filters</h2>
-        <app-connect-filters-panel (filtersChanged)="onFiltersPanelChange($event)"></app-connect-filters-panel>
+        <h2 class="rail-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="inline mr-2">
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Filters
+        </h2>
+        <app-connect-filters-panel 
+          (filtersChanged)="onFiltersPanelChange($event)">
+        </app-connect-filters-panel>
       </div>
-      <!-- Trending Topics - Matching Explore Style -->
+      
+      <!-- Trending Topics -->
       <div class="rail-card">
         <h2 class="rail-title">Trending Topics</h2>
-        <div class="flex flex-wrap gap-2">
-          <button class="chip-pill" *ngFor="let t of ['Housing','Sublets','Campus rides','Textbooks','Study groups']" (click)="applyQuick({ interests: [(filters().interests||[]).includes(t)?undefined:t] })">{{t}}</button>
+        <div class="topic-pills">
+          <button 
+            *ngFor="let t of ['Housing','Sublets','Campus rides','Textbooks','Study groups']" 
+            (click)="applyQuick({ interests: [(filters().interests||[]).includes(t)?undefined:t] })"
+            class="topic-pill">
+            {{t}}
+          </button>
         </div>
       </div>
-      <!-- Quick Filters - Matching Explore Style -->
+      
+      <!-- Quick Filters -->
       <div class="rail-card">
         <h2 class="rail-title">Quick Filters</h2>
-        <div class="flex flex-col gap-2">
-          <button class="toggle-pill" (click)="applyQuick({ verifiedOnly: true })" [class.on]="filters().verifiedOnly">Verified Hosts</button>
-          <button class="toggle-pill" (click)="applyQuick({ roomType: 'shared' })" [class.on]="filters().roomType==='shared'">Shared Rooms</button>
-          <button class="toggle-pill" (click)="applyQuick({ roomType: 'private' })" [class.on]="filters().roomType==='private'">Private Rooms</button>
+        <div class="quick-filter-list">
+          <button 
+            class="quick-filter-item" 
+            (click)="applyQuick({ verifiedOnly: true })" 
+            [class.active]="filters().verifiedOnly">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 12l2 2 4-4M12 2l10 5v6c0 5-4 9-10 11C6 22 2 18 2 13V7l10-5z" stroke="currentColor" stroke-width="2" fill="none"/>
+            </svg>
+            Verified Hosts
+          </button>
+          <button 
+            class="quick-filter-item" 
+            (click)="applyQuick({ roomType: 'shared' })" 
+            [class.active]="filters().roomType==='shared'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Shared Rooms
+          </button>
+          <button 
+            class="quick-filter-item" 
+            (click)="applyQuick({ roomType: 'private' })" 
+            [class.active]="filters().roomType==='private'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
+              <path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Private Rooms
+          </button>
         </div>
       </div>
     </aside>
 
     <!-- Center Feed -->
-    <main style="min-width:0;" role="feed" aria-label="Community feed">
-      <div class="center-wrap mx-auto" style="max-width:760px; width:100%;">
-        <!-- Unified control bar: tabs left, actions right - Matching Explore Style -->
-        <nav class="sticky top-0 z-10 feed-bar mb-6" aria-label="Filters and actions bar" role="tablist" (keydown)="onTabsKeydown($event)">
-        <!-- Left: Tabs in specific order -->
-        <div class="flex items-center gap-2 flex-wrap">
-          <button *ngFor="let t of ['All','People','Rooms','Rides','Marketplace','Topics']"
-                  (click)="onTabClick(t)"
-                  class="tab-pill" [class.active]="activeTab()===t"
-                  role="tab"
-                  [attr.aria-selected]="activeTab()===t">
+    <main class="center-feed">
+      <!-- Hero Section - Campus Highlights -->
+      <app-campus-highlights></app-campus-highlights>
+      
+      <!-- People Near You Carousel -->
+      <app-people-near-you></app-people-near-you>
+      
+      <!-- Trending Topics -->
+      <app-trending-topics 
+        (topicSelected)="onTopicSelected($event)"
+        (quickFilterApplied)="onQuickFilterApplied($event)">
+      </app-trending-topics>
+
+      <!-- Unified Control Bar -->
+      <nav class="feed-control-bar">
+        <!-- Left: Tabs -->
+        <div class="tab-pills-container">
+          <button 
+            *ngFor="let t of tabs"
+            (click)="onTabClick(t)"
+            class="tab-pill" 
+            [class.active]="activeTab()===t"
+            role="tab"
+            [attr.aria-selected]="activeTab()===t">
             {{ t }}
           </button>
-          <span *ngIf="smartActive()" class="ml-2 inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-[rgba(62,143,255,0.08)] text-[#3E8FFF] border border-[rgba(62,143,255,0.2)]" title="Smart suggestions active">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.2 3.4L16.5 8 13.2 9.2 12 12.5 10.8 9.2 7.5 8l3.3-1.6L12 3z" stroke="#3E8FFF" stroke-width="1.2"/></svg>
+          
+          <!-- Smart Badge -->
+          <span 
+            *ngIf="smartActive()" 
+            class="smart-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3l1.2 3.4L16.5 8 13.2 9.2 12 12.5 10.8 9.2 7.5 8l3.3-1.6L12 3z" stroke="#3E8FFF" stroke-width="1.2"/>
+            </svg>
             Smart
-            <button (click)="clearSmart()" class="ml-1 text-[10px] px-1 py-0.5 rounded hover:bg-[rgba(62,143,255,0.1)]" aria-label="Clear smart suggestions">×</button>
+            <button 
+              (click)="clearSmart()" 
+              class="clear-smart-btn">×</button>
           </span>
         </div>
-        <!-- Right: Sort, Map, Refresh as smaller controls -->
-        <div class="flex items-center gap-2">
-          <select [value]="sort()" (change)="onSortSelect($event)" class="sort-select">
+        
+        <!-- Right: Controls -->
+        <div class="feed-controls">
+          <select 
+            [value]="sort()" 
+            (change)="onSortSelect($event)" 
+            class="sort-select-desktop">
             <option value="trending">Trending</option>
             <option value="new">New</option>
             <option value="near">Near you</option>
           </select>
-          <button (click)="viewMode('map')" class="action-btn">Map</button>
-          <button (click)="refreshCurrent()" class="action-btn inline-flex items-center gap-1.5" [attr.aria-busy]="loading()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12a8 8 0 118 8" stroke="#3E8FFF" stroke-width="1.6" stroke-linecap="round"/></svg>
+          
+          <button 
+            (click)="viewMode('map')" 
+            class="control-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Map
+          </button>
+          
+          <button 
+            (click)="refreshCurrent()" 
+            class="control-btn"
+            [attr.aria-busy]="loading()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M4 12a8 8 0 118 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
             Refresh
           </button>
         </div>
       </nav>
 
-      <!-- Directory or Feed -->
+      <!-- Feed Content -->
       <ng-container *ngIf="activeTab() === 'People'; else unifiedFeed">
         <app-people-directory></app-people-directory>
       </ng-container>
+      
       <ng-template #unifiedFeed>
         <div class="relative">
-          <button *ngIf="newAvailable()" (click)="showNew()" class="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-4 py-2 rounded-full bg-white border border-[#3E8FFF] text-[#3E8FFF] shadow-lg hover:shadow-xl hover:bg-[rgba(62,143,255,0.05)] transition-all font-medium z-10">
-            {{ newCount() > 0 ? (newCount() + ' new posts — tap to refresh') : 'New posts — tap to refresh' }}
+          <!-- New Posts Badge -->
+          <button 
+            *ngIf="newAvailable()" 
+            (click)="showNew()" 
+            class="new-posts-badge">
+            {{ newCount() > 0 ? (newCount() + ' new posts') : 'New posts available' }}
           </button>
+          
           <app-connect-feed
             [feed]="{ posts: filteredPosts(), nextCursor: feed().nextCursor }"
             [loading]="loading()"
@@ -104,96 +205,116 @@
           </app-connect-feed>
         </div>
       </ng-template>
-    </div>
     </main>
 
-    <!-- Right Rail - Matching Explore Card Style -->
-    <aside class="space-y-6 sticky self-start" style="top: calc(var(--header-height) + 32px);" aria-label="Community widgets" role="complementary">
+    <!-- Right Rail -->
+    <aside class="right-rail">
       <!-- People You May Know -->
       <div class="rail-card">
-        <h2 class="rail-title">People You May Know</h2>
-        <ul class="space-y-3">
-          <li *ngFor="let p of suggestedPeople" class="flex items-center justify-between">
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-semibold text-[#0A1A3F] truncate">{{p.name}}</div>
-              <div class="text-xs text-[#6F7785]">{{p.university}}</div>
-              <div *ngIf="p.mutual" class="text-xs text-[#3E8FFF] mt-0.5">{{p.mutual}} mutual</div>
+        <h2 class="rail-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="inline mr-2">
+            <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
+            <path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          People You May Know
+        </h2>
+        <ul class="suggested-people-list">
+          <li *ngFor="let p of suggestedPeople" class="suggested-person">
+            <div class="person-left">
+              <div class="mini-avatar">{{p.name[0]}}</div>
+              <div class="person-details">
+                <div class="person-name-small">{{p.name}}</div>
+                <div class="person-university-small">{{p.university}}</div>
+                <div *ngIf="p.mutual" class="person-mutual">{{p.mutual}} mutual</div>
+              </div>
             </div>
-            <button class="mini-pill">Connect</button>
+            <button class="mini-connect-btn">Connect</button>
           </li>
         </ul>
       </div>
-      <!-- Saved -->
+      
+      <!-- Saved Items -->
       <div class="rail-card">
-        <h2 class="rail-title">Saved</h2>
-        <ul class="space-y-3">
-          <li *ngFor="let s of savedItems" class="flex items-start gap-2">
-            <span class="inline-block w-2 h-2 rounded-full bg-[#3E8FFF] mt-1.5 flex-shrink-0"></span>
-            <span class="text-sm text-[#0A1A3F]">{{s.title}}</span>
+        <h2 class="rail-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="inline mr-2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          Saved
+        </h2>
+        <ul class="saved-items-list">
+          <li *ngFor="let s of savedItems" class="saved-item">
+            <span class="saved-bullet"></span>
+            <span class="saved-title">{{s.title}}</span>
           </li>
         </ul>
       </div>
+      
       <!-- Trust Score -->
-      <div class="rail-card text-center">
+      <div class="rail-card trust-score-card">
         <h2 class="rail-title text-center">Trust Score</h2>
-        <div class="text-4xl font-bold text-[#3E8FFF] mb-2">{{trustScore}}</div>
-        <p class="text-xs text-[#6F7785] mb-4">Engage with the community to increase</p>
-        <button class="mini-pill">Improve</button>
-      </div>
-      <!-- Weekly Digest -->
-      <div class="rail-card">
-        <h2 class="rail-title">Weekly Digest</h2>
-        <ul class="space-y-3">
-          <li *ngFor="let d of weeklyDigest">
-            <div class="text-sm font-medium text-[#0A1A3F]">{{d.title}}</div>
-            <div class="text-xs text-[#6F7785] mt-0.5">{{d.meta}}</div>
-          </li>
-        </ul>
+        <div class="trust-score-circle">
+          <span class="trust-score-number">{{trustScore}}</span>
+        </div>
+        <p class="trust-score-desc">Engage with the community to increase</p>
+        <button class="improve-score-btn">Improve Score</button>
       </div>
     </aside>
   </div>
 
-  <!-- Mobile feed - Matching Explore Style -->
-  <div class="px-4 py-6 lg:hidden max-w-2xl mx-auto">
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center gap-3">
-        <label class="text-sm text-[#6F7785] font-medium">Sort</label>
-        <select [value]="sort()" (change)="onSortSelect($event)" class="text-sm border border-[#ECECEC] rounded-xl px-3 py-2 focus:border-[#3E8FFF] focus:ring-2 focus:ring-[#3E8FFF]/10">
-          <option value="trending">Trending</option>
-          <option value="new">New</option>
-          <option value="near">Near you</option>
-        </select>
-      </div>
-      <div class="text-sm font-semibold text-[#0A1A3F]">{{ filteredPosts().length }} <span class="text-[#6F7785] font-normal">results</span></div>
-    </div>
+  <!-- Mobile Feed -->
+  <div class="mobile-feed lg:hidden">
+    <!-- Campus Highlights -->
+    <app-campus-highlights></app-campus-highlights>
+    
+    <!-- People Near You -->
+    <app-people-near-you></app-people-near-you>
+    
+    <!-- Trending Topics -->
+    <app-trending-topics 
+      (topicSelected)="onTopicSelected($event)"
+      (quickFilterApplied)="onQuickFilterApplied($event)">
+    </app-trending-topics>
 
-
-  <nav class="sticky -top-2 z-10 bg-white/95 backdrop-blur-sm flex items-center gap-2 mb-4 relative px-2 py-2 border border-[#ECECEC] rounded-xl shadow-sm" aria-label="Content type tabs" role="tablist" (keydown)="onTabsKeydown($event)">
-      <button *ngFor="let t of tabs"
-              (click)="onTabClick(t)"
-              [class.bg-[#3E8FFF]]="activeTab()===t"
-              [class.text-white]="activeTab()===t"
-              [class.border-[#3E8FFF]]="activeTab()===t"
-              [class.shadow-md]="activeTab()===t"
-              class="px-3 py-1.5 rounded-xl text-sm border border-[#ECECEC] font-medium transition-all"
-              role="tab"
-              [attr.aria-selected]="activeTab()===t">
+    <!-- Mobile Tabs -->
+    <nav class="mobile-tabs-nav">
+      <button 
+        *ngFor="let t of tabs"
+        (click)="onTabClick(t)"
+        class="mobile-tab"
+        [class.active]="activeTab()===t">
         {{ t }}
       </button>
-      <span class="ml-auto"></span>
-      <button (click)="refreshCurrent()" class="px-3 py-1.5 rounded-xl text-xs border border-[#ECECEC] inline-flex items-center gap-1.5 hover:border-[#3E8FFF] transition-colors" [attr.aria-busy]="loading()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12a8 8 0 118 8" stroke="#3E8FFF" stroke-width="1.6" stroke-linecap="round"/></svg>
-        Refresh
+      
+      <button 
+        (click)="refreshCurrent()" 
+        class="mobile-refresh-btn"
+        [attr.aria-busy]="loading()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M4 12a8 8 0 118 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
       </button>
     </nav>
 
+    <!-- Results Count -->
+    <div class="mobile-results-header">
+      <span class="results-count">
+        <strong>{{ filteredPosts().length }}</strong> results
+      </span>
+    </div>
+
+    <!-- Feed -->
     <div class="relative">
-      <button *ngIf="newAvailable()" (click)="showNew()" class="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-4 py-2 rounded-full bg-white border border-[#3E8FFF] text-[#3E8FFF] shadow-lg hover:shadow-xl hover:bg-[rgba(62,143,255,0.05)] transition-all font-medium z-10">
-        {{ newCount() > 0 ? (newCount() + ' new posts — tap to refresh') : 'New posts — tap to refresh' }}
+      <button 
+        *ngIf="newAvailable()" 
+        (click)="showNew()" 
+        class="new-posts-badge-mobile">
+        {{ newCount() > 0 ? (newCount() + ' new') : 'New posts' }}
       </button>
+      
       <ng-container *ngIf="activeTab() === 'People'; else mobileFeed">
         <app-people-directory></app-people-directory>
       </ng-container>
+      
       <ng-template #mobileFeed>
         <app-connect-feed
           [feed]="{ posts: filteredPosts(), nextCursor: feed().nextCursor }"
@@ -203,11 +324,16 @@
         </app-connect-feed>
       </ng-template>
     </div>
-
-    <div *ngIf="showMobileFilters()" class="mt-4 bg-white border border-[#ECECEC] rounded-xl p-4 shadow-lg">
-      <app-connect-filters-panel (filtersChanged)="onFiltersPanelChange($event)"></app-connect-filters-panel>
-    </div>
   </div>
 
+  <!-- Filter Drawer (Mobile) -->
+  <app-filter-drawer
+    [isOpen]="filterDrawerOpen"
+    [resultsCount]="filteredPosts().length"
+    (filtersChanged)="onFilterDrawerChange($event)"
+    (closed)="filterDrawerOpen.set(false)">
+  </app-filter-drawer>
+
+  <!-- Toast Container -->
   <app-toast-container></app-toast-container>
 </div>

@@ -1,6 +1,7 @@
 /* ===================================
    SETLY CONNECT - PREMIUM DESIGN
    Mobile-First Social Hub Experience
+   Instagram-Style Interactions
    =================================== */
 
 :host {
@@ -24,6 +25,167 @@
 .premium-connect-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #FAFBFC 0%, #FFFFFF 100%);
+  overscroll-behavior-y: contain;
+}
+
+/* ============ PULL TO REFRESH (INSTAGRAM-STYLE) ============ */
+.pull-refresh-indicator {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.pull-refresh-indicator.active {
+  animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.refresh-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #f3f4f6;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.pull-refresh-indicator span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounceIn {
+  0% { 
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1.05);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* ============ INSTAGRAM-STYLE TOP BAR (MOBILE) ============ */
+.instagram-top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 12px -4px rgba(0, 0, 0, 0.08);
+  animation: slideDown 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.5px;
+  flex: 1;
+  text-align: center;
+}
+
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-bar-action {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.top-bar-action:active {
+  transform: scale(0.9);
+  background: #f3f4f6;
+}
+
+.top-bar-action svg {
+  transition: all 0.2s;
+}
+
+.top-bar-action:hover svg {
+  color: #3b82f6;
+}
+
+.notification-btn {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9px;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ============ LOADING BAR ============ */
@@ -49,7 +211,7 @@
   100% { transform: scaleX(1); }
 }
 
-/* ============ MOBILE STICKY HEADER ============ */
+/* ============ LEGACY MOBILE STICKY HEADER (KEEP FOR DESKTOP) ============ */
 .mobile-sticky-header {
   position: sticky;
   top: 0;

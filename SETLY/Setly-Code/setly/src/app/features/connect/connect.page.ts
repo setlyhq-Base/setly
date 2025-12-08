@@ -13,6 +13,8 @@ import { CampusHighlightsComponent } from './components/campus-highlights.compon
 import { PeopleNearYouComponent } from './components/people-near-you.component';
 import { TrendingTopicsComponent } from './components/trending-topics.component';
 import { FilterDrawerComponent } from './components/filter-drawer.component';
+import { MapViewComponent } from './components/map-view.component';
+import { NotificationsDrawerComponent } from './components/notifications-drawer.component';
 
 @Component({
   selector: 'app-connect',
@@ -27,7 +29,9 @@ import { FilterDrawerComponent } from './components/filter-drawer.component';
     CampusHighlightsComponent,
     PeopleNearYouComponent,
     TrendingTopicsComponent,
-    FilterDrawerComponent
+    FilterDrawerComponent,
+    MapViewComponent,
+    NotificationsDrawerComponent
   ],
   templateUrl: './connect.page.html',
   styleUrls: ['./connect.page.scss']
@@ -48,6 +52,18 @@ export class ConnectPage implements OnDestroy {
   showSkeleton = signal<boolean>(false);
   createOpen = signal<boolean>(false);
   filterDrawerOpen = signal<boolean>(false);
+  
+  // Instagram-style interactions
+  isRefreshing = signal<boolean>(false);
+  pullDistance = signal<number>(0);
+  mapViewOpen = signal<boolean>(false);
+  notificationsOpen = signal<boolean>(false);
+  
+  // Instagram-style interactions
+  isRefreshing = signal<boolean>(false);
+  pullDistance = signal<number>(0);
+  mapViewOpen = signal<boolean>(false);
+  notificationsOpen = signal<boolean>(false);
 
   // Feed state
   feed: Signal<ConnectFeedResponse> = this.feedService.feed;
@@ -354,6 +370,50 @@ export class ConnectPage implements OnDestroy {
   onFilterDrawerChange(filters: any) {
     // Apply filters from mobile drawer
     this.filtersService.setFilters(filters);
+  }
+
+  // Instagram-style pull-to-refresh
+  async refreshFeed() {
+    if (this.isRefreshing()) return;
+    this.isRefreshing.set(true);
+    this.analytics.track('connect_pull_refresh');
+    
+    const filters = this.filtersService.filters()();
+    await this.feedService.fetchFeed({ ...filters }).toPromise();
+    
+    // Reset states
+    this.newAvailable.set(false);
+    this.newCount.set(0);
+    
+    // Smooth animation delay
+    setTimeout(() => {
+      this.isRefreshing.set(false);
+      this.pullDistance.set(0);
+    }, 500);
+  }
+
+  // View mode actions
+  openFilters() {
+    this.filterDrawerOpen.set(true);
+    this.analytics.track('connect_filters_opened');
+  }
+
+  openMapView() {
+    this.mapViewOpen.set(true);
+    this.analytics.track('connect_map_opened');
+  }
+
+  openNotifications() {
+    this.notificationsOpen.set(true);
+    this.analytics.track('connect_notifications_opened');
+  }
+
+  closeMapView() {
+    this.mapViewOpen.set(false);
+  }
+
+  closeNotifications() {
+    this.notificationsOpen.set(false);
   }
 
   ngOnDestroy(): void {

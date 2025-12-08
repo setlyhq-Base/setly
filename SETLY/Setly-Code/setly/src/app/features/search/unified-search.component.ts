@@ -1,4 +1,4 @@
-import { Component, signal, Output, EventEmitter } from '@angular/core';
+import { Component, signal, Output, EventEmitter, HostListener, inject, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExploreFormCardComponent } from '../explore/explore-form-card.component';
 
@@ -15,11 +15,11 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
         <div class="orb orb-3"></div>
       </div>
 
-      <!-- �🎨 Premium Category Selector with Enhanced Glassmorphism -->
-      <div class="category-selector-container">
+      <!-- 🎨 Premium Category Selector with Enhanced Glassmorphism - NOW STICKY! -->
+      <div class="category-selector-container sticky-tabs">
         <div class="category-glow"></div>
         <nav class="category-tabs" role="tablist" aria-label="Search categories">
-          <button 
+          <button
             role="tab" 
             [attr.aria-selected]="active() === 'rooms'" 
             class="category-tab" 
@@ -87,8 +87,16 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
         </nav>
       </div>
 
-      <!-- 🎯 Form Card with Transition -->
-      <div class="form-card-wrapper">
+      <!-- 🎯 Form Card with Transition and Swipe Support -->
+      <div 
+        class="form-card-wrapper"
+        (touchstart)="onTouchStart($event)"
+        (touchmove)="onTouchMove($event)"
+        (touchend)="onTouchEnd($event)"
+        (mousedown)="onMouseDown($event)"
+        (mousemove)="onMouseMove($event)"
+        (mouseup)="onMouseUp($event)"
+        (mouseleave)="onMouseLeave($event)">
         <app-explore-form-card
           [tab]="active()"
           (action)="handleAction($event)"></app-explore-form-card>
@@ -168,7 +176,7 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
       }
     }
     
-    /* 🌟 Category Selector Container with Premium Glow */
+    /* 🌟 Category Selector Container with Premium Glow + STICKY POSITIONING */
     .category-selector-container {
       margin-bottom: 36px;
       display: flex;
@@ -176,6 +184,33 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
       animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       z-index: 1;
+    }
+    
+    /* 📌 STICKY TABS - Instagram/Airbnb Style */
+    .sticky-tabs {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-top: 16px;
+      padding-bottom: 16px;
+      background: linear-gradient(to bottom, 
+        rgba(250, 251, 255, 0.98) 0%, 
+        rgba(250, 251, 255, 0.96) 80%, 
+        rgba(250, 251, 255, 0) 100%);
+      backdrop-filter: blur(12px) saturate(150%);
+      -webkit-backdrop-filter: blur(12px) saturate(150%);
+      margin-bottom: 24px;
+      transition: box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+    
+    /* Add shadow when scrolled */
+    .sticky-tabs.scrolled {
+      box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.1),
+                  0 2px 8px -2px rgba(0, 0, 0, 0.06);
+      background: linear-gradient(to bottom, 
+        rgba(255, 255, 255, 0.98) 0%, 
+        rgba(255, 255, 255, 0.95) 80%, 
+        rgba(255, 255, 255, 0) 100%);
     }
     
     @keyframes fadeInUp {
@@ -433,11 +468,19 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
       }
     }
     
-    /* 🎯 Form Card Wrapper with Transition */
+    /* 🎯 Form Card Wrapper with Transition + Swipe Animation */
     .form-card-wrapper {
       position: relative;
       z-index: 1;
       animation: cardFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: pan-y pinch-zoom;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .form-card-wrapper.swiping {
+      transition: none;
     }
     
     @keyframes cardFadeIn {
@@ -704,9 +747,21 @@ import { ExploreFormCardComponent } from '../explore/explore-form-card.component
     ]
 })
 export class UnifiedSearchComponent {
+  private elementRef = inject(ElementRef);
+  
   active = signal<'rooms' | 'rides' | 'market'>('rooms');
   @Output() activeTabChange = new EventEmitter<'rooms' | 'rides' | 'market'>();
   @Output() performedSearch = new EventEmitter<{ tab: 'rooms' | 'rides' | 'market'; mode: 'search' | 'post'; payload: any }>();
+
+  // Swipe gesture state
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private currentX = 0;
+  private isDragging = false;
+  private lastScrollY = 0;
+  
+  private readonly SWIPE_THRESHOLD = 50; // Minimum distance for a swipe
+  private readonly SWIPE_VELOCITY_THRESHOLD = 0.3; // Minimum velocity
 
   setTab(t: 'rooms' | 'rides' | 'market') {
     if (this.active() === t) {
@@ -718,5 +773,133 @@ export class UnifiedSearchComponent {
 
   handleAction(event: { tab: 'rooms' | 'rides' | 'market'; mode: 'search' | 'post'; payload: any }) {
     this.performedSearch.emit(event);
+  }
+
+  // Swipe Navigation Implementation
+  onTouchStart(event: TouchEvent) {
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+    this.isDragging = true;
+    const wrapper = event.currentTarget as HTMLElement;
+    wrapper.classList.add('swiping');
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (!this.isDragging) return;
+    
+    this.currentX = event.touches[0].clientX;
+    const currentY = event.touches[0].clientY;
+    const deltaX = this.currentX - this.touchStartX;
+    const deltaY = currentY - this.touchStartY;
+    
+    // Only handle horizontal swipes (prevent vertical scroll interference)
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      event.preventDefault();
+      const wrapper = event.currentTarget as HTMLElement;
+      // Apply transform for visual feedback
+      wrapper.style.transform = `translateX(${deltaX * 0.3}px)`;
+    }
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    if (!this.isDragging) return;
+    
+    const wrapper = event.currentTarget as HTMLElement;
+    wrapper.classList.remove('swiping');
+    wrapper.style.transform = '';
+    
+    const deltaX = this.currentX - this.touchStartX;
+    const deltaY = event.changedTouches[0].clientY - this.touchStartY;
+    
+    // Only process horizontal swipes
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > this.SWIPE_THRESHOLD) {
+      if (deltaX > 0) {
+        // Swipe right - go to previous tab
+        this.navigateToPreviousTab();
+      } else {
+        // Swipe left - go to next tab
+        this.navigateToNextTab();
+      }
+    }
+    
+    this.isDragging = false;
+  }
+
+  // Mouse events for desktop swipe support
+  onMouseDown(event: MouseEvent) {
+    this.touchStartX = event.clientX;
+    this.isDragging = true;
+    const wrapper = event.currentTarget as HTMLElement;
+    wrapper.classList.add('swiping');
+  }
+
+  onMouseMove(event: MouseEvent) {
+    if (!this.isDragging) return;
+    
+    this.currentX = event.clientX;
+    const deltaX = this.currentX - this.touchStartX;
+    
+    const wrapper = event.currentTarget as HTMLElement;
+    wrapper.style.transform = `translateX(${deltaX * 0.3}px)`;
+  }
+
+  onMouseUp(event: MouseEvent) {
+    if (!this.isDragging) return;
+    
+    const wrapper = event.currentTarget as HTMLElement;
+    wrapper.classList.remove('swiping');
+    wrapper.style.transform = '';
+    
+    const deltaX = this.currentX - this.touchStartX;
+    
+    if (Math.abs(deltaX) > this.SWIPE_THRESHOLD) {
+      if (deltaX > 0) {
+        this.navigateToPreviousTab();
+      } else {
+        this.navigateToNextTab();
+      }
+    }
+    
+    this.isDragging = false;
+  }
+
+  onMouseLeave(event: MouseEvent) {
+    if (this.isDragging) {
+      const wrapper = event.currentTarget as HTMLElement;
+      wrapper.classList.remove('swiping');
+      wrapper.style.transform = '';
+      this.isDragging = false;
+    }
+  }
+
+  private navigateToNextTab() {
+    const tabs: Array<'rooms' | 'rides' | 'market'> = ['rooms', 'rides', 'market'];
+    const currentIndex = tabs.indexOf(this.active());
+    const nextIndex = (currentIndex + 1) % tabs.length;
+    this.setTab(tabs[nextIndex]);
+  }
+
+  private navigateToPreviousTab() {
+    const tabs: Array<'rooms' | 'rides' | 'market'> = ['rooms', 'rides', 'market'];
+    const currentIndex = tabs.indexOf(this.active());
+    const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    this.setTab(tabs[prevIndex]);
+  }
+
+  // Scroll listener to add shadow to sticky tabs
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    const stickyContainer = this.elementRef.nativeElement.querySelector('.sticky-tabs');
+    
+    if (stickyContainer) {
+      if (scrollY > 50) {
+        stickyContainer.classList.add('scrolled');
+      } else {
+        stickyContainer.classList.remove('scrolled');
+      }
+    }
+    
+    this.lastScrollY = scrollY;
   }
 }

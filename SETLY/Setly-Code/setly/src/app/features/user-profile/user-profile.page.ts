@@ -41,260 +41,204 @@ interface ConnectionPreview {
   selector: 'app-user-profile-page',
   standalone: true,
   imports: [CommonModule, RouterModule],
+  styleUrls: ['./user-profile.page.scss'],
   template: `
-    <div class="min-h-screen bg-slate-50">
-      <div class="max-w-6xl mx-auto px-4 py-6 md:py-10">
-        <button
-          type="button"
-          class="mb-6 flex items-center gap-1 text-sm font-medium text-brand-azure hover:text-brand-midnight"
-          (click)="goBack()"
-        >
-          ← Back to People
+    <!-- Mobile-First Premium Profile -->
+    <div class="profile-container">
+      <!-- Mobile App Header -->
+      <header class="profile-header">
+        <button class="back-btn" (click)="goBack()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
+        <h1 class="header-title">Profile</h1>
+        <button class="more-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="6" r="1.5" fill="currentColor"/>
+            <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+            <circle cx="12" cy="18" r="1.5" fill="currentColor"/>
+          </svg>
+        </button>
+      </header>
 
-        <ng-container *ngIf="!loading(); else loadingState">
-          <ng-container *ngIf="!loadError(); else notFound">
-            <ng-container *ngIf="detail(); else notFound">
-              <section class="bg-white rounded-[28px] shadow-lg border border-slate-200 p-6 md:p-8">
-                <div class="flex flex-col md:flex-row md:items-start gap-6">
-                  <div class="gradient-border w-28 h-28 shrink-0">
-                    <img
-                      [src]="detail()?.avatarUrl || '/assets/avatar-placeholder.svg'"
-                      alt="Profile photo"
-                      class="w-full h-full object-cover border-4 border-white"
-                    />
+      <ng-container *ngIf="!loading(); else loadingState">
+        <ng-container *ngIf="!loadError() && detail(); else notFound">
+          <!-- Profile Content -->
+          <div class="profile-content">
+            <!-- Hero Section -->
+            <section class="profile-hero">
+              <!-- Large Profile Photo -->
+              <div class="profile-photo-wrapper">
+                <div class="profile-photo-ring">
+                  <img
+                    [src]="detail()?.avatarUrl || '/assets/avatar-placeholder.svg'"
+                    alt="Profile photo"
+                    class="profile-photo"
+                  />
+                  <div class="status-indicator" [class.online]="isOnline()"></div>
+                </div>
+              </div>
+
+              <!-- User Info -->
+              <div class="user-info">
+                <div class="name-verified">
+                  <h2 class="user-name">{{ detail()?.name }}</h2>
+                  <svg *ngIf="isVerified()" class="verified-badge" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#dbeafe"/>
+                  </svg>
+                </div>
+                <p class="user-title" *ngIf="detail()?.organization">
+                  {{ detail()?.role }} at {{ detail()?.organization }}
+                </p>
+                <p class="user-location" *ngIf="detail()?.location">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                  </svg>
+                  {{ detail()?.location }}
+                </p>
+              </div>
+
+              <!-- Trust Score -->
+              <div class="trust-section">
+                <div class="trust-ring" [style.--progress]="trustScore()">
+                  <span class="trust-value">{{ trustScore() }}%</span>
+                </div>
+                <span class="trust-label">Trust Score</span>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="action-buttons">
+                <button class="btn-primary" (click)="onConnect()">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M8.5 11a4 4 0 100-8 4 4 0 000 8zM20 8v6M23 11h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Connect
+                </button>
+                <button class="btn-secondary" (click)="onMessage()">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Message
+                </button>
+                <button class="btn-icon" (click)="onFollow()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Stats Bar -->
+              <div class="stats-bar">
+                <div class="stat-item">
+                  <span class="stat-value">{{ roomsCount() }}</span>
+                  <span class="stat-label">Rooms</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                  <span class="stat-value">{{ connectionsCount() }}</span>
+                  <span class="stat-label">Connections</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                  <span class="stat-value">0</span>
+                  <span class="stat-label">Reviews</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- About Section -->
+            <section class="content-card" *ngIf="detail()?.bio">
+              <div class="card-header">
+                <h3 class="card-title">About</h3>
+              </div>
+              <p class="about-text">{{ detail()?.bio }}</p>
+            </section>
+
+            <!-- Verification Section -->
+            <section class="content-card">
+              <div class="card-header">
+                <h3 class="card-title">Verification</h3>
+                <svg class="shield-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </div>
+              <div class="verification-grid">
+                <div *ngFor="let item of verificationChecklist()" class="verification-item" [class.verified]="item.verified">
+                  <div class="verification-icon">
+                    <svg *ngIf="item.verified" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg *ngIf="!item.verified" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                    </svg>
                   </div>
-                  <div class="flex-1 min-w-0 space-y-3">
-                    <div class="flex flex-wrap items-center gap-3">
-                      <h1 class="text-2xl sm:text-3xl font-semibold text-slate-900 truncate">
-                        {{ detail()?.name }}
-                      </h1>
-                      <span class="px-3 py-1 text-xs font-semibold uppercase tracking-wide rounded-full border" style="background:#E8F4FF;color:#0F5FFF;border-color:#BBD9FF">
-                        {{ detail()?.role }}
-                      </span>
-                    </div>
-                    <div class="text-sm text-slate-600 flex flex-wrap items-center gap-2">
-                      <span *ngIf="detail()?.organization" class="font-medium text-slate-700">
-                        {{ detail()?.organization }}
-                      </span>
-                      <span *ngIf="detail()?.location">
-                        • {{ detail()?.location }}
-                      </span>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                      <div class="flex items-center gap-3 pr-5 border-r border-slate-200">
-                        <span class="trust-ring" [style.--progress]="trustScore()">
-                          <span class="trust-ring__inner">{{ trustScore() }}%</span>
-                        </span>
-                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-600">Trust score</span>
-                      </div>
-                      <span
-                        *ngFor="let badge of verificationBadges()"
-                        class="verify-pill"
-                        [class.verify-pill--active]="badge.active"
-                      >
-                        {{ badge.label }}
-                      </span>
-                    </div>
-                    <div class="flex flex-wrap gap-4 text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                      <span *ngIf="joinedLabel()">{{ joinedLabel() }}</span>
-                      <span *ngIf="lastActiveLabel()">Last active {{ lastActiveLabel() }}</span>
-                    </div>
-                  </div>
-                  <div class="flex flex-wrap md:flex-col gap-2 md:gap-3 w-full md:w-auto">
-                    <button
-                      type="button"
-                      class="rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition md:w-[180px]"
-                      style="background: var(--brand-gradient)"
-                      (click)="onConnect()"
-                    >
-                      Connect
-                    </button>
-                    <button
-                      type="button"
-                      class="rounded-full px-4 py-2.5 text-sm font-semibold border border-slate-200 text-slate-700 hover:border-slate-300 transition md:w-[180px]"
-                      (click)="onMessage()"
-                    >
-                      Message
-                    </button>
-                    <button
-                      type="button"
-                      class="rounded-full px-4 py-2.5 text-sm font-semibold border border-slate-200 text-slate-700 hover:border-slate-300 transition md:w-[180px]"
-                      (click)="onFollow()"
-                    >
-                      Follow
-                    </button>
-                    <button
-                      type="button"
-                      class="rounded-full px-4 py-2.5 text-sm font-semibold border border-rose-200 text-rose-600 hover:bg-rose-50 transition md:w-[180px]"
-                      (click)="onReport()"
-                    >
-                      Report
-                    </button>
+                  <span class="verification-label">{{ item.label }}</span>
+                  <span *ngIf="item.comingSoon" class="coming-soon-badge">Soon</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Interests Section -->
+            <section class="content-card" *ngIf="interestTags().length">
+              <div class="card-header">
+                <h3 class="card-title">Interests</h3>
+                <span class="count-badge">{{ interestTags().length }}</span>
+              </div>
+              <div class="interests-grid">
+                <span *ngFor="let tag of interestTags()" class="interest-tag">{{ tag }}</span>
+              </div>
+            </section>
+
+            <!-- Roommate Preferences -->
+            <section class="content-card" *ngIf="preferenceItems().length">
+              <div class="card-header">
+                <h3 class="card-title">Roommate Preferences</h3>
+              </div>
+              <div class="preferences-list">
+                <div *ngFor="let pref of preferenceItems()" class="preference-item">
+                  <span class="pref-icon">{{ pref.icon }}</span>
+                  <div class="pref-content">
+                    <span class="pref-label">{{ pref.label }}</span>
+                    <span class="pref-value">{{ pref.value }}</span>
                   </div>
                 </div>
-              </section>
+              </div>
+            </section>
 
-              <div class="mt-8 space-y-10">
-                <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                  <header class="flex items-center justify-between mb-3">
-                    <h2 class="text-xl font-semibold text-slate-900">About</h2>
-                  </header>
-                  <p class="text-sm text-slate-700 leading-6" *ngIf="detail()?.bio; else aboutEmpty">
-                    {{ detail()?.bio }}
-                  </p>
-                  <ng-template #aboutEmpty>
-                    <p class="text-sm text-slate-400">Short bio coming soon.</p>
-                  </ng-template>
-                </section>
-
-                <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                  <header class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-slate-900">Interests & Lifestyle</h2>
-                  </header>
-                  <div *ngIf="interestTags().length; else interestsEmpty" class="flex flex-wrap gap-2">
-                    <span
-                      *ngFor="let tag of interestTags()"
-                      class="px-3 py-1 rounded-full text-xs font-semibold border"
-                      style="color:#0F5FFF;background:#E8F4FF;border-color:#BBD9FF"
-                    >
-                      {{ tag }}
-                    </span>
+            <!-- Active Rooms -->
+            <section class="content-card" *ngIf="roomsCount() > 0">
+              <div class="card-header">
+                <h3 class="card-title">Active Rooms</h3>
+                <span class="count-badge">{{ roomsCount() }}</span>
+              </div>
+              <div class="listings-scroll" *ngIf="!roomsLoading()">
+                <a *ngFor="let room of roomsPreview()" [routerLink]="['/listing', room.id]" class="listing-card">
+                  <img *ngIf="room.photo" [src]="room.photo" alt="Room" class="listing-image" />
+                  <div class="listing-info">
+                    <h4 class="listing-title">{{ room.title }}</h4>
+                    <p class="listing-price" *ngIf="room.price">{{ formatPrice(room.price) }}/mo</p>
+                    <p class="listing-location" *ngIf="room.city || room.state">{{ formatCityState(room.city, room.state) }}</p>
                   </div>
-                  <ng-template #interestsEmpty>
-                    <p class="text-sm text-slate-400">No interests added yet.</p>
-                  </ng-template>
-                </section>
+                </a>
+              </div>
+              <button *ngIf="roomsCount() > 3" class="view-all-btn">View all {{ roomsCount() }} rooms →</button>
+            </section>
 
-                <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                  <header class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-slate-900">Activity Overview</h2>
-                  </header>
-                  <div class="grid gap-4 md:grid-cols-3">
-                    <div class="rounded-2xl border border-slate-200 p-4 flex flex-col gap-3">
-                      <div>
-                        <h3 class="text-sm font-semibold text-slate-800">Rooms by {{ shortName() }}</h3>
-                      </div>
-                      <ng-container *ngIf="!roomsLoading(); else roomsBusy">
-                        <ng-container *ngIf="roomsFirst() as first; else noRooms">
-                          <a
-                            [routerLink]="['/listing', first.id]"
-                            class="flex gap-3 items-center group"
-                          >
-                            <img
-                              *ngIf="first.photo"
-                              [src]="first.photo"
-                              alt="Room preview"
-                              class="w-20 h-16 rounded-xl object-cover border border-slate-200"
-                            />
-                            <div class="min-w-0">
-                              <p class="text-sm font-semibold text-slate-900 group-hover:text-brand-azure transition truncate">
-                                {{ first.title }}
-                              </p>
-                              <p class="text-xs text-slate-500 truncate">
-                                <span *ngIf="first.price">{{ formatPrice(first.price) }}</span>
-                                <span *ngIf="first.city || first.state">
-                                  • {{ formatCityState(first.city, first.state) }}
-                                </span>
-                              </p>
-                            </div>
-                          </a>
-                          <div class="text-xs text-slate-500">
-                            {{ roomsCount() }} active {{ roomsCount() === 1 ? 'listing' : 'listings' }}
-                          </div>
-                        </ng-container>
-                      </ng-container>
-                      <ng-template #roomsBusy>
-                        <div class="text-sm text-slate-400">Loading rooms…</div>
-                      </ng-template>
-                      <ng-template #noRooms>
-                        <div class="text-sm text-slate-400">No active rooms found.</div>
-                      </ng-template>
-                    </div>
-                    <div class="rounded-2xl border border-slate-200 p-4">
-                      <h3 class="text-sm font-semibold text-slate-800 mb-2">Rides by {{ shortName() }}</h3>
-                      <p class="text-sm text-slate-400">No active rides found.</p>
-                    </div>
-                    <div class="rounded-2xl border border-slate-200 p-4">
-                      <h3 class="text-sm font-semibold text-slate-800 mb-2">Marketplace by {{ shortName() }}</h3>
-                      <p class="text-sm text-slate-400">No items listed.</p>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                  <header class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-slate-900">Roommate Preferences</h2>
-                  </header>
-                  <div *ngIf="preferenceItems().length; else preferencesEmpty" class="grid gap-4 sm:grid-cols-2">
-                    <div
-                      *ngFor="let pref of preferenceItems()"
-                      class="flex items-start gap-3 rounded-2xl border border-slate-200 p-4 hover:border-[#BBD9FF] transition"
-                    >
-                      <div class="text-2xl">{{ pref.icon }}</div>
-                      <div>
-                        <p class="text-sm font-semibold text-slate-800">{{ pref.label }}</p>
-                        <p class="text-sm text-slate-600">{{ pref.value }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <ng-template #preferencesEmpty>
-                    <p class="text-sm text-slate-400">Roommate preferences not added yet.</p>
-                  </ng-template>
-                </section>
-
-                <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                  <header class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-slate-900">Verification & Safety</h2>
-                  </header>
-                  <ul class="space-y-3">
-                    <li *ngFor="let item of verificationChecklist()" class="flex items-center gap-3">
-                      <span
-                        class="grid place-items-center w-7 h-7 rounded-full border"
-                        [class.bg-emerald-500]="item.verified"
-                        [class.border-emerald-500]="item.verified"
-                        [class.text-white]="item.verified"
-                        [class.border-slate-200]="!item.verified"
-                        [class.text-slate-500]="!item.verified"
-                      >
-                        {{ item.verified ? '✓' : '•' }}
-                      </span>
-                      <div>
-                        <p class="text-sm font-semibold text-slate-800">{{ item.label }}</p>
-                        <p *ngIf="item.comingSoon" class="text-xs text-slate-400">Coming soon</p>
-                      </div>
-                    </li>
-                  </ul>
-                </section>
-
-                <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                  <header class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-slate-900">Connections</h2>
-                    <span class="text-sm text-slate-500">{{ connectionsCount() }} connections</span>
-                  </header>
-                  <div *ngIf="connectionsPreview().length; else noConnections" class="flex items-center gap-3">
-                    <div class="flex -space-x-3">
-                      <span
-                        *ngFor="let conn of connectionsPreview(); let i = index"
-                        class="w-10 h-10 grid place-items-center rounded-full border-2 border-white text-white text-sm font-semibold shadow"
-                        style="background: var(--brand-gradient)"
-                      >
-                        {{ conn.initial }}
-                      </span>
-                    </div>
-                    <span class="text-sm text-slate-500">Mutual connections</span>
-                  </div>
-                  <ng-template #noConnections>
-                    <p class="text-sm text-slate-400">No mutual connections yet.</p>
-                  </ng-template>
-                  <button
-                    type="button"
-                    class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-azure hover:text-brand-midnight"
-                    (click)="viewConnections()"
-                  >
-                    See all connections →
-                  </button>
-                </section>
+            <!-- Connections -->
+            <section class="content-card" *ngIf="connectionsCount() > 0">
+              <div class="card-header">
+                <h3 class="card-title">Connections</h3>
+                <span class="count-badge">{{ connectionsCount() }}</span>
+              </div>
+              <div class="connections-preview">
+                <div class="avatar-stack">
+                  <span *ngFor="let conn of connectionsPreview(); let i = index" class="connection-avatar" [style.z-index]="10 - i">{{ conn.initial }}</span>
+                </div>
+                <span class="connections-text">Mutual connections</span>
+              </div>
+              <button class="view-all-btn" (click)="viewConnections()">See all connections →</button>
+            </section>
 
                 <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
                   <header class="flex items-center justify-between mb-4">
@@ -319,101 +263,54 @@ interface ConnectionPreview {
                   </ng-template>
                 </section>
 
-                <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                  <header class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-slate-900">Reviews</h2>
-                  </header>
-                  <nav class="flex gap-4 overflow-x-auto border-b border-slate-200">
-                    <button
-                      *ngFor="let tab of reviewTabs"
-                      type="button"
-                      class="review-tab"
-                      [class.review-tab--active]="selectedReviewTab() === tab.key"
-                      (click)="selectReviewTab(tab.key)"
-                    >
-                      {{ tab.label }}
-                    </button>
-                  </nav>
-                  <div class="py-6 text-sm text-slate-400">No reviews yet.</div>
-                </section>
-
-                <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                  <header class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-slate-900">Listings Preview</h2>
-                    <span class="text-sm text-slate-500" *ngIf="roomsCount() > 0">{{ roomsCount() }} rooms</span>
-                  </header>
-                  <ng-container *ngIf="roomsPreview().length; else noListings">
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      <a
-                        *ngFor="let room of roomsPreview()"
-                        [routerLink]="['/listing', room.id]"
-                        class="group rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow transition"
-                      >
-                        <img
-                          *ngIf="room.photo"
-                          [src]="room.photo"
-                          alt="Listing preview"
-                          class="h-40 w-full object-cover"
-                        />
-                        <div class="p-4 space-y-2">
-                          <h3 class="text-sm font-semibold text-slate-900 group-hover:text-brand-azure transition truncate">
-                            {{ room.title }}
-                          </h3>
-                          <p class="text-xs text-slate-500 truncate">
-                            <span *ngIf="room.price">{{ formatPrice(room.price) }}</span>
-                            <span *ngIf="room.city || room.state">
-                              • {{ formatCityState(room.city, room.state) }}
-                            </span>
-                          </p>
-                          <span class="text-xs font-semibold uppercase tracking-wide text-brand-azure">View listing</span>
-                        </div>
-                      </a>
-                    </div>
-                  </ng-container>
-                  <ng-template #noListings>
-                    <p class="text-sm text-slate-400">No listings to show yet.</p>
-                  </ng-template>
-                </section>
-
-                <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                  <header class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-slate-900">Basic Info</h2>
-                  </header>
-                  <dl class="grid gap-3 text-sm text-slate-700">
-                    <div *ngFor="let row of basicInfo()" class="flex items-start justify-between gap-6">
-                      <dt class="font-semibold text-slate-800">{{ row.label }}</dt>
-                      <dd class="text-right" [class.text-slate-400]="row.placeholder">
-                        {{ row.value || row.placeholder }}
-                      </dd>
-                    </div>
-                  </dl>
-                  <p class="text-xs text-slate-400 mt-4">Sensitive contact details are hidden.</p>
-                </section>
+            <!-- Member Since -->
+            <section class="content-card" *ngIf="joinedLabel()">
+              <div class="member-since">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="#94a3b8" stroke-width="2"/>
+                  <path d="M12 6v6l4 2" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <div class="member-text">
+                  <span class="member-label">Member Since</span>
+                  <span class="member-date">{{ joinedLabel() }}</span>
+                </div>
               </div>
-            </ng-container>
-          </ng-container>
+              <div *ngIf="lastActiveLabel()" class="last-active">Last active {{ lastActiveLabel() }}</div>
+            </section>
+
+            <!-- Safety Actions -->
+            <section class="content-card safety-card">
+              <button class="safety-btn" (click)="onReport()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Report User
+              </button>
+            </section>
+          </div>
         </ng-container>
+      </ng-container>
 
-        <ng-template #loadingState>
-          <div class="mt-20 flex flex-col items-center gap-3 text-slate-500">
-            <span class="loader"></span>
-            <p class="text-sm font-medium">Loading profile…</p>
-          </div>
-        </ng-template>
+      <!-- Loading State -->
+      <ng-template #loadingState>
+        <div class="mt-20 flex flex-col items-center gap-3 text-slate-500">
+          <span class="loader"></span>
+          <p class="text-sm font-medium">Loading profile…</p>
+        </div>
+      </ng-template>
 
-        <ng-template #notFound>
-          <div class="mt-20 bg-white rounded-3xl shadow-sm border border-slate-200 p-10 text-center text-slate-600">
-            <p class="text-sm">This profile is not available right now.</p>
-            <button
-              type="button"
-              class="mt-4 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold btn-brand"
-              (click)="goBack()"
-            >
-              Return to directory
-            </button>
-          </div>
-        </ng-template>
-      </div>
+      <!-- Not Found State -->
+      <ng-template #notFound>
+        <div class="error-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="#cbd5e1" stroke-width="2"/>
+            <path d="M12 8v4M12 16h.01" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <h3 class="error-title">Profile Not Found</h3>
+          <p class="error-message">This profile is not available right now.</p>
+          <button class="btn-primary" (click)="goBack()">Go Back</button>
+        </div>
+      </ng-template>
     </div>
   `,
   styles: `
@@ -617,6 +514,12 @@ export class UserProfilePage implements OnInit {
     const name = this.detailState()?.name || 'this user';
     const parts = name.trim().split(/\s+/);
     return parts[0] || name;
+  });
+
+  isOnline = computed(() => false); // TODO: Integrate with presence service
+  isVerified = computed(() => {
+    const badges = this.detailState()?.badges;
+    return !!(badges?.email && badges?.university);
   });
 
   basicInfo = computed(() => {

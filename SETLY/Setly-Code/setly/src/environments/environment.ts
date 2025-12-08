@@ -3,7 +3,7 @@ export const environment = {
   firebase: {
     // Prod Firebase config (same as dev for now; replace with prod secrets when ready)
     apiKey: "AIzaSyDLk2hmPHVtlBdxu0Rctfh2G5FnAIHpq64",
-    authDomain: "setly-fire.firebaseapp.com",
+    authDomain: "setly.in",
     projectId: "setly-fire",
     storageBucket: "setly-fire.firebasestorage.app",
     messagingSenderId: "577734262579",

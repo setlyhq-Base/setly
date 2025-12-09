@@ -11,5 +11,7 @@ router.get('/details', PlacesController.details);
 router.get('/textsearch', PlacesController.textSearch);
 // Institution geocode/synthetic endpoint
 router.get('/institution', PlacesController.institution);
+// Nearby places for Explore page
+router.get('/nearby', PlacesController.nearby);
 
 export default router;

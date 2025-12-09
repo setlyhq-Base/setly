@@ -175,6 +175,68 @@ export class PlacesController {
       res.status(500).json({ error: 'institution_failed', message: e?.message });
     }
   }
+
+  // GET /api/places/nearby - Get nearby places for Explore page
+  static async nearby(req: Request, res: Response) {
+    try {
+      if (!allow()) return res.status(429).json({ error: 'rate_limited' });
+      
+      const locationStr = String(req.query.location || '');
+      const category = String(req.query.type || '');
+      const radius = Number(req.query.radius || 5000);
+      
+      if (!locationStr) {
+        return res.status(400).json({ error: 'missing_location' });
+      }
+
+      // Parse location "lat,lng"
+      const [latStr, lngStr] = locationStr.split(',');
+      const lat = parseFloat(latStr);
+      const lng = parseFloat(lngStr);
+
+      if (isNaN(lat) || isNaN(lng)) {
+        return res.status(400).json({ error: 'invalid_location' });
+      }
+
+      const location = { lat, lng };
+      const key = mapsKey();
+      
+      // If no API key, return mock data for development
+      if (!key) {
+        return res.json({ 
+          results: generateMockPlaces(category, location),
+          warning: 'maps_key_missing_dev_fallback' 
+        });
+      }
+
+      const type = category || 'point_of_interest';
+
+      const params = new URLSearchParams({
+        location: locationStr,
+        radius: radius.toString(),
+        type: type,
+        key: key
+      });
+
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${params.toString()}`;
+      const resp = await fetch(url);
+      const data: any = await resp.json();
+
+      if (!resp.ok) {
+        return res.status(resp.status).json({ 
+          error: 'nearby_upstream', 
+          status: resp.status, 
+          message: data?.error_message || 'upstream_error' 
+        });
+      }
+
+      const results = Array.isArray(data?.results) ? data.results : [];
+      res.json({ results });
+      
+    } catch (e: any) {
+      res.status(500).json({ error: 'nearby_failed', message: e?.message });
+    }
+  }
 }
 
 // --- Institution fuzzy matching helpers ---
@@ -240,5 +302,123 @@ function fuzzyInstitutionPredictions(input: string) {
     description: s.name,
     place_id: 'uni:' + s.name,
     structured_formatting: { main_text: s.name, secondary_text: 'University' }
+  }));
+}
+
+// Generate mock places for development when API key not available
+function generateMockPlaces(type: string, location: { lat: number; lng: number }) {
+  // Map Google Places type to mock category
+  const categoryMap: Record<string, string> = {
+    'restaurant': 'restaurants',
+    'tourist_attraction': 'places',
+    'point_of_interest': 'places',
+    'gym': 'activities',
+    'spa': 'activities',
+    'bowling_alley': 'activities',
+    'amusement_park': 'activities',
+    'night_club': 'nightlife',
+    'bar': 'nightlife',
+    'park': 'outdoor',
+    'campground': 'outdoor'
+  };
+
+  const category = categoryMap[type] || 'places';
+
+  const mockData: Record<string, any[]> = {
+    'restaurants': [
+      { name: 'Campus Cafe', rating: 4.5, price_level: 2, vicinity: '123 College Ave' },
+      { name: 'Pizza Palace', rating: 4.2, price_level: 1, vicinity: '456 Main St' },
+      { name: 'Sushi Bar', rating: 4.7, price_level: 3, vicinity: '789 University Blvd' },
+      { name: 'Burger Joint', rating: 4.0, price_level: 1, vicinity: '321 Campus Dr' },
+      { name: 'Thai Garden', rating: 4.6, price_level: 2, vicinity: '654 Student Way' },
+      { name: 'Italian Bistro', rating: 4.4, price_level: 2, vicinity: '111 Food St' },
+      { name: 'Mexican Grill', rating: 4.3, price_level: 2, vicinity: '222 Taco Ave' },
+      { name: 'Chinese Restaurant', rating: 4.5, price_level: 2, vicinity: '333 Wok Way' },
+      { name: 'Steakhouse', rating: 4.8, price_level: 4, vicinity: '444 Meat Ln' },
+      { name: 'Vegetarian Cafe', rating: 4.6, price_level: 2, vicinity: '555 Green St' }
+    ],
+    'places': [
+      { name: 'City Museum', rating: 4.8, vicinity: '100 Museum Ln' },
+      { name: 'Historic Downtown', rating: 4.5, vicinity: 'Downtown Area' },
+      { name: 'Art Gallery', rating: 4.3, vicinity: '200 Art St' },
+      { name: 'Science Center', rating: 4.6, vicinity: '300 Discovery Ave' },
+      { name: 'Local Theater', rating: 4.4, vicinity: '400 Broadway' },
+      { name: 'Public Library', rating: 4.7, vicinity: '500 Book St' },
+      { name: 'City Park', rating: 4.5, vicinity: '600 Park Ave' },
+      { name: 'Shopping District', rating: 4.2, vicinity: '700 Mall Rd' },
+      { name: 'Historic Monument', rating: 4.4, vicinity: '800 History Blvd' },
+      { name: 'Observation Deck', rating: 4.9, vicinity: '900 View Point' }
+    ],
+    'activities': [
+      { name: 'Campus Gym', rating: 4.2, vicinity: 'Student Recreation Center' },
+      { name: 'Rock Climbing Wall', rating: 4.5, vicinity: '500 Adventure Rd' },
+      { name: 'Bowling Alley', rating: 4.0, vicinity: '600 Bowling Ln' },
+      { name: 'Escape Room', rating: 4.7, vicinity: '700 Puzzle St' },
+      { name: 'Arcade', rating: 4.3, vicinity: '800 Game Ave' },
+      { name: 'Ice Skating Rink', rating: 4.6, vicinity: '900 Ice Dr' },
+      { name: 'Trampoline Park', rating: 4.4, vicinity: '1000 Jump St' },
+      { name: 'Mini Golf', rating: 4.1, vicinity: '1100 Putt Way' },
+      { name: 'Laser Tag', rating: 4.5, vicinity: '1200 Laser Ln' },
+      { name: 'Go Karts', rating: 4.7, vicinity: '1300 Speed Ave' }
+    ],
+    'nightlife': [
+      { name: 'College Bar', rating: 4.1, vicinity: '900 Party Ln' },
+      { name: 'Dance Club', rating: 4.4, vicinity: '1000 Club St' },
+      { name: 'Live Music Venue', rating: 4.6, vicinity: '1100 Concert Ave' },
+      { name: 'Karaoke Lounge', rating: 4.2, vicinity: '1200 Sing Way' },
+      { name: 'Sports Bar', rating: 4.3, vicinity: '1300 Fan Blvd' },
+      { name: 'Cocktail Bar', rating: 4.7, vicinity: '1400 Mix Dr' },
+      { name: 'Rooftop Lounge', rating: 4.8, vicinity: '1500 Sky Terrace' },
+      { name: 'Jazz Club', rating: 4.5, vicinity: '1600 Jazz St' },
+      { name: 'Wine Bar', rating: 4.4, vicinity: '1700 Vine Way' },
+      { name: 'Pub', rating: 4.2, vicinity: '1800 Brew Ave' }
+    ],
+    'outdoor': [
+      { name: 'Campus Park', rating: 4.5, vicinity: 'University Grounds' },
+      { name: 'Nature Trail', rating: 4.7, vicinity: 'Green Valley' },
+      { name: 'Lake View', rating: 4.8, vicinity: 'Waterfront Dr' },
+      { name: 'Botanical Garden', rating: 4.6, vicinity: '1400 Garden Way' },
+      { name: 'Bike Path', rating: 4.4, vicinity: 'Riverside Trail' },
+      { name: 'Dog Park', rating: 4.3, vicinity: '1900 Pup Pl' },
+      { name: 'Picnic Area', rating: 4.5, vicinity: '2000 Blanket Blvd' },
+      { name: 'Hiking Trail', rating: 4.7, vicinity: '2100 Trek Way' },
+      { name: 'Beach', rating: 4.9, vicinity: '2200 Sand St' },
+      { name: 'Campground', rating: 4.6, vicinity: '2300 Camp Rd' }
+    ],
+    'events': [
+      { name: 'Event Center', rating: 4.5, vicinity: '1500 Event Plaza' },
+      { name: 'Conference Hall', rating: 4.3, vicinity: '1600 Meeting St' },
+      { name: 'Community Center', rating: 4.4, vicinity: '1700 Community Ave' },
+      { name: 'Student Union', rating: 4.6, vicinity: 'Campus Center' },
+      { name: 'Convention Center', rating: 4.7, vicinity: '1800 Convention Blvd' },
+      { name: 'Amphitheater', rating: 4.8, vicinity: '2400 Stage Dr' },
+      { name: 'Exhibition Hall', rating: 4.4, vicinity: '2500 Expo Way' },
+      { name: 'Auditorium', rating: 4.6, vicinity: '2600 Performance St' },
+      { name: 'Arena', rating: 4.7, vicinity: '2700 Sports Complex' },
+      { name: 'Fairgrounds', rating: 4.5, vicinity: '2800 Fair Ln' }
+    ]
+  };
+
+  const categoryData = mockData[category] || mockData['places'];
+  
+  return categoryData.map((place, index) => ({
+    place_id: `mock_${type}_${index}`,
+    name: place.name,
+    rating: place.rating,
+    price_level: place.price_level || undefined,
+    vicinity: place.vicinity,
+    geometry: {
+      location: {
+        lat: location.lat + (Math.random() - 0.5) * 0.05,
+        lng: location.lng + (Math.random() - 0.5) * 0.05
+      }
+    },
+    photos: [
+      { photo_reference: 'mock_photo', height: 400, width: 600 }
+    ],
+    opening_hours: {
+      open_now: Math.random() > 0.3
+    },
+    types: [type]
   }));
 }

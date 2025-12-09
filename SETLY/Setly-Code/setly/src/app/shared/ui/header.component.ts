@@ -82,7 +82,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     .logo-dots-container {
       @apply inline-flex relative;
       width: 14px;
-      height: 1.1em;
+      height: 18px;
       flex-shrink: 0;
       margin-right: 6px;
     }

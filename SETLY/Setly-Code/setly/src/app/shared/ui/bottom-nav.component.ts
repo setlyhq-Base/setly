@@ -45,9 +45,10 @@ interface NavItem {
                   <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               }
-              @if (item.label === 'Events') {
+              @if (item.label === 'Explore') {
                 <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-1.65 4.5m-10.2-4.5l1.65 4.5M3.75 18.75h16.5a1.5 1.5 0 001.5-1.5v-10.5a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5v10.5a1.5 1.5 0 001.5 1.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
                 </svg>
               }
             </span>
@@ -371,9 +372,9 @@ export class BottomNavComponent {
       action: 'post-sheet'
     },
     {
-      label: 'Events',
-      icon: `<svg viewBox="0 0 24 24" fill="none"><path d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-1.65 4.5m-10.2-4.5l1.65 4.5M3.75 18.75h16.5a1.5 1.5 0 001.5-1.5v-10.5a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5v10.5a1.5 1.5 0 001.5 1.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-      route: '/events'
+      label: 'Explore',
+      icon: `<svg viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/></svg>`,
+      route: '/explore'
     },
     {
       label: 'Profile',

@@ -21,11 +21,20 @@ export const routes: Routes = [
     title: 'Home - Setly',
     canActivate: []
   },
-  // Backward compatibility: redirect old /search and /explore to /home
+  // Backward compatibility: redirect old /search to /home
   { path: 'search', redirectTo: 'home', pathMatch: 'full' },
-  { path: 'explore', redirectTo: 'home', pathMatch: 'full' },
   // Redirect legacy connect/people to new People page
   { path: 'connect/people', redirectTo: 'people', pathMatch: 'full' },
+  {
+    path: 'explore',
+    loadComponent: () => import('./features/events/explore.page').then(m => m.ExplorePageComponent),
+    title: 'Explore - Setly'
+  },
+  {
+    path: 'explore/:id',
+    loadComponent: () => import('./features/events/explore-detail.page').then(m => m.ExploreDetailPageComponent),
+    title: 'Details - Setly'
+  },
   {
     path: 'people',
     loadComponent: () => import('./features/people/people.page').then(m => m.PeoplePage),
@@ -33,8 +42,8 @@ export const routes: Routes = [
   },
   {
     path: 'events',
-    loadComponent: () => import('./features/events/events.page').then(m => m.EventsPage),
-    title: 'Events - Setly'
+    loadComponent: () => import('./features/events/explore.page').then(m => m.ExplorePageComponent),
+    title: 'Explore - Setly'
   },
   {
     path: 'events/:id',

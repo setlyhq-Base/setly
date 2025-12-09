@@ -8,12 +8,18 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="event-card" (click)="cardClick.emit(event)">
       <div class="event-image-wrapper">
-        <img [src]="event.image" [alt]="event.title" class="event-image">
+        <img 
+          [src]="event.image" 
+          [alt]="event.title" 
+          class="event-image"
+          loading="lazy"
+          decoding="async">
         
         <!-- Save Button -->
         <button 
           class="save-btn"
           [class.saved]="isSaved()"
+          [class.animating]="isAnimating()"
           (click)="toggleSave($event)"
           aria-label="Save event">
           <svg width="20" height="20" viewBox="0 0 24 24" [attr.fill]="isSaved() ? 'currentColor' : 'none'">
@@ -56,7 +62,7 @@ import { CommonModule } from '@angular/common';
         
         <div class="event-footer">
           <div class="organizer">
-            <img [src]="event.organizer.avatar" [alt]="event.organizer.name" class="organizer-avatar">
+            <img [src]="event.organizer.avatar" [alt]="event.organizer.name" class="organizer-avatar" loading="lazy" decoding="async">
             <span class="organizer-name">{{ event.organizer.name }}</span>
           </div>
           <div class="event-price">
@@ -126,6 +132,32 @@ import { CommonModule } from '@angular/common';
 
     .save-btn.saved {
       color: #3B82F6;
+      animation: bookmarkPulse 0.4s ease-out;
+    }
+
+    .save-btn.animating {
+      animation: bookmarkBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes bookmarkPulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.3);
+      }
+    }
+
+    @keyframes bookmarkBounce {
+      0%, 100% {
+        transform: scale(1);
+      }
+      30% {
+        transform: scale(1.4) rotate(-5deg);
+      }
+      60% {
+        transform: scale(0.9) rotate(5deg);
+      }
     }
 
     .event-tag {
@@ -287,6 +319,7 @@ export class EventCardComponent {
   @Output() cardClick = new EventEmitter<any>();
   
   isSaved = signal(false);
+  isAnimating = signal(false);
 
   ngOnInit() {
     if (this.event) {
@@ -304,6 +337,10 @@ export class EventCardComponent {
   toggleSave(event: Event) {
     event.stopPropagation();
     this.isSaved.update(saved => !saved);
+    
+    // Trigger bookmark animation
+    this.isAnimating.set(true);
+    setTimeout(() => this.isAnimating.set(false), 600);
   }
 
   onCardClick() {

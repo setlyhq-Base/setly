@@ -1,4 +1,4 @@
-import { Component, OnDestroy, Signal, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, Signal, computed, effect, inject, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
 import { ConnectFeedService } from '../../core/services/connect-feed.service';
@@ -15,6 +15,7 @@ import { FilterDrawerComponent } from './components/filter-drawer.component';
 import { MapViewComponent } from './components/map-view.component';
 import { NotificationsDrawerComponent } from './components/notifications-drawer.component';
 import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.directive';
+import { GlobalSearchOverlayComponent } from '../../shared/components/global-search-overlay.component';
 
 @Component({
   selector: 'app-connect',
@@ -31,7 +32,8 @@ import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.
     FilterDrawerComponent,
     MapViewComponent,
     NotificationsDrawerComponent,
-    PullToRefreshDirective
+    PullToRefreshDirective,
+    GlobalSearchOverlayComponent
   ],
   templateUrl: './connect.page.html',
   styleUrls: ['./connect.page.scss']
@@ -58,6 +60,14 @@ export class ConnectPage implements OnDestroy {
   pullDistance = signal<number>(0);
   mapViewOpen = signal<boolean>(false);
   notificationsOpen = signal<boolean>(false);
+  searchOpen = signal<boolean>(false);
+
+  // Swipe navigation state
+  @ViewChild('tabsNav') tabsNav?: ElementRef;
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private isSwiping = false;
+  isScrolled = signal<boolean>(false);
 
   // Feed state
   feed: Signal<ConnectFeedResponse> = this.feedService.feed;
@@ -408,6 +418,53 @@ export class ConnectPage implements OnDestroy {
 
   closeNotifications() {
     this.notificationsOpen.set(false);
+  }
+
+  // Scroll detection for sticky tabs shadow effect
+  @HostListener('window:scroll', [])
+  onScroll() {
+    this.isScrolled.set(window.scrollY > 60);
+  }
+
+  // Swipe navigation between tabs
+  onTouchStart(event: TouchEvent) {
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+    this.isSwiping = false;
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (!this.touchStartX) return;
+    
+    const deltaX = Math.abs(event.touches[0].clientX - this.touchStartX);
+    const deltaY = Math.abs(event.touches[0].clientY - this.touchStartY);
+    
+    if (deltaX > deltaY && deltaX > 10) {
+      this.isSwiping = true;
+    }
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    if (!this.isSwiping || !this.touchStartX) {
+      this.touchStartX = 0;
+      return;
+    }
+
+    const deltaX = event.changedTouches[0].clientX - this.touchStartX;
+    const threshold = 80;
+
+    if (Math.abs(deltaX) > threshold) {
+      const currentIndex = this.tabs.indexOf(this.activeTab());
+      
+      if (deltaX < 0 && currentIndex < this.tabs.length - 1) {
+        this.onTabClick(this.tabs[currentIndex + 1]);
+      } else if (deltaX > 0 && currentIndex > 0) {
+        this.onTabClick(this.tabs[currentIndex - 1]);
+      }
+    }
+
+    this.touchStartX = 0;
+    this.isSwiping = false;
   }
 
   ngOnDestroy(): void {

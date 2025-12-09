@@ -28,8 +28,8 @@ import { RoomStore } from '../../core/state/room.store';
       </div>
     </section>
 
-    <!-- Anchor Nav -->
-    <nav *ngIf="room()" class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-200 hidden md:block">
+    <!-- Anchor Nav (Sticky) -->
+    <nav *ngIf="room()" class="sticky top-0 z-50 bg-white/98 backdrop-blur-xl border-b border-gray-200/80 hidden md:block shadow-sm">
       <ul class="max-w-7xl mx-auto px-6 flex gap-8 text-sm font-medium">
         <li><button (click)="scrollTo('photos')" class="py-4 -mb-px border-b-2 border-transparent hover:border-gray-300 transition"
             [class.border-blue-500]="activeAnchor()==='photos'" [class.text-blue-600]="activeAnchor()==='photos'" [class.font-semibold]="activeAnchor()==='photos'">Photos</button></li>

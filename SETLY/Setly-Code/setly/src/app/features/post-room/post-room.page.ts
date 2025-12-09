@@ -670,7 +670,7 @@ export class PostRoomPage {
   // Navigation methods
   handleBack() {
     if (this.store.currentStep() === 1) {
-      this.attemptNavigation('/explore');
+      this.attemptNavigation('/home');
     } else {
       this.store.previousStep();
     }

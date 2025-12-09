@@ -29,6 +29,9 @@ import { CommonModule } from '@angular/common';
             [alt]="item.title"
             class="room-image"
             loading="lazy"
+            decoding="async"
+            width="800"
+            height="600"
           />
           
           <!-- Gradient Overlay -->

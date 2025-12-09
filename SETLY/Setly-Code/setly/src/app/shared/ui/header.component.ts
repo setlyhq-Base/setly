@@ -92,7 +92,7 @@ export class HeaderComponent {
   readonly navLinks = [
     { label: 'Connect', route: '/connect' },
     { label: 'People', route: '/people' },
-    { label: 'Explore', route: '/explore' },
+    { label: 'Home', route: '/home' },
     { label: 'Post', route: '/post' },
     { label: 'Browse', route: '/browse' }
   ];

@@ -17,18 +17,16 @@
 
   <!-- Instagram-Style Sticky Top Bar -->
   <div class="instagram-top-bar">
-    <button 
-      (click)="openFilters()" 
-      class="top-bar-action"
-      aria-label="Filters">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-    </button>
-    
-    <h1 class="page-title">Connect</h1>
-    
-    <div class="top-bar-actions">
+    <div class="top-bar-left">
+      <button 
+        (click)="openFilters()" 
+        class="top-bar-action"
+        aria-label="Filters">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      
       <button 
         (click)="openMapView()" 
         class="top-bar-action"
@@ -38,16 +36,30 @@
           <path d="M8 2v16M16 6v16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-      
+    </div>
+    
+    <h1 class="page-title">Connect</h1>
+    
+    <div class="top-bar-actions">
       <button 
         (click)="openNotifications()" 
         class="top-bar-action notification-btn"
         aria-label="Notifications">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="currentColor" stroke-width="2"/>
-          <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span class="notification-badge" *ngIf="newAvailable()">{{ newCount() }}</span>
+      </button>
+      
+      <button 
+        (click)="searchOpen.set(true)" 
+        class="top-bar-action"
+        aria-label="Search">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
       </button>
     </div>
   </div>
@@ -69,8 +81,13 @@
       (quickFilterApplied)="onQuickFilterApplied($event)">
     </app-trending-topics>
 
-    <!-- Mobile Tabs -->
-    <nav class="mobile-tabs-nav">
+    <!-- Mobile Tabs (Sticky with Swipe Support) -->
+    <nav class="mobile-tabs-nav" 
+         #tabsNav
+         [class.scrolled]="isScrolled()"
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd($event)">
       <button 
         *ngFor="let t of tabs"
         (click)="onTabClick(t)"
@@ -139,6 +156,12 @@
     *ngIf="notificationsOpen()"
     (close)="closeNotifications()">
   </app-notifications-drawer>
+
+  <!-- Global Search Overlay -->
+  <app-global-search-overlay
+    *ngIf="searchOpen()"
+    (close)="searchOpen.set(false)">
+  </app-global-search-overlay>
 
   <!-- Toast Container -->
   <app-toast-container></app-toast-container>

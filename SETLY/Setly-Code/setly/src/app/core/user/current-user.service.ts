@@ -70,6 +70,10 @@ export class CurrentUserService {
     }, (error: FirestoreError) => {
       if (error?.code === 'unavailable') {
         console.info('[CurrentUserService] Offline while listening for profile updates');
+      } else if (error?.code === 'permission-denied') {
+        console.info('[CurrentUserService] Profile listener error - using backend sync instead');
+        // Graceful fallback - the app will use backend auth sync instead
+        this._profile.set(null);
       } else {
         console.warn('[CurrentUserService] Profile listener error', error);
       }
@@ -112,6 +116,9 @@ export class CurrentUserService {
     } catch (err: any) {
       if (err?.code === 'unavailable') {
         console.info('[CurrentUserService] Skipping ensureUserDocument while offline');
+      } else if (err?.code === 'permission-denied') {
+        console.info('[CurrentUserService] Skipping Firestore user document - using backend sync instead');
+        // Graceful - backend handles user creation via /api/auth/sync
       } else {
         console.warn('[CurrentUserService] Failed ensuring user document', err);
       }

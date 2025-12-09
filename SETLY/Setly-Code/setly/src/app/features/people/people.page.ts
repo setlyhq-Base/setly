@@ -880,7 +880,7 @@ export class PeoplePage implements OnInit, OnDestroy, AfterViewInit {
   
   // Navigate to unified explore feed
   navigateToExploreFeed(): void {
-    this.router.navigate(['/explore']);
+    this.router.navigate(['/home']);
   }
 
   private getCarouselContainer(categoryIndex: number): HTMLDivElement | null {

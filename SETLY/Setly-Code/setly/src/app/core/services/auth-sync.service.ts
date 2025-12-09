@@ -76,7 +76,8 @@ export class AuthSyncService {
         // Begin presence heartbeat (immediate + interval)
         this.startHeartbeat();
       } catch (e: any) {
-        console.warn('[AuthSync] Backend sync failed - using Firebase user data only (backend may not be available):', e);
+        const errorMsg = e?.status === 500 ? 'Backend temporarily unavailable' : (e?.error?.error || e?.message || 'Connection failed');
+        console.warn('[AuthSync] Backend sync failed - using Firebase user data only:', errorMsg);
         // Graceful degrade: hydrate stores from Firebase user so app remains usable even without backend
         try {
           this.authStore.setUser({
@@ -162,8 +163,12 @@ export class AuthSyncService {
       const detail: any = { status: 'ok', intervalMs: this.heartbeatIntervalMs };
       if (res?.meta) detail.meta = res.meta;
       window.dispatchEvent(new CustomEvent('presence-status', { detail }));
-    } catch (e) {
+    } catch (e: any) {
       this.heartbeatFailures++;
+      // Only log on first failure or milestone failures to reduce console spam
+      if (this.heartbeatFailures === 1) {
+        console.info('[AuthSync] Presence heartbeat failed (backend may not be running) - will retry');
+      }
       // escalate interval after a few consecutive failures to reduce backend pressure
       if (this.heartbeatFailures === 3) {
         this.heartbeatIntervalMs = 60_000; // slow down

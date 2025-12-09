@@ -16,13 +16,14 @@ export const routes: Routes = [
     title: 'Profile - Setly'
   },
   {
-    path: 'explore',
+    path: 'home',
     loadComponent: () => import('./features/search/search.page').then(m => m.SearchPage),
-    title: 'Explore - Setly',
+    title: 'Home - Setly',
     canActivate: []
   },
-  // Backward compatibility: redirect old /search to /explore
-  { path: 'search', redirectTo: 'explore', pathMatch: 'full' },
+  // Backward compatibility: redirect old /search and /explore to /home
+  { path: 'search', redirectTo: 'home', pathMatch: 'full' },
+  { path: 'explore', redirectTo: 'home', pathMatch: 'full' },
   // Redirect legacy connect/people to new People page
   { path: 'connect/people', redirectTo: 'people', pathMatch: 'full' },
   {
@@ -33,8 +34,8 @@ export const routes: Routes = [
   // Default landing page: Redirect root to Explore
   {
     path: '',
-    redirectTo: 'explore',
-    pathMatch: 'full'
+    redirectTo: 'home',
+    pathMatch: 'full',
   },
   // Keep home page accessible at /home for backward compatibility
   {

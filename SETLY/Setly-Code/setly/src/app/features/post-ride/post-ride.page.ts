@@ -614,7 +614,7 @@ export class PostRidePage {
   // Navigation methods
   handleBack() {
     if (this.store.currentStep() === 1) {
-      this.attemptNavigation('/explore');
+      this.attemptNavigation('/home');
     } else {
       this.store.previousStep();
     }
@@ -715,7 +715,7 @@ export class PostRidePage {
       
       // Navigate to rides list or success page
       setTimeout(() => {
-        this.router.navigate(['/explore']);
+        this.router.navigate(['/home']);
       }, 800);
       
     } catch (error) {

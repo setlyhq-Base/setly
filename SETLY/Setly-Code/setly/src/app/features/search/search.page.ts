@@ -1,6 +1,7 @@
 import { Component, signal, computed, HostListener, inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { FilterPanelComponent } from './components/filter-panel.component';
 import { RoomResultCardComponent } from './components/room-result-card.component';
 import { RideResultCardComponent } from './components/ride-result-card.component';
@@ -17,7 +18,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, FilterPanelComponent, RoomResultCardComponent, RideResultCardComponent, MarketResultCardComponent, RideDetailModalComponent, FilterDrawerComponent, NotificationsDrawerComponent, GlobalSearchOverlayComponent],
+  imports: [CommonModule, FormsModule, RouterModule, FilterPanelComponent, RoomResultCardComponent, RideResultCardComponent, MarketResultCardComponent, RideDetailModalComponent, FilterDrawerComponent, NotificationsDrawerComponent, GlobalSearchOverlayComponent],
   template: `
   <main class="explore-page min-h-screen relative pb-20 md:pb-8">
       <!-- 🌟 Clean Minimal Background -->
@@ -47,7 +48,9 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
           </button>
         </div>
         
-        <img src="/assets/setly-logo.svg" alt="Setly" class="header-logo" />
+        <div class="header-logo-wrapper">
+          <img src="/assets/setly-logo.svg" alt="Setly" class="header-logo" />
+        </div>
         
         <div class="top-bar-right">
           <button 
@@ -60,6 +63,15 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
             </svg>
             <span class="notification-badge" *ngIf="hasNotifications()">{{ notificationCount() }}</span>
           </button>
+          
+          <a 
+            routerLink="/messages"
+            class="top-bar-action"
+            aria-label="Messages">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
           
           <button 
             (click)="searchOpen.set(true)" 
@@ -148,6 +160,16 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
         </div>
       </section>
 
+      <!-- 🌟 Hero Tagline Section - Sticky with Fade -->
+      <section class="hero-tagline-section" [class.scrolled]="isScrolled()">
+        <div class="max-w-7xl mx-auto px-4 md:px-6">
+          <div class="hero-content">
+            <h1 class="hero-title">Find your next move</h1>
+            <p class="hero-subtitle">Discover trusted rooms, instant rides, and connect with your community — all in one place.</p>
+          </div>
+        </div>
+      </section>
+
       <!-- 🔍 Premium Mobile-First Search Bar (Priceline/Booking Style) -->
       <section class="premium-search-section">
         <div class="max-w-7xl mx-auto px-4 md:px-6">
@@ -155,7 +177,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
           <!-- Rooms Search Bar -->
           <div *ngIf="activeTab() === 'rooms'" class="premium-search-bar animate-fade-in">
             <!-- Location Field -->
-            <button class="search-field" (click)="openLocationSheet(); $event.stopPropagation()">
+            <button class="search-field" (click)="openLocationSheet(); $event.stopImmediatePropagation()">
               <div class="field-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
@@ -172,7 +194,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
             </button>
 
             <!-- Date Range Field -->
-            <button class="search-field" (click)="openDateRangeSheet(); $event.stopPropagation()">
+            <button class="search-field" (click)="openDateRangeSheet(); $event.stopImmediatePropagation()">
               <div class="field-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
@@ -189,7 +211,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
             </button>
 
             <!-- Room Type Field -->
-            <button class="search-field" (click)="openRoomTypeSheet(); $event.stopPropagation()">
+            <button class="search-field" (click)="openRoomTypeSheet(); $event.stopImmediatePropagation()">
               <div class="field-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
@@ -218,7 +240,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
           <!-- Rides Search Bar -->
           <div *ngIf="activeTab() === 'rides'" class="premium-search-bar animate-fade-in">
             <!-- Pickup Field -->
-            <button class="search-field" (click)="openPickupSheet(); $event.stopPropagation()">
+            <button class="search-field" (click)="openPickupSheet(); $event.stopImmediatePropagation()">
               <div class="field-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/>
@@ -235,7 +257,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
             </button>
 
             <!-- Drop-off Field -->
-            <button class="search-field" (click)="openDropoffSheet(); $event.stopPropagation()">
+            <button class="search-field" (click)="openDropoffSheet(); $event.stopImmediatePropagation()">
               <div class="field-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
@@ -252,7 +274,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
             </button>
 
             <!-- Date & Time Field -->
-            <button class="search-field" (click)="openRideDateTimeSheet(); $event.stopPropagation()">
+            <button class="search-field" (click)="openRideDateTimeSheet(); $event.stopImmediatePropagation()">
               <div class="field-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
@@ -298,7 +320,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
             </button>
 
             <!-- Location Field -->
-            <button class="search-field" (click)="openLocationSheet(); $event.stopPropagation()">
+            <button class="search-field" (click)="openLocationSheet(); $event.stopImmediatePropagation()">
               <div class="field-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
@@ -775,17 +797,24 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       text-align: center;
     }
     
+    .header-logo-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-width: 0;
+    }
+
     .header-logo {
-      height: 28px;
+      height: 36px;
       width: auto;
       object-fit: contain;
       display: block;
-      margin: 0 auto;
     }
     
     @media (max-width: 640px) {
       .header-logo {
-        height: 24px;
+        height: 32px;
       }
     }
     
@@ -895,6 +924,81 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       animation: scale-in 0.3s ease-out forwards;
     }
 
+    /* ========== HERO TAGLINE SECTION - STICKY WITH FADE ========== */
+    .hero-tagline-section {
+      position: relative;
+      z-index: auto;
+      padding: 24px 0 20px;
+      margin-top: 0;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+      transition: opacity 0.3s ease, padding 0.3s ease, border-bottom-color 0.3s ease;
+      opacity: 1;
+    }
+
+    .hero-tagline-section.scrolled {
+      opacity: 0.75;
+      padding: 18px 0 16px;
+      border-bottom-color: rgba(0, 0, 0, 0.06);
+    }
+
+    .hero-content {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .hero-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: #111827;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      font-weight: 400;
+      color: #6B7280;
+      margin: 0;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+      .hero-tagline-section {
+        padding: 20px 0 16px;
+      }
+
+      .hero-tagline-section.scrolled {
+        padding: 16px 0 14px;
+        opacity: 0.7;
+      }
+
+      .hero-title {
+        font-size: 26px;
+        margin-bottom: 10px;
+      }
+
+      .hero-subtitle {
+        font-size: 15px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 24px;
+      }
+
+      .hero-subtitle {
+        font-size: 14px;
+      }
+    }
+
     /* ========== SINGLE STICKY CATEGORY TAB BAR (Mobile-App Style) ========== */
     .category-tabs-section {
       position: sticky;
@@ -906,6 +1010,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       padding: 12px 0;
+      margin-bottom: 0;
       border-bottom: 1px solid rgba(0, 0, 0, 0.06);
       box-shadow: 0 2px 12px -4px rgba(0, 0, 0, 0.08);
       transition: box-shadow 0.3s ease, border-bottom-color 0.3s ease;
@@ -971,11 +1076,11 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       top: 8px;
       left: 8px;
       background: linear-gradient(135deg, #3E8FFF 0%, #5EA3FF 100%);
-      border-radius: 14px;
+      border-radius: 16px;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 
-        0 4px 16px rgba(62, 143, 255, 0.3),
-        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+        0 6px 20px rgba(62, 143, 255, 0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.25) inset;
       z-index: 0;
     }
 
@@ -983,21 +1088,22 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 20px;
+      gap: 9px;
+      padding: 13px 22px;
       background: transparent;
       border: none;
-      border-radius: 14px;
+      border-radius: 16px;
       font-size: 15px;
       font-weight: 600;
       color: #6F7785;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
       z-index: 1;
-      min-height: 44px; /* Touch-friendly */
+      min-height: 46px; /* Touch-friendly */
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      letter-spacing: -0.01em;
     }
 
     .category-pill:active {
@@ -1015,10 +1121,12 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
 
     .category-pill.active {
       color: white;
+      transform: scale(1.02);
     }
 
     .category-pill.active .pill-icon {
       color: white;
+      transform: scale(1.05);
     }
 
     .pill-icon {
@@ -1037,15 +1145,16 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 22px;
-      height: 22px;
-      padding: 0 6px;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 11px;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 7px;
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 12px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
       color: white;
       animation: pill-count-entrance 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     @keyframes pill-count-entrance {
@@ -1086,7 +1195,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
 
     /* ========== PREMIUM MOBILE-FIRST SEARCH BAR (Priceline/Booking Style) ========== */
     .premium-search-section {
-      padding: 16px 0 24px;
+      padding: 0 0 24px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
     }
 

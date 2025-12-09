@@ -31,6 +31,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/people/people.page').then(m => m.PeoplePage),
     title: 'People - Setly'
   },
+  {
+    path: 'events',
+    loadComponent: () => import('./features/events/events.page').then(m => m.EventsPage),
+    title: 'Events - Setly'
+  },
+  {
+    path: 'events/:id',
+    loadComponent: () => import('./features/events/event-detail.page').then(m => m.EventDetailPage),
+    title: 'Event Detail - Setly'
+  },
   // Default landing page: Redirect root to Explore
   {
     path: '',

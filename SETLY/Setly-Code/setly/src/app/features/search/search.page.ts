@@ -811,64 +811,13 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       min-width: 0;
     }
 
-    .setly-logo-text {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 400;
-      font-size: 22px;
-      letter-spacing: 0.05em;
-      color: #111827;
-    }
-
-    .logo-dots {
-      display: inline-flex;
-      position: relative;
-      width: 14px;
-      height: 22px;
-      flex-shrink: 0;
-    }
-
-    .logo-dot {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background-color: #4E7BFD;
-    }
-
-    .logo-dot-1 {
-      top: 0;
-      right: 0;
-    }
-
-    .logo-dot-2 {
-      bottom: 0;
-      left: 0;
-    }
-
-    .logo-wordmark {
-      font-weight: 400;
-      letter-spacing: 0.15em;
-      color: #111827;
-    }
-    
-    @media (max-width: 640px) {
-      .setly-logo-text {
-        font-size: 20px;
-        gap: 5px;
-      }
-      
-      .logo-dots {
-        width: 13px;
-        height: 16px;
-      }
-
-      .logo-dot {
-        width: 5px;
-        height: 5px;
-      }
-    }
+    .setly-logo-text{display:flex;align-items:center;gap:6px;font-weight:400;font-size:22px;letter-spacing:.05em;color:#111827}
+    .logo-dots{display:inline-flex;position:relative;width:14px;height:18px;flex-shrink:0}
+    .logo-dot{position:absolute;width:6px;height:6px;border-radius:50%;background-color:#4E7BFD}
+    .logo-dot-1{top:0;right:0}
+    .logo-dot-2{bottom:0;left:0}
+    .logo-wordmark{font-weight:400;letter-spacing:.15em;color:#111827}
+    @media (max-width:640px){.setly-logo-text{font-size:20px;gap:5px}.logo-dots{width:13px;height:16px}.logo-dot{width:5px;height:5px}}
     
     .top-bar-action {
       position: relative;
@@ -922,59 +871,16 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       animation: pulse 2s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.05);
-      }
-    }
-
-    /* Floating Animations */
-    @keyframes float {
-      0%, 100% { transform: translateY(0) translateX(0); }
-      33% { transform: translateY(-15px) translateX(8px); }
-      66% { transform: translateY(8px) translateX(-8px); }
-    }
-
-    @keyframes float-delayed {
-      0%, 100% { transform: translateY(0) translateX(0); }
-      33% { transform: translateY(10px) translateX(-12px); }
-      66% { transform: translateY(-8px) translateX(8px); }
-    }
-
-    .animate-float {
-      animation: float 8s ease-in-out infinite;
-    }
-
-    .animate-float-delayed {
-      animation: float-delayed 10s ease-in-out infinite;
-    }
-
-    /* Fade in animations */
-    @keyframes fade-in-up {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .animate-fade-in-up {
-      animation: fade-in-up 0.6s ease-out forwards;
-    }
-
-    .animation-delay-200 {
-      animation-delay: 200ms;
-    }
-
-    /* Scale in animation for cards */
-    @keyframes scale-in {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .animate-scale-in {
-      animation: scale-in 0.3s ease-out forwards;
-    }
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    @keyframes float{0%,100%{transform:translateY(0) translateX(0)}33%{transform:translateY(-15px) translateX(8px)}66%{transform:translateY(8px) translateX(-8px)}}
+    @keyframes float-delayed{0%,100%{transform:translateY(0) translateX(0)}33%{transform:translateY(10px) translateX(-12px)}66%{transform:translateY(-8px) translateX(8px)}}
+    .animate-float{animation:float 8s ease-in-out infinite}
+    .animate-float-delayed{animation:float-delayed 10s ease-in-out infinite}
+    @keyframes fade-in-up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    .animate-fade-in-up{animation:fade-in-up .6s ease-out forwards}
+    .animation-delay-200{animation-delay:200ms}
+    @keyframes scale-in{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+    .animate-scale-in{animation:scale-in .3s ease-out forwards}
 
     /* ========== HERO TAGLINE SECTION - STICKY WITH FADE ========== */
     .hero-tagline-section {

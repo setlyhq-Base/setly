@@ -7,6 +7,7 @@ import { FilterDrawerComponent } from '../connect/components/filter-drawer.compo
 import { NotificationsDrawerComponent } from '../connect/components/notifications-drawer.component';
 import { GlobalSearchOverlayComponent } from '../../shared/components/global-search-overlay.component';
 import { LocationBottomSheetComponent } from './components/location-bottom-sheet.component';
+import { MapViewComponent } from '../connect/components/map-view.component';
 
 @Component({
   selector: 'app-events-page',
@@ -19,7 +20,8 @@ import { LocationBottomSheetComponent } from './components/location-bottom-sheet
     FilterDrawerComponent,
     NotificationsDrawerComponent,
     GlobalSearchOverlayComponent,
-    LocationBottomSheetComponent
+    LocationBottomSheetComponent,
+    MapViewComponent
   ],
   template: `
   <main class="events-page min-h-screen relative pb-20 md:pb-8">
@@ -49,9 +51,27 @@ import { LocationBottomSheetComponent } from './components/location-bottom-sheet
               <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
             </svg>
           </button>
+          
+          <button 
+            (click)="openMapView()"
+            class="top-bar-action"
+            aria-label="Map view">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 2v16M16 6v16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
         
-        <h1 class="page-title">Events</h1>
+        <div class="header-logo-wrapper">
+          <span class="setly-logo-text">
+            <span class="logo-dots">
+              <span class="logo-dot logo-dot-1"></span>
+              <span class="logo-dot logo-dot-2"></span>
+            </span>
+            <span class="logo-wordmark">SETLY</span>
+          </span>
+        </div>
         
         <div class="top-bar-right">
           <button 
@@ -89,7 +109,7 @@ import { LocationBottomSheetComponent } from './components/location-bottom-sheet
       <!-- Hero Section with Location & Categories -->
       <section class="hero-section" [class.scrolled]="isScrolled()">
         <div class="hero-content">
-          <h1 class="hero-title">Find your world nearby.</h1>
+          <h1 class="hero-title">Your world, nearby.</h1>
           <p class="hero-subtitle">Discover events, meet your community, and explore what's happening around you in real-time.</p>
           
           <!-- Location Pill -->
@@ -255,20 +275,26 @@ import { LocationBottomSheetComponent } from './components/location-bottom-sheet
 
       <!-- Filter Drawer -->
       <app-filter-drawer
-        *ngIf="filterDrawerOpen()"
+        [isOpen]="filterDrawerOpen"
         (closed)="closeFilterDrawer()">
       </app-filter-drawer>
+
+      <!-- Map View -->
+      <app-map-view
+        *ngIf="mapViewOpen()"
+        (close)="closeMapView()">
+      </app-map-view>
 
       <!-- Notifications Drawer -->
       <app-notifications-drawer
         *ngIf="notificationsOpen()"
-        (closed)="closeNotifications()">
+        (close)="closeNotifications()">
       </app-notifications-drawer>
 
       <!-- Global Search Overlay -->
       <app-global-search-overlay
         *ngIf="searchOpen()"
-        (closed)="searchOpen.set(false)">
+        (close)="searchOpen.set(false)">
       </app-global-search-overlay>
     </main>
   `,
@@ -305,14 +331,71 @@ import { LocationBottomSheetComponent } from './components/location-bottom-sheet
       gap: 8px;
     }
 
-    .page-title {
-      font-size: 20px;
-      font-weight: 800;
-      color: #111827;
-      margin: 0;
-      letter-spacing: -0.5px;
+    .header-logo-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex: 1;
-      text-align: center;
+      min-width: 0;
+    }
+
+    .setly-logo-text {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 400;
+      font-size: 22px;
+      letter-spacing: 0.05em;
+      color: #111827;
+    }
+
+    .logo-dots {
+      display: inline-flex;
+      position: relative;
+      width: 14px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .logo-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #4E7BFD;
+    }
+
+    .logo-dot-1 {
+      top: 0;
+      right: 0;
+    }
+
+    .logo-dot-2 {
+      bottom: 0;
+      left: 0;
+    }
+
+    .logo-wordmark {
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      color: #111827;
+    }
+    
+    @media (max-width: 640px) {
+      .setly-logo-text {
+        font-size: 20px;
+        gap: 5px;
+      }
+      
+      .logo-dots {
+        width: 13px;
+        height: 16px;
+      }
+
+      .logo-dot {
+        width: 5px;
+        height: 5px;
+      }
     }
 
     .top-bar-action {
@@ -609,6 +692,7 @@ export class EventsPage implements AfterViewInit {
   notificationsOpen = signal(false);
   searchOpen = signal(false);
   locationSheetOpen = signal(false);
+  mapViewOpen = signal(false);
   selectedLocation = signal('Nashua, NH');
   selectedCategory = signal('all');
   
@@ -981,6 +1065,14 @@ export class EventsPage implements AfterViewInit {
   onLocationSelected(location: string) {
     this.selectedLocation.set(location);
     this.closeLocationSheet();
+  }
+
+  openMapView() {
+    this.mapViewOpen.set(true);
+  }
+
+  closeMapView() {
+    this.mapViewOpen.set(false);
   }
 
   openEventDetail(eventId: number) {

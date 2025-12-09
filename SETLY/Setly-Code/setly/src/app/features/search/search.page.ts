@@ -49,7 +49,13 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
         </div>
         
         <div class="header-logo-wrapper">
-          <img src="/assets/setly-logo.svg" alt="Setly" class="header-logo" />
+          <span class="setly-logo-text">
+            <span class="logo-dots">
+              <span class="logo-dot logo-dot-1"></span>
+              <span class="logo-dot logo-dot-2"></span>
+            </span>
+            <span class="logo-wordmark">SETLY</span>
+          </span>
         </div>
         
         <div class="top-bar-right">
@@ -805,16 +811,62 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       min-width: 0;
     }
 
-    .header-logo {
-      height: 36px;
-      width: auto;
-      object-fit: contain;
-      display: block;
+    .setly-logo-text {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 400;
+      font-size: 22px;
+      letter-spacing: 0.05em;
+      color: #111827;
+    }
+
+    .logo-dots {
+      display: inline-flex;
+      position: relative;
+      width: 14px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .logo-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #4E7BFD;
+    }
+
+    .logo-dot-1 {
+      top: 0;
+      right: 0;
+    }
+
+    .logo-dot-2 {
+      bottom: 0;
+      left: 0;
+    }
+
+    .logo-wordmark {
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      color: #111827;
     }
     
     @media (max-width: 640px) {
-      .header-logo {
-        height: 32px;
+      .setly-logo-text {
+        font-size: 20px;
+        gap: 5px;
+      }
+      
+      .logo-dots {
+        width: 13px;
+        height: 16px;
+      }
+
+      .logo-dot {
+        width: 5px;
+        height: 5px;
       }
     }
     

@@ -109,14 +109,71 @@
   gap: 8px;
 }
 
-.page-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: #111827;
-  margin: 0;
-  letter-spacing: -0.5px;
+.header-logo-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 1;
-  text-align: center;
+  min-width: 0;
+}
+
+.setly-logo-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: 0.05em;
+  color: #111827;
+}
+
+.logo-dots {
+  display: inline-flex;
+  position: relative;
+  width: 14px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.logo-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #4E7BFD;
+}
+
+.logo-dot-1 {
+  top: 0;
+  right: 0;
+}
+
+.logo-dot-2 {
+  bottom: 0;
+  left: 0;
+}
+
+.logo-wordmark {
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  color: #111827;
+}
+
+@media (max-width: 640px) {
+  .setly-logo-text {
+    font-size: 20px;
+    gap: 5px;
+  }
+  
+  .logo-dots {
+    width: 13px;
+    height: 16px;
+  }
+
+  .logo-dot {
+    width: 5px;
+    height: 5px;
+  }
 }
 
 .top-bar-actions {

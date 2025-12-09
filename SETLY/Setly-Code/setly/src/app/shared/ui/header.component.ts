@@ -18,9 +18,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   <header class="app-header sticky top-0 z-50 bg-white/85 backdrop-blur px-4 py-2 md:py-3 hidden md:block" [class.dark]="useDark">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-8">
         <div class="flex items-center gap-3 flex-1 md:flex-none">
-          <a routerLink="/" class="flex min-w-0 items-center gap-2 font-semibold text-lg text-gray-900 md:text-xl" (click)="closeMobileNav()">
-            <span class="northstar"></span>
-            <span class="truncate uppercase tracking-[0.15em]">Setly</span>
+          <a routerLink="/" class="flex min-w-0 items-center gap-2 text-lg text-gray-900 md:text-xl" (click)="closeMobileNav()">
+            <span class="logo-dots-container">
+              <span class="northstar northstar-1"></span>
+              <span class="northstar northstar-2"></span>
+            </span>
+            <span class="truncate uppercase tracking-[0.15em] font-normal">Setly</span>
           </a>
         </div>
 
@@ -76,9 +79,26 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     </header>
   `,
   styles: [`
+    .logo-dots-container {
+      @apply inline-flex relative;
+      width: 14px;
+      height: 1.1em;
+      flex-shrink: 0;
+      margin-right: 6px;
+    }
     .northstar {
-      @apply inline-block w-2.5 h-2.5 rounded-full align-middle;
-      background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
+      @apply absolute rounded-full;
+      width: 6px;
+      height: 6px;
+      background-color: #4E7BFD;
+    }
+    .northstar-1 {
+      top: 0;
+      right: 0;
+    }
+    .northstar-2 {
+      bottom: 0;
+      left: 0;
     }
     .nav-link { @apply text-gray-700 hover:text-gray-900 transition-colors; font-weight:500; }
   `]

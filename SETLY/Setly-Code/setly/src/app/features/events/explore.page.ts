@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { EventCardComponent } from './components/event-card.component';
+import { RestaurantCardComponent } from './components/restaurant-card.component';
+import { PlaceCardComponent } from './components/place-card.component';
 import { FilterDrawerComponent } from '../connect/components/filter-drawer.component';
 import { NotificationsDrawerComponent } from '../connect/components/notifications-drawer.component';
 import { GlobalSearchOverlayComponent } from '../../shared/components/global-search-overlay.component';
@@ -18,6 +20,8 @@ import { Subject, takeUntil } from 'rxjs';
     FormsModule,
     RouterModule,
     EventCardComponent,
+    RestaurantCardComponent,
+    PlaceCardComponent,
     FilterDrawerComponent,
     NotificationsDrawerComponent,
     GlobalSearchOverlayComponent,
@@ -140,12 +144,44 @@ import { Subject, takeUntil } from 'rxjs';
             <h2 class="row-title">{{ row.emoji }} {{ row.title }}</h2>
             <button class="see-all-btn" (click)="openCategoryPage(row.id)">See all →</button>
           </div>
-          <div class="row-scroll" data-scroll-snap="true">  
-            <app-event-card
-              *ngFor="let event of row.events"
-              [event]="event"
-              (cardClick)="openExploreDetail(event)">
-            </app-event-card>
+          <div class="row-scroll" data-scroll-snap="true">
+            
+            <!-- Restaurant Cards -->
+            <ng-container *ngIf="selectedCategory() === 'restaurants'">
+              <app-restaurant-card
+                *ngFor="let item of row.events"
+                [restaurant]="item"
+                (cardClick)="openExploreDetail(item)">
+              </app-restaurant-card>
+            </ng-container>
+            
+            <!-- Event Cards (for events, trending events, music, etc.) -->
+            <ng-container *ngIf="isEventCategory(selectedCategory())">
+              <app-event-card
+                *ngFor="let item of row.events"
+                [event]="item"
+                (cardClick)="openExploreDetail(item)">
+              </app-event-card>
+            </ng-container>
+            
+            <!-- Place Cards (for places, activities, nightlife, outdoor) -->
+            <ng-container *ngIf="isPlaceCategory(selectedCategory())">
+              <app-place-card
+                *ngFor="let item of row.events"
+                [place]="item"
+                (cardClick)="openExploreDetail(item)">
+              </app-place-card>
+            </ng-container>
+            
+            <!-- Mixed Content (for 'all' category - use appropriate card per item) -->
+            <ng-container *ngIf="selectedCategory() === 'all'">
+              <app-event-card
+                *ngFor="let item of row.events"
+                [event]="item"
+                (cardClick)="openExploreDetail(item)">
+              </app-event-card>
+            </ng-container>
+            
           </div>
         </div>
 
@@ -162,23 +198,85 @@ import { Subject, takeUntil } from 'rxjs';
               </svg>
             </button>
           </div>
+          
+          <!-- Search Input -->
+          <div class="location-search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="search-icon">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input 
+              type="text" 
+              placeholder="Search for a city..." 
+              [(ngModel)]="locationSearchQuery"
+              (input)="onLocationSearchChange()"
+              class="search-input">
+            <button *ngIf="locationSearchQuery()" class="clear-search" (click)="clearLocationSearch()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+
           <div class="location-options">
-            <button class="location-option current" (click)="onLocationSelected('Current Location')">
+            <!-- Current Location -->
+            <button class="location-option current" (click)="useCurrentLocation()" [disabled]="isLoadingLocation()">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
                 <circle cx="12" cy="12" r="3" fill="currentColor"/>
               </svg>
-              <span>Use Current Location</span>
+              <span>{{ isLoadingLocation() ? 'Getting location...' : 'Use Current Location' }}</span>
             </button>
-            <div class="section-title">Nearby Cities</div>
-            <button class="location-option" (click)="onLocationSelected('Nashua')">Nashua, NH</button>
-            <button class="location-option" (click)="onLocationSelected('Boston')">Boston, MA</button>
-            <button class="location-option" (click)="onLocationSelected('Manchester')">Manchester, NH</button>
-            <button class="location-option" (click)="onLocationSelected('Lowell')">Lowell, MA</button>
-            <div class="section-title">Trending Locations</div>
-            <button class="location-option" (click)="onLocationSelected('Cambridge')">Cambridge, MA</button>
-            <button class="location-option" (click)="onLocationSelected('Portsmouth')">Portsmouth, NH</button>
-            <button class="location-option" (click)="onLocationSelected('Salem')">Salem, MA</button>
+
+            <!-- Search Results -->
+            <div *ngIf="locationSearchQuery() && locationSearchResults().length > 0">
+              <div class="section-title">Search Results</div>
+              <button 
+                *ngFor="let result of locationSearchResults()" 
+                class="location-option"
+                (click)="selectSearchResult(result)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span class="result-text">
+                  <span class="result-main">{{ result.structured_formatting?.main_text || result.description.split(',')[0] }}</span>
+                  <span class="result-secondary" *ngIf="result.structured_formatting?.secondary_text">
+                    {{ result.structured_formatting.secondary_text }}
+                  </span>
+                </span>
+              </button>
+            </div>
+
+            <!-- No Results State -->
+            <div *ngIf="locationSearchQuery() && !isSearching() && locationSearchResults().length === 0" class="no-results-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" class="no-results-icon">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <p class="no-results-text">No cities found</p>
+              <p class="no-results-hint">Try a different city name</p>
+            </div>
+
+            <!-- Searching State -->
+            <div *ngIf="locationSearchQuery() && isSearching()" class="searching-state">
+              <div class="spinner"></div>
+              <span>Searching cities...</span>
+            </div>
+
+            <!-- Default Cities (shown when no search) -->
+            <div *ngIf="!locationSearchQuery()">
+              <div class="section-title">Nearby Cities</div>
+              <button class="location-option" (click)="selectCity('Nashua, NH', 42.7654, -71.4676)">Nashua, NH</button>
+              <button class="location-option" (click)="selectCity('Boston, MA', 42.3601, -71.0589)">Boston, MA</button>
+              <button class="location-option" (click)="selectCity('Manchester, NH', 42.9956, -71.4548)">Manchester, NH</button>
+              <button class="location-option" (click)="selectCity('Lowell, MA', 42.6334, -71.3162)">Lowell, MA</button>
+              <div class="section-title">Popular Cities</div>
+              <button class="location-option" (click)="selectCity('Cambridge, MA', 42.3736, -71.1097)">Cambridge, MA</button>
+              <button class="location-option" (click)="selectCity('Portsmouth, NH', 43.0718, -70.7626)">Portsmouth, NH</button>
+              <button class="location-option" (click)="selectCity('Salem, MA', 42.5195, -70.8967)">Salem, MA</button>
+              <button class="location-option" (click)="selectCity('Providence, RI', 41.8240, -71.4128)">Providence, RI</button>
+            </div>
           </div>
         </div>
       </div>
@@ -498,12 +596,17 @@ import { Subject, takeUntil } from 'rxjs';
 
     /* Netflix-Style Feed Rows */
     .events-feed {
-      padding: 32px 0 60px;
+      padding: 24px 0 60px;
+      margin-top: 0;
     }
 
     .feed-row {
-      margin-bottom: 48px;
+      margin-bottom: 40px;
       animation: fadeInUp 0.4s ease-out;
+    }
+
+    .feed-row:last-child {
+      margin-bottom: 24px;
     }
 
     @keyframes fadeInUp {
@@ -521,7 +624,7 @@ import { Subject, takeUntil } from 'rxjs';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px 16px;
+      padding: 0 16px 12px 16px;
     }
 
     .row-title {
@@ -559,38 +662,31 @@ import { Subject, takeUntil } from 'rxjs';
 
     .row-scroll {
       display: flex;
-      gap: 20px;
-      padding: 0 20px;
+      gap: 12px;
+      padding: 0 16px 24px 16px;
       overflow-x: auto;
-      scrollbar-width: thin;
-      scrollbar-color: #CBD5E1 transparent;
+      overflow-y: hidden;
       scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x proximity;
-      scroll-padding-left: 20px;
+      scroll-snap-type: x mandatory;
+      scroll-padding-left: 16px;
+      scroll-padding-right: 16px;
     }
 
     .row-scroll::-webkit-scrollbar {
-      height: 6px;
+      display: none;
     }
 
-    .row-scroll::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .row-scroll::-webkit-scrollbar-thumb {
-      background: #CBD5E1;
-      border-radius: 3px;
-    }
-
-    .row-scroll::-webkit-scrollbar-thumb:hover {
-      background: #94A3B8;
-    }
-
-    .row-scroll app-event-card {
+    /* Card Sizing - Desktop */
+    .row-scroll app-event-card,
+    .row-scroll app-restaurant-card,
+    .row-scroll app-place-card {
       flex: 0 0 280px;
       max-width: 280px;
       scroll-snap-align: start;
+      scroll-snap-stop: always;
     }
 
     /* Responsive Design */
@@ -607,13 +703,26 @@ import { Subject, takeUntil } from 'rxjs';
         font-size: 20px;
       }
 
-      .row-scroll app-event-card {
-        flex: 0 0 240px;
-        max-width: 240px;
+      .row-header {
+        padding: 0 16px 10px 16px;
+      }
+
+      .row-scroll {
+        gap: 10px;
+        padding: 0 16px 20px 16px;
+        scroll-padding-left: 16px;
+      }
+
+      .row-scroll app-event-card,
+      .row-scroll app-restaurant-card,
+      .row-scroll app-place-card {
+        flex: 0 0 260px;
+        max-width: 260px;
       }
     }
 
-    @media (max-width: 640px) {
+    /* Mobile - iPhone 14 Pro / Pixel 7 */
+    @media (max-width: 480px) {
       .hero-section {
         padding: 24px 16px 20px;
       }
@@ -626,35 +735,91 @@ import { Subject, takeUntil } from 'rxjs';
         font-size: 14px;
       }
 
+      .category-bar {
+        top: 60px;
+      }
+
+      .category-scroll {
+        padding: 0 12px;
+        gap: 6px;
+      }
+
       .category-chip {
         padding: 8px 14px;
         font-size: 13px;
       }
 
-      .row-scroll {
-        padding: 0 16px;
+      .row-header {
+        padding: 0 12px 8px 12px;
       }
 
-      .row-scroll app-event-card {
-        flex: 0 0 220px;
-        max-width: 220px;
+      .row-title {
+        font-size: 18px;
+      }
+
+      .see-all-btn {
+        font-size: 14px;
+        padding: 6px 12px;
+      }
+
+      /* Mobile Card Sizing: 85% viewport width */
+      .row-scroll {
+        gap: 8px;
+        padding: 0 12px 20px 12px;
+        scroll-padding-left: 12px;
+        scroll-padding-right: 12px;
+      }
+
+      .row-scroll app-event-card,
+      .row-scroll app-restaurant-card,
+      .row-scroll app-place-card {
+        flex: 0 0 85vw;
+        max-width: 360px;
+      }
+    }
+
+    /* Extra small screens */
+    @media (max-width: 380px) {
+      .row-scroll app-event-card,
+      .row-scroll app-restaurant-card,
+      .row-scroll app-place-card {
+        flex: 0 0 90vw;
+        max-width: 300px;
       }
     }
 
     /* Location Bottom Sheet */
     .location-bottom-sheet{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);display:flex;align-items:flex-end;animation:fadeIn 0.2s ease;-webkit-tap-highlight-color:transparent}
     .location-sheet-content{width:100%;max-height:70vh;background:white;border-radius:24px 24px 0 0;padding:24px;animation:slideUp 0.3s ease;overflow-y:auto;touch-action:pan-y}
-    .sheet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .sheet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
     .sheet-header h3{font-size:20px;font-weight:700;color:#111827;margin:0}
     .close-btn{background:none;border:none;color:#6B7280;cursor:pointer;padding:8px;border-radius:50%;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
     .close-btn:hover,.close-btn:active{background:#F3F4F6;color:#111827}
+    .location-search{position:relative;margin-bottom:20px}
+    .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#9CA3AF;pointer-events:none}
+    .search-input{width:100%;padding:12px 40px 12px 44px;border:1.5px solid #E5E7EB;border-radius:12px;font-size:15px;font-weight:500;color:#111827;background:white;transition:all 0.2s}
+    .search-input:focus{outline:none;border-color:#4E7BFD;background:#F8FAFF}
+    .search-input::placeholder{color:#9CA3AF}
+    .clear-search{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9CA3AF;cursor:pointer;padding:4px;border-radius:50%;transition:all 0.2s}
+    .clear-search:hover{background:#F3F4F6;color:#111827}
     .location-options{display:flex;flex-direction:column;gap:8px}
     .location-option{display:flex;align-items:center;gap:12px;padding:14px 16px;background:white;border:1.5px solid #E5E7EB;border-radius:12px;color:#374151;font-size:15px;font-weight:500;text-align:left;cursor:pointer;transition:all 0.2s;width:100%;-webkit-tap-highlight-color:transparent}
     .location-option:hover,.location-option:active{border-color:#4E7BFD;background:#F8FAFF;color:#4E7BFD}
+    .location-option:disabled{opacity:0.6;cursor:not-allowed}
     .location-option.current{background:linear-gradient(135deg,#4E7BFD 0%,#6B8FFF 100%);border-color:#4E7BFD;color:white}
+    .result-text{display:flex;flex-direction:column;gap:2px;flex:1}
+    .result-main{font-size:15px;font-weight:600;color:#111827}
+    .result-secondary{font-size:13px;font-weight:400;color:#6B7280}
+    .no-results-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+    .no-results-icon{color:#D1D5DB;margin-bottom:16px}
+    .no-results-text{font-size:16px;font-weight:600;color:#374151;margin:0 0 8px 0}
+    .no-results-hint{font-size:14px;color:#9CA3AF;margin:0}
     .section-title{font-size:13px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px;padding:0 4px}
+    .searching-state{display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;color:#6B7280;font-size:14px}
+    .spinner{width:20px;height:20px;border:2px solid #E5E7EB;border-top-color:#4E7BFD;border-radius:50%;animation:spin 0.8s linear infinite}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
   `]
 })
 export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
@@ -671,6 +836,10 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
   locationSheetOpen = signal(false);
   mapViewOpen = signal(false);
   selectedLocation = signal('Nashua, NH');
+  locationSearchQuery = signal('');
+  locationSearchResults = signal<any[]>([]);
+  isSearching = signal(false);
+  isLoadingLocation = signal(false);
   selectedCategory = signal('all');
   isLoading = signal(false);
   userLocation = signal<{ lat: number; lng: number }>({ lat: 42.7654, lng: -71.4676 });
@@ -678,57 +847,60 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
   // Dynamic Hero Content based on Category
   heroTitle = computed(() => {
     const category = this.selectedCategory();
+    const location = this.selectedLocation();
+    
     switch (category) {
       case 'all':
-        return 'Discover what\'s around you';
+        return `Discover what's around ${location}`;
       case 'events':
-        return 'Discover Amazing Events';
+        return `Events Near ${location}`;
       case 'restaurants':
-        return 'Discover Great Food';
+        return `Restaurants Near ${location}`;
       case 'places':
-        return 'Discover Incredible Places';
+        return `Places Near ${location}`;
       case 'activities':
-        return 'Discover Fun Activities';
+        return `Activities Near ${location}`;
       case 'nightlife':
-        return 'Discover Nightlife';
+        return `Nightlife Near ${location}`;
       case 'trending':
-        return 'Trending Near You';
+        return `Trending Near ${location}`;
       case 'student':
-        return 'Student Favorites';
+        return `Student Picks Near ${location}`;
       case 'deals':
-        return 'Best Deals & Free Events';
+        return `Deals Near ${location}`;
       case 'outdoor':
-        return 'Outdoor Adventures';
+        return `Outdoor Near ${location}`;
       default:
-        return 'Discover what\'s around you';
+        return `Discover ${location}`;
     }
   });
 
   heroSubtitle = computed(() => {
     const category = this.selectedCategory();
+    const location = this.selectedLocation();
     switch (category) {
       case 'all':
-        return 'Events, places, food, and experiences – all in one place.';
+        return 'Top-rated events, restaurants, and activities. Only the best, most popular spots.';
       case 'events':
-        return 'Concerts, festivals, parties, and more happening near you.';
+        return 'Verified events from Ticketmaster & Eventbrite. Live concerts, festivals, and entertainment.';
       case 'restaurants':
-        return 'Top-rated restaurants, cafés, and hidden food gems.';
+        return `Top-rated restaurants (4.2+ stars) near ${location}. Only popular, verified spots with great reviews.`;
       case 'places':
-        return 'Parks, museums, landmarks, and must-visit spots.';
+        return 'Highest-rated attractions, museums, and landmarks. Curated for quality and popularity.';
       case 'activities':
-        return 'Gaming, fitness, workshops, and adventures to try.';
+        return 'Top-rated fitness, gaming, and entertainment. Only the most popular activities near you.';
       case 'nightlife':
-        return 'Clubs, bars, live music, and late-night entertainment.';
+        return 'Best clubs, bars, and music venues. Premium nightlife spots with great reviews.';
       case 'trending':
-        return 'The hottest spots and events everyone\'s talking about.';
+        return 'What\'s hot right now. The most popular events, restaurants, and activities.';
       case 'student':
-        return 'Events, deals, and hangouts picked by students.';
+        return 'Student-friendly picks: top-rated hangouts, events, and budget spots with great reviews.';
       case 'deals':
-        return 'Free events, discounts, and budget-friendly options.';
+        return 'Best value: free events, student discounts, and highly-rated budget options.';
       case 'outdoor':
-        return 'Hiking, parks, nature tours, and outdoor experiences.';
+        return 'Top-rated parks, trails, and outdoor activities. Only the best nature spots.';
       default:
-        return 'Events, places, food, and experiences – all in one place.';
+        return 'Premium, verified experiences. Only the best places with great ratings & reviews.';
     }
   });
   
@@ -765,6 +937,9 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
   restaurantsMustTry = signal<ExploreItem[]>([]);
   restaurantsBudget = signal<ExploreItem[]>([]);
   restaurantsDesserts = signal<ExploreItem[]>([]);
+  indianRestaurants = signal<ExploreItem[]>([]);
+  topRatedRestaurants = signal<ExploreItem[]>([]);
+  openNowRestaurants = signal<ExploreItem[]>([]);
   
   // Places Data
   placesPopular = signal<ExploreItem[]>([]);
@@ -786,114 +961,136 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
   // COMPUTED: Dynamic Category Rows
   // ============================================
 
+  // Minimum number of items required to show a row
+  // SECTION 1.4 & SECTION 10 - Hide sections with insufficient results
+  private readonly MIN_ROW_ITEMS = 3; // Per user requirement: if section has < 3 results, don't show it
+
+  /**
+   * Filter rows to only show those with sufficient high-quality content
+   * Never show empty or weak rows to maintain trust and polish
+   */
+  private filterRowsByQuality(rows: Array<{ id: string; emoji: string; title: string; events: ExploreItem[] }>): Array<{ id: string; emoji: string; title: string; events: ExploreItem[] }> {
+    return rows.filter(row => row.events.length >= this.MIN_ROW_ITEMS);
+  }
+
   currentCategoryRows = computed(() => {
     const category = this.selectedCategory();
     const location = this.selectedLocation();
 
     switch (category) {
       case 'all':
-        return [
+        const allRows = [
           { id: 'trending', emoji: '🎆', title: `Trending Near ${location}`, events: this.trendingEvents() },
-          { id: 'career', emoji: '💼', title: 'Career & Tech Events', events: this.careerEvents() },
-          { id: 'nightlife', emoji: '🎉', title: 'Parties & Nightlife', events: this.partyEvents() },
-          { id: 'music', emoji: '🎵', title: 'Live Music & Concerts', events: this.musicEvents() },
-          { id: 'workshops', emoji: '📚', title: 'Workshops & Study Events', events: this.workshopEvents() },
-          { id: 'campus', emoji: '📍', title: 'Campus Events Near You', events: this.campusEvents() },
-          { id: 'wellness', emoji: '🧘', title: 'Wellness & Fitness', events: this.wellnessEvents() },
-          { id: 'sports', emoji: '🏀', title: 'Sports & Tournaments', events: this.sportsEvents() },
-          { id: 'activities', emoji: '🎯', title: 'Activities & Adventures', events: this.activityEvents() },
-          { id: 'outdoor', emoji: '🌲', title: 'Outdoor & Nature', events: this.outdoorEvents() },
-          { id: 'deals', emoji: '💰', title: 'Deals & Free Events', events: this.dealEvents() },
-          { id: 'student', emoji: '🎓', title: 'Student Picks', events: this.studentPickEvents() }
+          { id: 'career', emoji: '💼', title: `Career & Tech Events Near ${location}`, events: this.careerEvents() },
+          { id: 'nightlife', emoji: '🎉', title: `Parties & Nightlife Near ${location}`, events: this.partyEvents() },
+          { id: 'music', emoji: '🎵', title: `Live Music & Concerts Near ${location}`, events: this.musicEvents() },
+          { id: 'workshops', emoji: '📚', title: `Workshops & Study Events Near ${location}`, events: this.workshopEvents() },
+          { id: 'campus', emoji: '📍', title: `Campus Events Near ${location}`, events: this.campusEvents() },
+          { id: 'wellness', emoji: '🧘', title: `Wellness & Fitness Near ${location}`, events: this.wellnessEvents() },
+          { id: 'sports', emoji: '🏀', title: `Sports & Tournaments Near ${location}`, events: this.sportsEvents() },
+          { id: 'activities', emoji: '🎯', title: `Activities & Adventures Near ${location}`, events: this.activityEvents() },
+          { id: 'outdoor', emoji: '🌲', title: `Outdoor & Nature Near ${location}`, events: this.outdoorEvents() },
+          { id: 'deals', emoji: '💰', title: `Deals & Free Events Near ${location}`, events: this.dealEvents() },
+          { id: 'student', emoji: '🎓', title: `Student Picks Near ${location}`, events: this.studentPickEvents() }
         ];
+        return this.filterRowsByQuality(allRows);
 
       case 'events':
-        return [
+        const eventRows = [
           { id: 'trending-events', emoji: '🔥', title: `Trending Events Near ${location}`, events: this.trendingEvents() },
-          { id: 'career', emoji: '💼', title: 'Career & Tech Events', events: this.careerEvents() },
-          { id: 'nightlife', emoji: '🎉', title: 'Parties & Nightlife', events: this.partyEvents() },
-          { id: 'music', emoji: '🎵', title: 'Live Music & Concerts', events: this.musicEvents() },
-          { id: 'workshops', emoji: '📚', title: 'Workshops & Meetups', events: this.workshopEvents() },
-          { id: 'campus', emoji: '📍', title: 'Student Events', events: this.campusEvents() },
-          { id: 'sports', emoji: '🏀', title: 'Sports & Tournaments', events: this.sportsEvents() }
+          { id: 'career', emoji: '💼', title: `Career & Tech Events Near ${location}`, events: this.careerEvents() },
+          { id: 'nightlife', emoji: '🎉', title: `Parties & Nightlife Events Near ${location}`, events: this.partyEvents() },
+          { id: 'music', emoji: '🎵', title: `Live Concerts Near ${location}`, events: this.musicEvents() },
+          { id: 'workshops', emoji: '📚', title: `Workshops & Meetups Near ${location}`, events: this.workshopEvents() },
+          { id: 'campus', emoji: '📍', title: `Student Events Near ${location}`, events: this.campusEvents() },
+          { id: 'sports', emoji: '🏀', title: `Sports Events Near ${location}`, events: this.sportsEvents() }
         ];
+        return this.filterRowsByQuality(eventRows);
 
       case 'restaurants':
-        return [
+        const restaurantRows = [
           { id: 'restaurants-trending', emoji: '🔥', title: `Trending Restaurants Near ${location}`, events: this.restaurantsTrending() },
-          { id: 'must-try', emoji: '⭐', title: 'Must-Try This Week', events: this.restaurantsMustTry() },
-          { id: 'trending-food', emoji: '🍜', title: 'Trending Food Spots', events: this.restaurantsTrending() },
-          { id: 'budget-eats', emoji: '💵', title: 'Student Budget-Friendly Eats', events: this.restaurantsBudget() },
-          { id: 'desserts', emoji: '🧁', title: 'Best Desserts Near You', events: this.restaurantsDesserts() },
-          { id: 'late-night', emoji: '🌙', title: 'Open Late (Night Eats)', events: this.restaurantsBudget() }
+          { id: 'indian', emoji: '🍛', title: `Top-Rated Indian Restaurants Near ${location}`, events: this.indianRestaurants() },
+          { id: 'top-rated', emoji: '⭐', title: `Highest Rated Near ${location}`, events: this.topRatedRestaurants() },
+          { id: 'open-now', emoji: '✅', title: `Open Now • Popular Near ${location}`, events: this.openNowRestaurants() },
+          { id: 'budget-eats', emoji: '💵', title: `Best Budget-Friendly Spots Near ${location}`, events: this.restaurantsBudget() },
+          { id: 'desserts', emoji: '🧁', title: `Best Desserts & Cafes Near ${location}`, events: this.restaurantsDesserts() }
         ];
+        return this.filterRowsByQuality(restaurantRows);
 
       case 'places':
-        return [
-          { id: 'places-popular', emoji: '📍', title: `Popular Places Near ${location}`, events: this.placesPopular() },
-          { id: 'scenic', emoji: '🏞️', title: 'Scenic Spots', events: this.placesScenic() },
-          { id: 'outdoor-places', emoji: '🌲', title: 'Outdoor Adventures', events: this.outdoorEvents() },
-          { id: 'landmarks', emoji: '🏛️', title: 'Landmarks & Museums', events: this.placesLandmarks() },
-          { id: 'student-favorites', emoji: '🎓', title: 'Student Favorites', events: this.studentPickEvents() },
-          { id: 'weekend', emoji: '🗓️', title: 'Must-Visit This Weekend', events: this.placesPopular() },
-          { id: 'hidden-gems', emoji: '💎', title: 'Hidden Gems Nearby', events: this.placesHiddenGems() }
+        const placesRows = [
+          { id: 'places-popular', emoji: '📍', title: `Most Popular Places Near ${location}`, events: this.placesPopular() },
+          { id: 'scenic', emoji: '🏞️', title: `Beautiful Scenic Spots Near ${location}`, events: this.placesScenic() },
+          { id: 'outdoor-places', emoji: '🌲', title: `Outdoor Adventures Near ${location}`, events: this.outdoorEvents() },
+          { id: 'landmarks', emoji: '🏛️', title: `Top Landmarks & Museums Near ${location}`, events: this.placesLandmarks() },
+          { id: 'student-favorites', emoji: '🎓', title: `Student Favorites Near ${location}`, events: this.studentPickEvents() },
+          { id: 'weekend', emoji: '🗓️', title: `Must-Visit This Weekend Near ${location}`, events: this.placesPopular() },
+          { id: 'hidden-gems', emoji: '💎', title: `Hidden Gems Near ${location}`, events: this.placesHiddenGems() }
         ];
+        return this.filterRowsByQuality(placesRows);
 
       case 'activities':
-        return [
-          { id: 'activities-fun', emoji: '🎯', title: `Fun Activities Near ${location}`, events: this.activityEvents() },
-          { id: 'fitness', emoji: '💪', title: 'Fitness & Wellness', events: this.activitiesFitness() },
-          { id: 'adventure', emoji: '🧗', title: 'Adventure Sports', events: this.outdoorEvents() },
-          { id: 'gaming', emoji: '🎮', title: 'Gaming & Arcades', events: this.activitiesGaming() },
-          { id: 'theaters', emoji: '🎬', title: 'Movie Theaters & Shows', events: this.musicEvents() },
-          { id: 'group', emoji: '👥', title: 'Group Activities', events: this.activityEvents() },
-          { id: 'creative', emoji: '🎨', title: 'Creative Workshops', events: this.activitiesCreative() }
+        const activityRows = [
+          { id: 'activities-fun', emoji: '🎯', title: `Most Popular Activities Near ${location}`, events: this.activityEvents() },
+          { id: 'fitness', emoji: '💪', title: `Top Fitness & Wellness Near ${location}`, events: this.activitiesFitness() },
+          { id: 'adventure', emoji: '🧗', title: `Adventure Sports Near ${location}`, events: this.outdoorEvents() },
+          { id: 'gaming', emoji: '🎮', title: `Gaming & Arcades Near ${location}`, events: this.activitiesGaming() },
+          { id: 'theaters', emoji: '🎬', title: `Movie Theaters & Shows Near ${location}`, events: this.musicEvents() },
+          { id: 'group', emoji: '👥', title: `Best Group Activities Near ${location}`, events: this.activityEvents() },
+          { id: 'creative', emoji: '🎨', title: `Creative Workshops Near ${location}`, events: this.activitiesCreative() }
         ];
+        return this.filterRowsByQuality(activityRows);
 
       case 'nightlife':
-        return [
-          { id: 'nightlife-trending', emoji: '🔥', title: `Trending Nightlife Near ${location}`, events: this.nightlifeTrending() },
-          { id: 'clubs', emoji: '💃', title: 'Top Clubs & Dancing', events: this.nightlifeTrending() },
-          { id: 'bars', emoji: '🍻', title: 'Best Bars & Pubs', events: this.nightlifeBars() },
-          { id: 'live-music-night', emoji: '🎸', title: 'Live Music Venues', events: this.nightlifeLiveMusic() },
-          { id: 'parties', emoji: '🎉', title: 'Parties & Events', events: this.partyEvents() },
-          { id: 'lounges', emoji: '🍸', title: 'Cocktail Lounges', events: this.nightlifeTrending() }
+        const nightlifeRows = [
+          { id: 'nightlife-trending', emoji: '🔥', title: `Hottest Nightlife Near ${location}`, events: this.nightlifeTrending() },
+          { id: 'clubs', emoji: '💃', title: `Top Clubs & Dancing Near ${location}`, events: this.nightlifeTrending() },
+          { id: 'bars', emoji: '🍻', title: `Best Bars & Pubs Near ${location}`, events: this.nightlifeBars() },
+          { id: 'live-music-night', emoji: '🎸', title: `Live Music Venues Near ${location}`, events: this.nightlifeLiveMusic() },
+          { id: 'parties', emoji: '🎉', title: `Parties & Events Near ${location}`, events: this.partyEvents() },
+          { id: 'lounges', emoji: '🍸', title: `Premium Cocktail Lounges Near ${location}`, events: this.nightlifeTrending() }
         ];
+        return this.filterRowsByQuality(nightlifeRows);
 
       case 'trending':
-        return [
+        const trendingRows = [
           { id: 'trending-all', emoji: '🔥', title: `Trending Near ${location}`, events: this.trendingEvents() },
           { id: 'trending-events', emoji: '🎉', title: 'Trending Events', events: this.partyEvents() },
           { id: 'trending-food', emoji: '🍽️', title: 'Trending Restaurants', events: this.restaurantsTrending() },
           { id: 'trending-nightlife', emoji: '🌙', title: 'Trending Nightlife', events: this.nightlifeTrending() },
           { id: 'trending-activities', emoji: '🎯', title: 'Trending Activities', events: this.activityEvents() }
         ];
+        return this.filterRowsByQuality(trendingRows);
 
       case 'student':
-        return [
+        const studentRows = [
           { id: 'student-picks', emoji: '🎓', title: `Student Picks Near ${location}`, events: this.studentPickEvents() },
           { id: 'campus-events', emoji: '📍', title: 'Campus Events', events: this.campusEvents() },
           { id: 'budget-student', emoji: '💵', title: 'Budget-Friendly', events: this.restaurantsBudget() },
           { id: 'study-events', emoji: '📚', title: 'Study & Workshops', events: this.workshopEvents() },
           { id: 'social-student', emoji: '🎮', title: 'Social & Gaming', events: this.activityEvents() }
         ];
+        return this.filterRowsByQuality(studentRows);
 
       case 'deals':
-        return [
+        const dealsRows = [
           { id: 'deals-free', emoji: '💰', title: `Deals & Free Near ${location}`, events: this.dealEvents() },
           { id: 'free-events', emoji: '🎁', title: 'Free Events', events: this.dealEvents() },
           { id: 'student-discounts', emoji: '🎓', title: 'Student Discounts', events: this.restaurantsBudget() },
           { id: 'happy-hours', emoji: '🍻', title: 'Happy Hours', events: this.nightlifeBars() }
         ];
+        return this.filterRowsByQuality(dealsRows);
 
       case 'outdoor':
-        return [
+        const outdoorRows = [
           { id: 'outdoor-trending', emoji: '🌲', title: `Outdoor Near ${location}`, events: this.outdoorEvents() },
           { id: 'hiking', emoji: '🥾', title: 'Hiking & Trails', events: this.outdoorEvents() },
           { id: 'parks', emoji: '🌳', title: 'Parks & Gardens', events: this.placesScenic() },
           { id: 'water-sports', emoji: '🚣', title: 'Water Activities', events: this.outdoorEvents() },
           { id: 'nature', emoji: '🦋', title: 'Nature & Wildlife', events: this.placesScenic() }
         ];
+        return this.filterRowsByQuality(outdoorRows);
 
       default:
         return [
@@ -931,6 +1128,10 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
 
   private loadAllData() {
     this.isLoading.set(true);
+    
+    // Clear deduplication cache for fresh data load
+    this.exploreDataService.clearDeduplication();
+    
     const location = this.userLocation();
 
     // Load trending (mixed content)
@@ -950,19 +1151,52 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private loadCategoryData(category: string, location: { lat: number; lng: number }) {
+    // Use dedicated events API for events category
+    if (category === 'events') {
+      this.exploreDataService.getEvents(location)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(items => {
+          this.careerEvents.set(items.filter(i => i.tag.toLowerCase().includes('career') || i.title.toLowerCase().includes('career')).slice(0, 10));
+          this.musicEvents.set(items.filter(i => i.tag.toLowerCase().includes('music') || i.title.toLowerCase().includes('concert')).slice(0, 10));
+          this.workshopEvents.set(items.filter(i => i.tag.toLowerCase().includes('workshop') || i.title.toLowerCase().includes('workshop')).slice(0, 10));
+          this.campusEvents.set(items.filter(i => i.tag.toLowerCase().includes('campus') || i.location.toLowerCase().includes('university')).slice(0, 10));
+          this.wellnessEvents.set(items.filter(i => i.tag.toLowerCase().includes('wellness') || i.title.toLowerCase().includes('yoga')).slice(0, 10));
+          this.sportsEvents.set(items.filter(i => i.tag.toLowerCase().includes('sports') || i.title.toLowerCase().includes('game')).slice(0, 10));
+          this.dealEvents.set(items.filter(i => i.isFree || i.price < 10).slice(0, 10));
+          this.studentPickEvents.set(items.slice(0, 10));
+        });
+      return;
+    }
+
+    // Use Google Places for other categories
     this.exploreDataService.getNearbyPlaces(category, location)
       .pipe(takeUntil(this.destroy$))
       .subscribe(items => {
         switch (category) {
           case 'restaurants':
             this.restaurantsTrending.set(items.slice(0, 10));
-            this.restaurantsMustTry.set(items.slice(3, 8));
+            this.restaurantsMustTry.set(items.filter(i => i.rating && i.rating >= 4.5).slice(0, 10));
             this.restaurantsBudget.set(items.filter(i => i.price <= 15).slice(0, 10));
             this.restaurantsDesserts.set(items.filter(i => 
               i.title.toLowerCase().includes('dessert') ||
               i.title.toLowerCase().includes('bakery') ||
               i.title.toLowerCase().includes('ice cream')
             ).slice(0, 10));
+            
+            // Load Indian restaurants separately
+            this.exploreDataService.getIndianRestaurants(location)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe(indianItems => this.indianRestaurants.set(indianItems.slice(0, 10)));
+            
+            // Load top rated restaurants
+            this.exploreDataService.getTopRatedRestaurants(location)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe(topItems => this.topRatedRestaurants.set(topItems.slice(0, 10)));
+            
+            // Load open now restaurants
+            this.exploreDataService.getOpenNowRestaurants(location)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe(openItems => this.openNowRestaurants.set(openItems.slice(0, 10)));
             break;
           case 'places':
             this.placesPopular.set(items.slice(0, 10));
@@ -1030,13 +1264,23 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
       this.loadCategoryData(categoryId, location);
     }
     
-    // Smooth scroll to feed section when switching categories
+    // Smooth scroll to first row, accounting for sticky header height
     setTimeout(() => {
-      const feedElement = document.querySelector('.events-feed');
-      if (feedElement) {
-        feedElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const firstRow = document.querySelector('.feed-row');
+      if (firstRow) {
+        const stickyHeaderHeight = 64; // top bar height
+        const categoryBarHeight = 52; // category bar height
+        const totalStickyHeight = stickyHeaderHeight + categoryBarHeight + 16; // +16px padding
+        
+        const elementPosition = firstRow.getBoundingClientRect().top + window.scrollY;
+        const offsetPosition = elementPosition - totalStickyHeight;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
       }
-    }, 100);
+    }, 150);
   }
 
   toggleFilterDrawer() {
@@ -1071,10 +1315,119 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
     this.locationSheetOpen.set(false);
   }
 
-  onLocationSelected(location: string) {
-    this.selectedLocation.set(location);
+  selectCity(cityName: string, lat: number, lng: number) {
+    console.log('[Explore] Selected city:', cityName, { lat, lng });
+    this.selectedLocation.set(cityName);
+    this.userLocation.set({ lat, lng });
     this.locationSheetOpen.set(false);
-    // Optionally reload data for new location
+    this.locationSearchQuery.set('');
+    this.locationSearchResults.set([]);
+    
+    // Clear cache and reload all data
+    this.exploreDataService.clearDeduplication();
+    this.exploreDataService.clearCache();
+    this.isLoading.set(true);
+    this.loadAllData();
+  }
+
+  async useCurrentLocation() {
+    this.isLoadingLocation.set(true);
+    try {
+      const location = await this.exploreDataService.getCurrentLocation();
+      console.log('[Explore] Current location:', location);
+      this.selectedLocation.set(location.city);
+      this.userLocation.set({ lat: location.lat, lng: location.lng });
+      this.locationSheetOpen.set(false);
+      
+      // Clear cache and reload all data
+      this.exploreDataService.clearDeduplication();
+      this.exploreDataService.clearCache();
+      this.isLoading.set(true);
+      this.loadAllData();
+    } catch (error) {
+      console.error('[Explore] Error getting current location:', error);
+      alert('Could not get your location. Please select a city from the list.');
+    } finally {
+      this.isLoadingLocation.set(false);
+    }
+  }
+
+  private searchTimeout: any;
+
+  onLocationSearchChange() {
+    const query = this.locationSearchQuery();
+    console.log('[Explore] 🔤 Search input changed:', query);
+    
+    // Clear previous timeout
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+      console.log('[Explore] ⏱️ Cleared previous timeout');
+    }
+    
+    if (!query || query.trim().length < 2) {
+      console.log('[Explore] ❌ Query too short, clearing results');
+      this.locationSearchResults.set([]);
+      this.isSearching.set(false);
+      return;
+    }
+
+    console.log('[Explore] ⏳ Setting isSearching = true');
+    this.isSearching.set(true);
+    
+    // Debounced search with proper cleanup (300ms for snappy feel)
+    this.searchTimeout = setTimeout(() => {
+      console.log('[Explore] 🚀 Executing search for:', query);
+      this.exploreDataService.searchCities(query)
+        .subscribe({
+          next: (results) => {
+            console.log('[Explore] ✅ Received results:', results.length);
+            console.log('[Explore] 📋 Results data:', results);
+            this.locationSearchResults.set(results);
+            console.log('[Explore] 📊 Signal updated, current value:', this.locationSearchResults());
+            this.isSearching.set(false);
+          },
+          error: (err) => {
+            console.error('[Explore] ❌ Search error:', err);
+            this.locationSearchResults.set([]);
+            this.isSearching.set(false);
+          }
+        });
+    }, 300);
+  }
+
+  clearLocationSearch() {
+    this.locationSearchQuery.set('');
+    this.locationSearchResults.set([]);
+  }
+
+  selectSearchResult(result: any) {
+    console.log('[Explore] Selected search result:', result);
+    this.isLoadingLocation.set(true);
+    this.isSearching.set(false);
+    
+    // Get place details to get coordinates
+    this.exploreDataService.getPlaceDetails(result.place_id)
+      .subscribe({
+        next: (details) => {
+          if (details?.geometry?.location) {
+            const lat = details.geometry.location.lat;
+            const lng = details.geometry.location.lng;
+            const cityName = result.structured_formatting?.main_text || result.description;
+            
+            console.log('[Explore] Geocoded coordinates:', { cityName, lat, lng });
+            this.selectCity(cityName, lat, lng);
+          } else {
+            console.error('[Explore] Invalid geometry in place details');
+            alert('Could not get coordinates for this location. Please try another city.');
+          }
+          this.isLoadingLocation.set(false);
+        },
+        error: (err) => {
+          console.error('[Explore] Error getting place details:', err);
+          alert('Error loading location details. Please try again.');
+          this.isLoadingLocation.set(false);
+        }
+      });
   }
 
   openMapView() {
@@ -1086,7 +1439,16 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   openExploreDetail(item: ExploreItem) {
-    // Navigate to detail page with item data in state
+    console.log('[Explore] Opening item:', item.title, 'isExternal:', item.isExternal);
+    
+    // If item has external URL (Ticketmaster, Eventbrite, Google Maps), open externally
+    if (item.isExternal && (item.externalUrl || item.officialUrl)) {
+      const url = item.externalUrl || item.officialUrl;
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Otherwise navigate to internal detail page with item data in state
     this.router.navigate(['/explore', item.id], { 
       state: { item } 
     });
@@ -1102,5 +1464,19 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
     console.log('Opening category page:', category);
     // TODO: Implement full category pages
     // this.router.navigate(['/explore', category]);
+  }
+
+  /**
+   * Determine if category should use event cards
+   */
+  isEventCategory(category: string): boolean {
+    return ['events', 'trending', 'student', 'deals'].includes(category);
+  }
+
+  /**
+   * Determine if category should use place cards
+   */
+  isPlaceCategory(category: string): boolean {
+    return ['places', 'activities', 'nightlife', 'outdoor'].includes(category);
   }
 }

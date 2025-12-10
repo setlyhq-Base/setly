@@ -7,6 +7,7 @@ import roomsRouter from './routes/rooms.routes';
 import healthRouter from './routes/health.routes';
 import geoRouter from './routes/geo.routes';
 import placesRouter from './routes/places.routes';
+import eventsRouter from './routes/events.routes';
 import connectRouter from './routes/connect.routes';
 import fs from 'fs';
 import { AWS_ENABLED } from './config/aws';
@@ -181,6 +182,7 @@ app.use('/api/uploads', authMiddleware, uploadsRouter);
 app.use('/api/rooms', authMiddleware, roomsRouter);
 app.use('/api/geo', geoRouter); // public geocoding search
 app.use('/api/places', placesRouter); // Google Places proxy endpoints (autocomplete/details/textsearch)
+app.use('/api/events', eventsRouter); // Events from Ticketmaster and Eventbrite
 app.use('/api/connect', connectRouter); // public connect discovery endpoints
 app.use('/', healthRouter);
 app.use('/api/auth', authMiddleware, authRouter);

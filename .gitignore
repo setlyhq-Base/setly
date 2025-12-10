@@ -1,2 +1,20 @@
 # Local Netlify folder
 .netlify
+
+# Environment variables (NEVER commit API keys)
+.env
+.env.*
+!.env.example
+*/.env
+*/.env.*
+!*/.env.example
+
+# API Keys and Secrets
+**/.env
+**/.env.local
+**/.env.production
+**/.env.development
+
+# Local API keys reference (not to be committed)
+**/API_KEYS_LOCAL.md
+API_KEYS_LOCAL.md

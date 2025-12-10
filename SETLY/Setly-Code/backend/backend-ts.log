@@ -1,0 +1,14 @@
+[Firebase] Admin SDK disabled (no credentials found). Features depending on admin will be unavailable.
+Server is running on port 3000
+[Places] 🔍 Autocomplete request - input: boston types: (cities)
+[Places] 📡 Calling Google API: https://maps.googleapis.com/maps/api/place/autocomplete/json?input=boston&key=API_KEY_HIDDEN&types=%28cities%29&components=country%3Aus
+[Places] 📦 Google API response status: OK predictions: 5
+[Places] ✅ Returning predictions: 5
+[Places] 🔍 Autocomplete request - input: new york types: (cities)
+[Places] 📡 Calling Google API: https://maps.googleapis.com/maps/api/place/autocomplete/json?input=new+york&key=API_KEY_HIDDEN&types=%28cities%29&components=country%3Aus
+[Places] 📦 Google API response status: OK predictions: 5
+[Places] ✅ Returning predictions: 5
+[Places] 🔍 Autocomplete request - input: new york types: (cities)
+[Places] 📡 Calling Google API: https://maps.googleapis.com/maps/api/place/autocomplete/json?input=new+york&key=API_KEY_HIDDEN&types=%28cities%29&components=country%3Aus
+[Places] 📦 Google API response status: OK predictions: 5
+[Places] ✅ Returning predictions: 5

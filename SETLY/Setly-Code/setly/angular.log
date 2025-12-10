@@ -1,0 +1,121 @@
+
+> setly@0.0.0 start
+> ng serve
+
+Node.js version v23.7.0 detected.
+Odd numbered Node.js versions will not enter LTS status and should not be used for production. For more information, please see https://nodejs.org/en/about/previous-releases/.
+❯ Building...
+✔ Building...
+Application bundle generation failed. [9.233 seconds] - 2025-12-10T14:31:15.974Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: EventCardComponent is not used within the template of ExplorePageComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/events/explore.page.ts:22:4:
+[37m      22 │     [32mEventCardComponent[37m,
+         ╵     [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: RestaurantCardComponent is not used within the template of ExplorePageComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/events/explore.page.ts:23:4:
+[37m      23 │     [32mRestaurantCardComponent[37m,
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: PlaceCardComponent is not used within the template of ExplorePageComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/events/explore.page.ts:24:4:
+[37m      24 │     [32mPlaceCardComponent[37m,
+         ╵     [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: FilterDrawerComponent is not used within the template of ExplorePageComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/events/explore.page.ts:25:4:
+[37m      25 │     [32mFilterDrawerComponent[37m,
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: NotificationsDrawerComponent is not used within the template of ExplorePageComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/events/explore.page.ts:26:4:
+[37m      26 │     [32mNotificationsDrawerComponent[37m,
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: GlobalSearchOverlayComponent is not used within the template of ExplorePageComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/events/explore.page.ts:27:4:
+[37m      27 │     [32mGlobalSearchOverlayComponent[37m,
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: MapViewComponent is not used within the template of ExplorePageComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/events/explore.page.ts:28:4:
+[37m      28 │     [32mMapViewComponent[37m
+         ╵     [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "main". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/events/explore.page.ts:306:4:
+[37m      306 │     [32m</main>[37m
+          ╵     [32m~~~~~~~[0m
+
+
+Watch mode enabled. Watching for file changes...
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names               |  Raw size
+main.js             | main                | 266.21 kB | 
+chunk-RE3MEP5K.js   | -                   | 220.64 kB | 
+styles.css          | styles              | 146.95 kB | 
+chunk-WUH73QE4.js   | -                   |  24.60 kB | 
+chunk-XC5PDOJ4.js   | -                   |  19.74 kB | 
+chunk-GLKBLA4F.js   | -                   |  15.53 kB | 
+chunk-6HSI6FKG.js   | -                   |  15.13 kB | 
+chunk-UVDZVNKA.js   | -                   |  11.91 kB | 
+chunk-X3IXGMHT.js   | -                   |   9.65 kB | 
+chunk-WJAQ27PK.js   | -                   |   9.58 kB | 
+chunk-NDQRU5NK.js   | -                   |   9.42 kB | 
+chunk-M7NY7UZ4.js   | -                   |   7.99 kB | 
+chunk-A6TJMDJS.js   | -                   |   7.75 kB | 
+chunk-F5R3EVP5.js   | -                   |   6.26 kB | 
+chunk-DBIGDCJH.js   | -                   |   6.11 kB | 
+chunk-Z5HSBPQZ.js   | -                   |   4.72 kB | 
+chunk-56IJTXNA.js   | -                   |   3.79 kB | 
+chunk-YUVRXKXB.js   | -                   |   3.72 kB | 
+chunk-OKNHF5HU.js   | -                   |   2.61 kB | 
+chunk-QE7JOB4A.js   | -                   |   2.17 kB | 
+chunk-BM6A5FZX.js   | -                   |   1.78 kB | 
+chunk-EVSPGG2W.js   | -                   |   1.64 kB | 
+chunk-YX2Z4ITK.js   | -                   |   1.28 kB | 
+polyfills.js        | polyfills           |  95 bytes | 
+
+                    | Initial total       | 799.29 kB
+
+Lazy chunk files    | Names               |  Raw size
+chunk-EAHAETCL.js   | search-page         | 424.91 kB | 
+chunk-KKKDCX2C.js   | connect-page        | 358.45 kB | 
+chunk-47ATDT2M.js   | people-page         | 241.03 kB | 
+chunk-FJ6KYJPR.js   | post-ride-page      | 165.64 kB | 
+chunk-BKESEFYU.js   | home-page           | 159.07 kB | 
+chunk-CLGRCQHC.js   | -                   | 158.81 kB | 
+chunk-QNLO24NU.js   | profile-page        | 154.95 kB | 
+chunk-HK7CU7Y6.js   | explore-page        | 153.26 kB | 
+chunk-NHXCOXEV.js   | -                   | 143.95 kB | 
+chunk-SHTZAVRS.js   | sign-in-page        | 119.16 kB | 
+chunk-KDRXGKWZ.js   | -                   | 115.98 kB | 
+chunk-2IGLQCR4.js   | profile-v2-page     | 107.49 kB | 
+chunk-2I22OWK5.js   | listing-detail-page |  98.22 kB | 
+chunk-A5R5GT4N.js   | user-profile-page   |  96.04 kB | 
+chunk-PCHW4LXI.js   | -                   |  63.73 kB | 
+...and 23 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [29.215 seconds] - 2025-12-10T14:34:34.189Z
+
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+9:34:34 AM [vite] (client) Re-optimizing dependencies because vite config has changed
+  ➜  Local:   http://localhost:4200/
+  ➜  press h + enter to show help

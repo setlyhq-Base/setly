@@ -48,22 +48,37 @@ export class PlacesController {
         }));
         return res.json({ predictions, warning: 'maps_key_missing_dev_fallback' });
       }
-  const params = new URLSearchParams({ input, key, types: 'geocode|address|establishment', components: 'country:us' });
+  
+      // Allow client to override types parameter (e.g., for city-only searches)
+      const types = String(req.query.types || 'geocode|address|establishment');
+      console.log('[Places] 🔍 Autocomplete request - input:', input, 'types:', types);
+      
+      const params = new URLSearchParams({ input, key, types, components: 'country:us' });
       if (token) params.set('sessiontoken', token);
       const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params.toString()}`;
+      console.log('[Places] 📡 Calling Google API:', url.replace(key, 'API_KEY_HIDDEN'));
+      
       const resp = await fetch(url);
       const data: any = await resp.json();
+      console.log('[Places] 📦 Google API response status:', data.status, 'predictions:', data?.predictions?.length || 0);
+      
       if (!resp.ok) {
+        console.error('[Places] ❌ Google API error:', resp.status, data?.error_message);
         return res.status(resp.status).json({ error: 'autocomplete_upstream', status: resp.status, message: data?.error_message || 'upstream_error' });
       }
       let predictions = Array.isArray(data?.predictions) ? data.predictions : [];
-      // Augment with fuzzy institution matches if predictions sparse (<3) or tokens suggest university
-      if (predictions.length < 3) {
+      
+      // Only augment with institutions if NOT searching for cities
+      const isCitySearch = types.includes('cities');
+      if (!isCitySearch && predictions.length < 3) {
+        console.log('[Places] 🏫 Adding fuzzy institution matches');
         const fuzzy = fuzzyInstitutionPredictions(input).slice(0, 5);
         // Avoid duplicates by description
         const existing = new Set(predictions.map((p: any) => p.description));
         for (const f of fuzzy) { if (!existing.has(f.description)) predictions.push(f); }
       }
+      
+      console.log('[Places] ✅ Returning predictions:', predictions.length);
       res.json({ predictions });
     } catch (e: any) {
       res.status(500).json({ error: 'autocomplete_failed', message: e?.message });
@@ -185,6 +200,8 @@ export class PlacesController {
       const category = String(req.query.type || '');
       const radius = Number(req.query.radius || 5000);
       
+      console.log('[API] /nearby request:', { location: locationStr, type: category, radius });
+      
       if (!locationStr) {
         return res.status(400).json({ error: 'missing_location' });
       }
@@ -201,10 +218,14 @@ export class PlacesController {
       const location = { lat, lng };
       const key = mapsKey();
       
+      console.log('[API] Google Maps API key:', key ? 'Present' : 'Missing');
+      
       // If no API key, return mock data for development
       if (!key) {
+        const mockResults = generateMockPlaces(category, location);
+        console.log('[API] Returning mock data:', mockResults.length, 'items');
         return res.json({ 
-          results: generateMockPlaces(category, location),
+          results: mockResults,
           warning: 'maps_key_missing_dev_fallback' 
         });
       }
@@ -219,10 +240,15 @@ export class PlacesController {
       });
 
       const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${params.toString()}`;
+      console.log('[API] Calling Google Places:', url.replace(key, 'API_KEY_HIDDEN'));
+      
       const resp = await fetch(url);
       const data: any = await resp.json();
 
+      console.log('[API] Google Places response status:', data.status, 'results:', data.results?.length || 0);
+
       if (!resp.ok) {
+        console.error('[API] Google Places error:', data);
         return res.status(resp.status).json({ 
           error: 'nearby_upstream', 
           status: resp.status, 
@@ -230,11 +256,115 @@ export class PlacesController {
         });
       }
 
-      const results = Array.isArray(data?.results) ? data.results : [];
-      res.json({ results });
+      // Apply strict quality filters (industry standard for premium apps)
+      const MINIMUM_RATING = 4.2;
+      const MINIMUM_REVIEWS = 10;
+      
+      let results = Array.isArray(data?.results) ? data.results : [];
+      
+      // Filter to only high-quality, credible places
+      results = results.filter((place: any) => {
+        const hasMinRating = place.rating && place.rating >= MINIMUM_RATING;
+        const hasEnoughReviews = place.user_ratings_total && place.user_ratings_total >= MINIMUM_REVIEWS;
+        const hasPhotos = place.photos && place.photos.length > 0;
+        const hasAddress = place.vicinity || place.formatted_address;
+        const isOpen = !place.business_status || place.business_status === 'OPERATIONAL';
+        
+        // Must meet ALL quality criteria to be shown
+        return hasMinRating && hasEnoughReviews && hasPhotos && hasAddress && isOpen;
+      });
+      
+      console.log(`[API] After quality filtering: ${results.length} high-quality places (rating >= ${MINIMUM_RATING}, reviews >= ${MINIMUM_REVIEWS})`);
+      
+      res.json({ results, status: data.status });
       
     } catch (e: any) {
+      console.error('[API] /nearby error:', e);
       res.status(500).json({ error: 'nearby_failed', message: e?.message });
+    }
+  }
+
+  // GET /api/places/geocode - Reverse geocode coordinates to location name
+  static async geocode(req: Request, res: Response) {
+    try {
+      if (!allow()) return res.status(429).json({ error: 'rate_limited' });
+      
+      const latlng = String(req.query.latlng || '');
+      
+      if (!latlng) {
+        return res.status(400).json({ error: 'missing_latlng' });
+      }
+
+      const key = mapsKey();
+      
+      if (!key) {
+        // Dev fallback
+        return res.json({ 
+          results: [{
+            formatted_address: 'Boston, MA',
+            address_components: [
+              { long_name: 'Boston', short_name: 'Boston', types: ['locality'] },
+              { long_name: 'MA', short_name: 'MA', types: ['administrative_area_level_1'] }
+            ]
+          }],
+          warning: 'maps_key_missing_dev_fallback' 
+        });
+      }
+
+      const params = new URLSearchParams({ latlng, key });
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`;
+      const resp = await fetch(url);
+      const data: any = await resp.json();
+
+      if (!resp.ok) {
+        return res.status(resp.status).json({ 
+          error: 'geocode_upstream', 
+          status: resp.status, 
+          message: data?.error_message || 'upstream_error' 
+        });
+      }
+
+      res.json(data);
+      
+    } catch (e: any) {
+      res.status(500).json({ error: 'geocode_failed', message: e?.message });
+    }
+  }
+
+  // GET /api/places/photo - Proxy Google Places photos
+  static async photo(req: Request, res: Response) {
+    try {
+      if (!allow()) return res.status(429).json({ error: 'rate_limited' });
+      
+      const reference = String(req.query.reference || '');
+      const maxwidth = Number(req.query.maxwidth || 400);
+      
+      if (!reference || reference === 'mock_photo') {
+        // Return placeholder image URL
+        return res.redirect('https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400');
+      }
+
+      const key = mapsKey();
+      
+      if (!key) {
+        // Dev fallback - redirect to unsplash placeholder
+        return res.redirect('https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=' + maxwidth);
+      }
+
+      const params = new URLSearchParams({
+        photo_reference: reference,
+        maxwidth: maxwidth.toString(),
+        key: key
+      });
+
+      const url = `https://maps.googleapis.com/maps/api/place/photo?${params.toString()}`;
+      
+      // Redirect to Google's photo URL
+      res.redirect(url);
+      
+    } catch (e: any) {
+      // Fallback to placeholder on error
+      res.redirect('https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400');
     }
   }
 }

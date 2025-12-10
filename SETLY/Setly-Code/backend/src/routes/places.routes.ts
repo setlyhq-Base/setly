@@ -13,5 +13,9 @@ router.get('/textsearch', PlacesController.textSearch);
 router.get('/institution', PlacesController.institution);
 // Nearby places for Explore page
 router.get('/nearby', PlacesController.nearby);
+// Geocode endpoint
+router.get('/geocode', PlacesController.geocode);
+// Photo proxy endpoint
+router.get('/photo', PlacesController.photo);
 
 export default router;

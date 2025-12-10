@@ -12,6 +12,8 @@ const uploads_routes_1 = __importDefault(require("./routes/uploads.routes"));
 const rooms_routes_1 = __importDefault(require("./routes/rooms.routes"));
 const health_routes_1 = __importDefault(require("./routes/health.routes"));
 const geo_routes_1 = __importDefault(require("./routes/geo.routes"));
+const places_routes_1 = __importDefault(require("./routes/places.routes"));
+const events_routes_1 = __importDefault(require("./routes/events.routes"));
 const connect_routes_1 = __importDefault(require("./routes/connect.routes"));
 const fs_1 = __importDefault(require("fs"));
 const aws_1 = require("./config/aws");
@@ -188,6 +190,8 @@ exports.app.post('/api/auth/sync', async (req, res) => {
 exports.app.use('/api/uploads', auth_middleware_1.authMiddleware, uploads_routes_1.default);
 exports.app.use('/api/rooms', auth_middleware_1.authMiddleware, rooms_routes_1.default);
 exports.app.use('/api/geo', geo_routes_1.default); // public geocoding search
+exports.app.use('/api/places', places_routes_1.default); // Google Places proxy endpoints (autocomplete/details/textsearch)
+exports.app.use('/api/events', events_routes_1.default); // Events from Ticketmaster and Eventbrite
 exports.app.use('/api/connect', connect_routes_1.default); // public connect discovery endpoints
 exports.app.use('/', health_routes_1.default);
 exports.app.use('/api/auth', auth_middleware_1.authMiddleware, auth_routes_1.default);

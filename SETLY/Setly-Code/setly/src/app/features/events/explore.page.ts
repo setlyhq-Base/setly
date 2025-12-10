@@ -1,4 +1,4 @@
-import { Component, signal, computed, HostListener, inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
+import { Component, signal, computed, HostListener, inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -10,11 +10,12 @@ import { NotificationsDrawerComponent } from '../connect/components/notification
 import { GlobalSearchOverlayComponent } from '../../shared/components/global-search-overlay.component';
 import { MapViewComponent } from '../connect/components/map-view.component';
 import { ExploreDataService, ExploreItem } from '../../core/services/explore-data.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime } from 'rxjs';
 
 @Component({
   selector: 'app-explore-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, 
     FormsModule,
@@ -311,6 +312,51 @@ import { Subject, takeUntil } from 'rxjs';
     .events-page {
       min-height: 100vh;
       background: #FAFBFF;
+    }
+    
+    /* Smooth Transitions for Content */
+    .category-section {
+      animation: fadeInUp 0.4s ease-out;
+      animation-fill-mode: both;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Skeleton Loader for Smooth Transitions */
+    .skeleton-card {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 12px;
+      height: 280px;
+    }
+    
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+      100% {
+        background-position: -200% 0;
+      }
+    }
+    
+    /* Prevent Layout Shifts */
+    .section-row {
+      min-height: 300px;
+      transition: opacity 0.3s ease-in-out;
+    }
+    
+    .section-row.loading {
+      opacity: 0.6;
     }
 
     /* Header - Sticky Top Bar */
@@ -844,6 +890,17 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
   isLoading = signal(false);
   userLocation = signal<{ lat: number; lng: number }>({ lat: 42.7654, lng: -71.4676 });
   
+  // Individual loading states for smooth transitions
+  loadingStates = {
+    trending: signal(false),
+    restaurants: signal(false),
+    places: signal(false),
+    activities: signal(false),
+    nightlife: signal(false),
+    outdoor: signal(false),
+    events: signal(false)
+  };
+  
   // Dynamic Hero Content based on Category
   heroTitle = computed(() => {
     const category = this.selectedCategory();
@@ -1100,6 +1157,9 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    // Setup city selection debouncing
+    this.setupCitySelectionDebounce();
+    
     // Initialize user location and load data
     this.initializeLocation();
   }
@@ -1127,17 +1187,26 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private loadAllData() {
-    this.isLoading.set(true);
+    // Don't show global loading - use per-category skeletons instead
+    const location = this.userLocation();
+
+    // Set all categories to loading state
+    Object.values(this.loadingStates).forEach((state: WritableSignal<boolean>) => state.set(true));
     
     // Clear deduplication cache for fresh data load
     this.exploreDataService.clearDeduplication();
-    
-    const location = this.userLocation();
 
     // Load trending (mixed content)
+    this.loadingStates.trending.set(true);
     this.exploreDataService.getTrendingNearby(location)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(items => this.trendingEvents.set(items));
+      .subscribe({
+        next: items => {
+          this.trendingEvents.set(items);
+          this.loadingStates.trending.set(false);
+        },
+        error: () => this.loadingStates.trending.set(false)
+      });
 
     // Load all categories in parallel
     this.loadCategoryData('restaurants', location);
@@ -1146,16 +1215,16 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
     this.loadCategoryData('nightlife', location);
     this.loadCategoryData('outdoor', location);
     this.loadCategoryData('events', location);
-
-    setTimeout(() => this.isLoading.set(false), 1000);
   }
 
   private loadCategoryData(category: string, location: { lat: number; lng: number }) {
     // Use dedicated events API for events category
     if (category === 'events') {
+      this.loadingStates.events.set(true);
       this.exploreDataService.getEvents(location)
         .pipe(takeUntil(this.destroy$))
-        .subscribe(items => {
+        .subscribe({
+          next: items => {
           this.careerEvents.set(items.filter(i => i.tag.toLowerCase().includes('career') || i.title.toLowerCase().includes('career')).slice(0, 10));
           this.musicEvents.set(items.filter(i => i.tag.toLowerCase().includes('music') || i.title.toLowerCase().includes('concert')).slice(0, 10));
           this.workshopEvents.set(items.filter(i => i.tag.toLowerCase().includes('workshop') || i.title.toLowerCase().includes('workshop')).slice(0, 10));
@@ -1164,14 +1233,21 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
           this.sportsEvents.set(items.filter(i => i.tag.toLowerCase().includes('sports') || i.title.toLowerCase().includes('game')).slice(0, 10));
           this.dealEvents.set(items.filter(i => i.isFree || i.price < 10).slice(0, 10));
           this.studentPickEvents.set(items.slice(0, 10));
-        });
+          this.loadingStates.events.set(false);
+        },
+        error: () => this.loadingStates.events.set(false)
+      });
       return;
     }
 
     // Use Google Places for other categories
+    const loadingState = this.loadingStates[category as keyof typeof this.loadingStates];
+    if (loadingState) loadingState.set(true);
+    
     this.exploreDataService.getNearbyPlaces(category, location)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(items => {
+      .subscribe({
+        next: items => {
         switch (category) {
           case 'restaurants':
             this.restaurantsTrending.set(items.slice(0, 10));
@@ -1197,6 +1273,8 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
             this.exploreDataService.getOpenNowRestaurants(location)
               .pipe(takeUntil(this.destroy$))
               .subscribe(openItems => this.openNowRestaurants.set(openItems.slice(0, 10)));
+            
+            if (loadingState) loadingState.set(false);
             break;
           case 'places':
             this.placesPopular.set(items.slice(0, 10));
@@ -1210,6 +1288,7 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
               i.title.toLowerCase().includes('landmark')
             ).slice(0, 10));
             this.placesHiddenGems.set(items.slice(7, 15));
+            if (loadingState) loadingState.set(false);
             break;
           case 'activities':
             this.activityEvents.set(items.slice(0, 10));
@@ -1223,6 +1302,7 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
               i.title.toLowerCase().includes('game')
             ).slice(0, 10));
             this.activitiesCreative.set(items.slice(5, 10));
+            if (loadingState) loadingState.set(false);
             break;
           case 'nightlife':
             this.nightlifeTrending.set(items.slice(0, 10));
@@ -1232,9 +1312,11 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
             ).slice(0, 10));
             this.nightlifeLiveMusic.set(items.slice(3, 8));
             this.partyEvents.set(items.slice(0, 10));
+            if (loadingState) loadingState.set(false);
             break;
           case 'outdoor':
             this.outdoorEvents.set(items.slice(0, 10));
+            if (loadingState) loadingState.set(false);
             break;
           case 'events':
             this.careerEvents.set(items.slice(0, 5));
@@ -1245,9 +1327,14 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
             this.sportsEvents.set(items.slice(0, 10));
             this.dealEvents.set(items.filter(i => i.isFree || i.price < 10).slice(0, 10));
             this.studentPickEvents.set(items.slice(0, 10));
+            if (loadingState) loadingState.set(false);
             break;
         }
-      });
+      },
+      error: () => {
+        if (loadingState) loadingState.set(false);
+      }
+    });
   }
 
   @HostListener('window:scroll', [])
@@ -1315,35 +1402,38 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
     this.locationSheetOpen.set(false);
   }
 
+  private citySelectionSubject = new Subject<{ cityName: string; lat: number; lng: number }>();
+  
   selectCity(cityName: string, lat: number, lng: number) {
-    console.log('[Explore] Selected city:', cityName, { lat, lng });
-    this.selectedLocation.set(cityName);
-    this.userLocation.set({ lat, lng });
-    this.locationSheetOpen.set(false);
-    this.locationSearchQuery.set('');
-    this.locationSearchResults.set([]);
-    
-    // Clear cache and reload all data
-    this.exploreDataService.clearDeduplication();
-    this.exploreDataService.clearCache();
-    this.isLoading.set(true);
-    this.loadAllData();
+    // Debounce city selection to prevent rapid switching
+    this.citySelectionSubject.next({ cityName, lat, lng });
+  }
+  
+  private setupCitySelectionDebounce() {
+    this.citySelectionSubject
+      .pipe(
+        debounceTime(200),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(({ cityName, lat, lng }) => {
+        this.selectedLocation.set(cityName);
+        this.userLocation.set({ lat, lng });
+        this.locationSheetOpen.set(false);
+        this.locationSearchQuery.set('');
+        this.locationSearchResults.set([]);
+        
+        // Clear cache and reload all data
+        this.exploreDataService.clearDeduplication();
+        this.exploreDataService.clearCache();
+        this.loadAllData();
+      });
   }
 
   async useCurrentLocation() {
     this.isLoadingLocation.set(true);
     try {
       const location = await this.exploreDataService.getCurrentLocation();
-      console.log('[Explore] Current location:', location);
-      this.selectedLocation.set(location.city);
-      this.userLocation.set({ lat: location.lat, lng: location.lng });
-      this.locationSheetOpen.set(false);
-      
-      // Clear cache and reload all data
-      this.exploreDataService.clearDeduplication();
-      this.exploreDataService.clearCache();
-      this.isLoading.set(true);
-      this.loadAllData();
+      this.selectCity(location.city, location.lat, location.lng);
     } catch (error) {
       console.error('[Explore] Error getting current location:', error);
       alert('Could not get your location. Please select a city from the list.');
@@ -1356,38 +1446,29 @@ export class ExplorePageComponent implements AfterViewInit, OnInit, OnDestroy {
 
   onLocationSearchChange() {
     const query = this.locationSearchQuery();
-    console.log('[Explore] 🔤 Search input changed:', query);
     
     // Clear previous timeout
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
-      console.log('[Explore] ⏱️ Cleared previous timeout');
     }
     
     if (!query || query.trim().length < 2) {
-      console.log('[Explore] ❌ Query too short, clearing results');
       this.locationSearchResults.set([]);
       this.isSearching.set(false);
       return;
     }
 
-    console.log('[Explore] ⏳ Setting isSearching = true');
     this.isSearching.set(true);
     
     // Debounced search with proper cleanup (300ms for snappy feel)
     this.searchTimeout = setTimeout(() => {
-      console.log('[Explore] 🚀 Executing search for:', query);
       this.exploreDataService.searchCities(query)
         .subscribe({
           next: (results) => {
-            console.log('[Explore] ✅ Received results:', results.length);
-            console.log('[Explore] 📋 Results data:', results);
             this.locationSearchResults.set(results);
-            console.log('[Explore] 📊 Signal updated, current value:', this.locationSearchResults());
             this.isSearching.set(false);
           },
-          error: (err) => {
-            console.error('[Explore] ❌ Search error:', err);
+          error: () => {
             this.locationSearchResults.set([]);
             this.isSearching.set(false);
           }

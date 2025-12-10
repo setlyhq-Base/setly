@@ -10,13 +10,13 @@ export const environment = {
     appId: "1:577734262579:web:de22f8e59f43303e1f4846",
     measurementId: "G-NVJEGLQLR3"
   },
-  apiUrl: 'https://api.setly.com/v1',
-  apiBaseUrl: 'https://api.setly.com/v1',
+  apiUrl: '/api',
+  apiBaseUrl: '/api',
   analytics: {
     gaMeasurementId: ''
   },
   assistant: {
-    apiUrl: 'https://api.setly.com/v1/assistant/chat',
+    apiUrl: '/api/assistant/chat',
     enabled: true,
     playbooks: ['housing','airport','sim','bank','ssn'],
     maxHistory: 30

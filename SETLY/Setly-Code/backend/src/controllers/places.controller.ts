@@ -51,19 +51,15 @@ export class PlacesController {
   
       // Allow client to override types parameter (e.g., for city-only searches)
       const types = String(req.query.types || 'geocode|address|establishment');
-      console.log('[Places] 🔍 Autocomplete request - input:', input, 'types:', types);
       
       const params = new URLSearchParams({ input, key, types, components: 'country:us' });
       if (token) params.set('sessiontoken', token);
       const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params.toString()}`;
-      console.log('[Places] 📡 Calling Google API:', url.replace(key, 'API_KEY_HIDDEN'));
       
       const resp = await fetch(url);
       const data: any = await resp.json();
-      console.log('[Places] 📦 Google API response status:', data.status, 'predictions:', data?.predictions?.length || 0);
       
       if (!resp.ok) {
-        console.error('[Places] ❌ Google API error:', resp.status, data?.error_message);
         return res.status(resp.status).json({ error: 'autocomplete_upstream', status: resp.status, message: data?.error_message || 'upstream_error' });
       }
       let predictions = Array.isArray(data?.predictions) ? data.predictions : [];
@@ -71,14 +67,12 @@ export class PlacesController {
       // Only augment with institutions if NOT searching for cities
       const isCitySearch = types.includes('cities');
       if (!isCitySearch && predictions.length < 3) {
-        console.log('[Places] 🏫 Adding fuzzy institution matches');
         const fuzzy = fuzzyInstitutionPredictions(input).slice(0, 5);
         // Avoid duplicates by description
         const existing = new Set(predictions.map((p: any) => p.description));
         for (const f of fuzzy) { if (!existing.has(f.description)) predictions.push(f); }
       }
       
-      console.log('[Places] ✅ Returning predictions:', predictions.length);
       res.json({ predictions });
     } catch (e: any) {
       res.status(500).json({ error: 'autocomplete_failed', message: e?.message });

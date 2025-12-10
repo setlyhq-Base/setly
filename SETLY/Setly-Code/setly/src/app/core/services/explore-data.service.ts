@@ -767,29 +767,15 @@ export class ExploreDataService {
       types: '(cities)'  // Restrict to cities only (Google Places API parameter)
     };
     
-    console.log('[ExploreData] 🔍 Calling city search API:', url, params);
-    
     return this.http.get<any>(url, { params }).pipe(
       map(response => {
-        console.log('[ExploreData] ✅ City search API response:', response);
-        
         if (response.warning) {
-          console.warn('[ExploreData] ⚠️ API Warning:', response.warning);
+          console.warn('[ExploreData] API Warning:', response.warning);
         }
-        
-        const predictions = response.predictions || [];
-        console.log('[ExploreData] 📊 Raw predictions count:', predictions.length);
-        
-        // Don't filter on client-side since backend is sending (cities) type
-        // Just return all predictions from the API
-        console.log('[ExploreData] ✅ Returning city results:', predictions.length);
-        return predictions;
+        return response.predictions || [];
       }),
       catchError(err => {
-        console.error('[ExploreData] ❌ City search error:', err);
-        console.error('[ExploreData] Error status:', err.status);
-        console.error('[ExploreData] Error details:', err.error);
-        console.error('[ExploreData] Error message:', err.message);
+        console.error('[ExploreData] City search error:', err.status, err.message);
         return of([]);
       })
     );
@@ -800,11 +786,11 @@ export class ExploreDataService {
    */
   getPlaceDetails(placeId: string): Observable<any> {
     return this.http.get<any>(`${this.API_BASE}/details`, {
-      params: { place_id: placeId }
+      params: { placeId: placeId }  // Backend expects 'placeId' not 'place_id'
     }).pipe(
       map(response => response.result),
       catchError(err => {
-        console.error('[Explore] Place details error:', err);
+        console.error('[ExploreData] Place details error:', err.status, err.message);
         throw err;
       })
     );

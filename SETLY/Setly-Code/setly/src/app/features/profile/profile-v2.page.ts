@@ -1107,15 +1107,15 @@ export class ProfileV2Page implements OnInit {
   private ridesApi = inject(RidesApiService);
   private marketplaceApi = inject(MarketplaceApiService);
   private usersApi = inject(UsersApiService);
-  private router = inject(Router);
+  router = inject(Router);
 
   showEdit = signal(false);
   
   // API-loaded data signals
-  private _myRooms = signal<any[]>([]);
-  private _myRides = signal<any[]>([]);
-  private _myMarketplace = signal<any[]>([]);
-  private _savedItems = signal<{rooms: string[], rides: string[], marketplace: string[]}>({rooms: [], rides: [], marketplace: []});
+  _myRooms = signal<any[]>([]);
+  _myRides = signal<any[]>([]);
+  _myMarketplace = signal<any[]>([]);
+  _savedItems = signal<{rooms: string[], rides: string[], marketplace: string[]}>({rooms: [], rides: [], marketplace: []});
   loadingRooms = signal(false);
   loadingRides = signal(false);
   loadingMarketplace = signal(false);

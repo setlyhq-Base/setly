@@ -1,208 +1,231 @@
-# Setly Backend Lambda - AWS Infrastructure
+# 🚀 Setly Backend - Production Deployment Ready
 
-This directory contains the production-ready backend for Setly, designed to run on AWS Lambda with API Gateway.
+## ⚡ Quick Deploy (Automated)
 
-## 🏗️ Architecture
-
-```
-┌─────────────────┐
-│  AWS Amplify    │  Frontend (Angular)
-│  setly.in       │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  API Gateway    │  HTTP Entry Point
-│  /api/*         │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Lambda         │  Node.js Express Backend
-│  (This Code)    │  - Explore APIs
-│                 │  - Upload signed URLs
-│                 │  - Rooms, Rides, Marketplace
-└────────┬────────┘
-         │
-         ├──────────► AWS Secrets Manager (API Keys)
-         ├──────────► S3 Bucket (User Uploads)
-         ├──────────► CloudFront (CDN)
-         └──────────► MongoDB/DynamoDB (Database)
-```
-
-## 📁 S3 Folder Structure
-
-```
-setly-user-uploads-{stage}/
-├── rooms/
-│   ├── {roomId}/
-│   │   ├── {uuid}.jpg
-│   │   └── {uuid}.jpg
-├── rides/
-│   ├── {rideId}/
-│   │   └── {uuid}.jpg
-├── marketplace/
-│   ├── {itemId}/
-│   │   ├── {uuid}.jpg
-│   │   └── {uuid}.jpg
-└── users/
-    ├── {userId}/
-    │   └── profile.jpg
-```
-
-## 🚀 Deployment
-
-### Prerequisites
-
-1. AWS CLI configured with credentials
-2. Node.js 20.x installed
-3. Serverless Framework installed globally (optional)
-
-### Initial Setup
-
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Store API keys in Secrets Manager:**
-   ```bash
-   chmod +x setup-secrets.sh
-   ./setup-secrets.sh dev
-   ./setup-secrets.sh stage
-   ./setup-secrets.sh prod
-   ```
-
-3. **Deploy to AWS:**
-   ```bash
-   chmod +x deploy.sh
-   ./deploy.sh dev      # Deploy to dev
-   ./deploy.sh stage    # Deploy to stage
-   ./deploy.sh prod     # Deploy to production
-   ```
-
-4. **After deployment, note the CloudFront domain and store it:**
-   ```bash
-   aws ssm put-parameter \
-     --name '/setly/dev/cloudfront-domain' \
-     --value 'd1234567890.cloudfront.net' \
-     --type String \
-     --region us-east-1
-   ```
-
-5. **Update Amplify environment variables:**
-   - Go to AWS Amplify Console → App Settings → Environment Variables
-   - Add: `VITE_API_URL` = `<YOUR_API_GATEWAY_URL>`
-
-## 🔑 Secrets Required
-
-Store these in AWS Secrets Manager:
-
-- `setly/{stage}/google-maps-api-key`
-- `setly/{stage}/ticketmaster-api-key`
-- `setly/{stage}/eventbrite-api-key`
-
-Store these in SSM Parameter Store:
-
-- `/setly/{stage}/cloudfront-domain`
-- `/setly/{stage}/mongodb-uri`
-
-## 📊 Environments
-
-| Environment | Domain         | Branch               | Stage |
-|-------------|----------------|----------------------|-------|
-| Production  | setly.in       | main                 | prod  |
-| Staging     | stage.setly.in | staging              | stage |
-| Development | dev.setly.in   | feat/monorepo-setup  | dev   |
-
-## 🛡️ Security Features
-
-- ✅ Rate limiting on all endpoints
-- ✅ CORS configured for specific domains
-- ✅ API keys stored in Secrets Manager (not in code)
-- ✅ Presigned S3 URLs for secure uploads
-- ✅ CloudFront for secure image delivery
-- ✅ Request validation with Joi
-- ✅ Error handling and logging
-
-## 📦 API Endpoints
-
-### Explore
-- `GET /api/explore/:category` - Get explore data (restaurants, places, events, etc.)
-- `GET /api/explore/places/autocomplete` - City search autocomplete
-- `GET /api/explore/places/details` - Get place details by placeId
-
-### Upload
-- `POST /api/upload/signed-url` - Get signed URL for single file upload
-- `POST /api/upload/batch-signed-urls` - Get multiple signed URLs
-- `DELETE /api/upload/:fileKey` - Delete a file
-
-### Rooms
-- `GET /api/rooms` - Search rooms
-- `GET /api/rooms/:roomId` - Get room details
-- `POST /api/rooms` - Create room listing
-- `PUT /api/rooms/:roomId` - Update room
-- `DELETE /api/rooms/:roomId` - Delete room
-
-### Rides
-- `GET /api/rides` - Search rides
-- `GET /api/rides/:rideId` - Get ride details
-- `POST /api/rides` - Create ride listing
-
-### Marketplace
-- `GET /api/marketplace` - Search items
-- `GET /api/marketplace/:itemId` - Get item details
-- `POST /api/marketplace` - Create listing
-
-### Users
-- `GET /api/users/:userId` - Get user profile
-- `POST /api/users` - Create user
-- `PUT /api/users/:userId` - Update profile
-
-## 🔄 Upload Flow
-
-1. Frontend requests signed URL:
-   ```typescript
-   POST /api/upload/signed-url
-   Body: {
-     entityType: 'rooms',
-     entityId: 'room-123',
-     filename: 'photo.jpg',
-     contentType: 'image/jpeg'
-   }
-   ```
-
-2. Backend returns:
-   ```json
-   {
-     "uploadUrl": "https://s3.amazonaws.com/...",
-     "fileKey": "rooms/room-123/uuid.jpg",
-     "cloudFrontUrl": "https://d123.cloudfront.net/rooms/room-123/uuid.jpg"
-   }
-   ```
-
-3. Frontend uploads directly to S3 using `uploadUrl`
-
-4. Frontend saves `cloudFrontUrl` in database
-
-## 🧪 Local Development
+### You have AWS configured, so deploy now:
 
 ```bash
-npm run local
+cd backend-lambda
+
+# Deploy to production
+./deploy-production.sh prod
 ```
 
-This starts serverless-offline on `http://localhost:3000`
+That's it! The script handles everything:
+- ✓ Verifies AWS credentials  
+- ✓ Prompts for MongoDB URI
+- ✓ Stores secrets in AWS Secrets Manager
+- ✓ Builds & deploys to Lambda + API Gateway
+- ✓ Creates S3 + CloudFront CDN
+- ✓ Returns your live API URL
 
-## 📝 TODO
+---
 
-- [ ] Implement actual MongoDB/DynamoDB connections in `database.service.ts`
-- [ ] Add authentication middleware (Firebase Auth or Cognito)
-- [ ] Add pagination to list endpoints
-- [ ] Implement full-text search for marketplace
-- [ ] Add WebSocket support for real-time features
-- [ ] Add monitoring with CloudWatch alarms
-- [ ] Add automated tests
+## 📋 What You Need
 
-## 📞 Support
+### 1. MongoDB Atlas Connection String
 
-For issues or questions, contact the Setly development team.
+Create cluster at [mongodb.com/cloud/atlas](https://mongodb.com/cloud/atlas):
+- Tier: M0 free (dev) or M10+ (production)
+- Region: us-east-1
+- Database: `setly-prod`
+- Network Access: 0.0.0.0/0 (for Lambda)
+
+Connection string format:
+```
+mongodb+srv://username:password@cluster.mongodb.net/setly-prod?retryWrites=true&w=majority
+```
+
+### 2. Google Maps API Key (Optional, for Explore features)
+
+Get from: https://console.cloud.google.com/apis/credentials
+
+---
+
+## 🧪 Test Locally First
+
+### 1. Create .env file
+```bash
+cp .env.example .env
+# Edit .env with your MongoDB URI
+```
+
+### 2. Start local server
+```bash
+npm install
+npm run dev
+```
+
+### 3. Test all endpoints
+```bash
+./test-api.sh http://localhost:3000
+```
+
+Should show:
+```
+✓ Health Endpoint
+✓ Create User
+✓ Get User  
+✓ Create Room
+✓ Search Rooms
+✓ Create Ride
+✓ Create Marketplace Item
+✓ Create Conversation
+✓ Get Presigned URL
+
+🎉 All tests passed!
+```
+
+---
+
+## ☁️ Deploy to AWS
+
+### Automated Deployment
+
+```bash
+./deploy-production.sh prod
+```
+
+You'll be prompted for:
+1. MongoDB connection string (if not already in AWS Secrets Manager)
+2. Google Maps API key (optional)
+
+### Manual Deployment
+
+```bash
+# Store secrets
+aws secretsmanager create-secret \
+  --name setly/prod/mongodb-uri \
+  --secret-string "YOUR_MONGODB_URI" \
+  --region us-east-1
+
+# Deploy
+npm run build
+npx serverless deploy --stage prod
+```
+
+---
+
+## 🎯 After Deployment
+
+### 1. Get API URL
+
+Deployment output shows:
+```
+🌐 API Gateway URL:
+   https://abc123xyz.execute-api.us-east-1.amazonaws.com
+```
+
+### 2. Test Production
+
+```bash
+./test-api.sh https://YOUR_API_GATEWAY_URL
+```
+
+### 3. Update Frontend
+
+Edit `setly/src/environments/environment.ts`:
+```typescript
+apiUrl: 'https://YOUR_API_GATEWAY_URL/api',
+apiBaseUrl: 'https://YOUR_API_GATEWAY_URL/api',
+```
+
+---
+
+## 📊 Monitor & Debug
+
+```bash
+# View logs
+npx serverless logs -f api --stage prod --tail
+
+# Get deployment info  
+npx serverless info --stage prod
+
+# Test health
+curl https://YOUR_API_URL/api/health
+```
+
+---
+
+## 🔧 Troubleshooting
+
+**MongoDB connection fails:**
+```bash
+# Verify secret
+aws secretsmanager get-secret-value \
+  --secret-id setly/prod/mongodb-uri \
+  --region us-east-1
+
+# Check network access in MongoDB Atlas (should be 0.0.0.0/0)
+```
+
+**Deployment fails:**
+```bash
+# Check AWS credentials
+aws sts get-caller-identity
+
+# Deploy with verbose logging
+npx serverless deploy --stage prod --verbose
+```
+
+---
+
+## 📁 Environment Stages
+
+- **prod**: Production (`./deploy-production.sh prod`)
+- **stage**: Staging (`./deploy-production.sh stage`)
+- **dev**: Development (`./deploy-production.sh dev`)
+
+Each has separate:
+- MongoDB database
+- S3 bucket
+- API Gateway URL
+- CloudFront domain
+
+---
+
+## 💰 Costs
+
+**Development**: $0-5/month (free tier)  
+**Production** (10K users): $85-110/month
+
+Breakdown:
+- Lambda: $10-20
+- MongoDB M10: $60  
+- S3: $5-10
+- CloudFront: $10-20
+
+---
+
+## ✅ Production Checklist
+
+- [ ] MongoDB Atlas cluster created
+- [ ] Network access configured (0.0.0.0/0)
+- [ ] Connection string tested locally
+- [ ] `./test-api.sh http://localhost:3000` passes
+- [ ] `./deploy-production.sh prod` completes
+- [ ] Health endpoint returns 200
+- [ ] Production tests pass
+- [ ] Frontend updated with API URL
+- [ ] E2E tests complete
+- [ ] https://setly.in works
+
+---
+
+## 🎉 Ready to Deploy!
+
+Run:
+```bash
+./deploy-production.sh prod
+```
+
+Then test:
+```bash
+curl https://YOUR_API_URL/api/health
+```
+
+See **PRODUCTION_DEPLOYMENT.md** for detailed docs.
+
+---
+
+**Your backend will be live in 3-5 minutes! 🚀**

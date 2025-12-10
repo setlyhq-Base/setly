@@ -12,8 +12,8 @@ provider:
   environment:
     STAGE: ${self:provider.stage}
     S3_BUCKET_NAME: setly-user-uploads-${self:provider.stage}
-    CLOUDFRONT_DOMAIN: ${self:custom.cloudfrontDomain.${self:provider.stage}}
-    MONGODB_URI: ${ssm:/setly/${self:provider.stage}/mongodb-uri}
+    CLOUDFRONT_DOMAIN: ${self:custom.cloudfrontDomain.${self:provider.stage}, ''}
+    # MongoDB URI will be fetched from Secrets Manager at runtime
     
   iam:
     role:
@@ -43,9 +43,9 @@ provider:
 
 custom:
   cloudfrontDomain:
-    dev: ${ssm:/setly/dev/cloudfront-domain}
-    stage: ${ssm:/setly/stage/cloudfront-domain}
-    prod: ${ssm:/setly/prod/cloudfront-domain}
+    dev: ''
+    stage: ''
+    prod: ''
   
   serverless-offline:
     httpPort: 3000

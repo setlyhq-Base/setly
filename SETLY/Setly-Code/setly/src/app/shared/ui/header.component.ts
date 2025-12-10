@@ -110,7 +110,8 @@ export class HeaderComponent {
   mobileNavOpen = false;
   searchExpanded = false;
   readonly navLinks = [
-    { label: 'Connect', route: '/connect' },
+    // TEMPORARILY HIDDEN: Connect page will be activated post-launch
+    // { label: 'Connect', route: '/connect' },
     { label: 'People', route: '/people' },
     { label: 'Home', route: '/home' },
     { label: 'Post', route: '/post' },

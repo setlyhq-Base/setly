@@ -33,7 +33,7 @@ export const environment = {
     // Keep off in prod; use S3 uploads
     forceLocalUploads: false,
     // Allow disabling presence heartbeat if backend under maintenance
-    disablePresenceHeartbeat: false,
+    disablePresenceHeartbeat: true,
     // Request debug meta in heartbeat responses (frontend adds ?debug=1)
     presenceDebug: false,
     enableRoomVideo: false,

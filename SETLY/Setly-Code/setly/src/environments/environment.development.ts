@@ -36,7 +36,7 @@ export const environment = {
     // Force local uploads in dev by default; set to false ONLY if testing real S3 with proper CORS
     forceLocalUploads: true,
     // Toggle to silence heartbeat noise when diagnosing auth or presence
-    disablePresenceHeartbeat: false,
+    disablePresenceHeartbeat: true,
     // Enable debug meta for presence heartbeat responses
     presenceDebug: true,
     // Explicit override to allow S3 in dev (takes precedence over forceLocalUploads)

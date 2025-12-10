@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { getMongoDBUri } from '../config/secrets';
 
 let isConnected = false;
 let connectionPromise: Promise<typeof mongoose> | null = null;
@@ -21,11 +22,11 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
   }
 
   try {
-    // Get MongoDB URI from environment variable
-    const MONGODB_URI = process.env.MONGODB_URI;
+    // Get MongoDB URI from Secrets Manager or environment variable
+    const MONGODB_URI = await getMongoDBUri();
     
     if (!MONGODB_URI) {
-      throw new Error('MONGODB_URI environment variable is not defined');
+      throw new Error('MONGODB_URI is not available');
     }
 
     console.log('Creating new database connection');

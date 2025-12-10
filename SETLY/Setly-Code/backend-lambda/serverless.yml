@@ -13,7 +13,7 @@ provider:
     STAGE: ${self:provider.stage}
     S3_BUCKET_NAME: setly-user-uploads-${self:provider.stage}
     CLOUDFRONT_DOMAIN: ${self:custom.cloudfrontDomain.${self:provider.stage}, ''}
-    # MongoDB URI will be fetched from Secrets Manager at runtime
+    # MongoDB URI will be fetched from Secrets Manager at runtime via src/config/secrets.ts
     
   iam:
     role:
@@ -58,18 +58,14 @@ functions:
           path: /{proxy+}
           method: ANY
           cors:
-            origin: 
-              - https://setly.in
-              - https://stage.setly.in
-              - https://dev.setly.in
-              - http://localhost:4200
+            origin: '*'
             headers:
               - Content-Type
               - X-Amz-Date
               - Authorization
               - X-Api-Key
               - X-Amz-Security-Token
-            allowCredentials: true
+            allowCredentials: false
 
 resources:
   Resources:
@@ -162,8 +158,8 @@ plugins:
 
 package:
   patterns:
-    - '!node_modules/**'
     - '!.git/**'
-    - '!src/**'
     - '!*.md'
-    - dist/**
+    - '!tests/**'
+    - '!scripts/**'
+    - '!.env*'

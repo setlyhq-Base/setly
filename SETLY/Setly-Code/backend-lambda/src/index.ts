@@ -32,12 +32,22 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
-// Health check
+// Health check - lightweight, no DB required
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ 
     status: 'healthy', 
-    stage: process.env.STAGE,
+    stage: process.env.STAGE || 'unknown',
+    region: process.env.AWS_REGION || 'unknown',
     timestamp: new Date().toISOString() 
+  });
+});
+
+// Root redirect
+app.get('/', (req: Request, res: Response) => {
+  res.json({ 
+    message: 'Setly API',
+    health: '/api/health',
+    stage: process.env.STAGE || 'unknown'
   });
 });
 
@@ -58,8 +68,23 @@ app.use((req: Request, res: Response) => {
 // Error handler
 app.use(errorHandler);
 
-// Export for Lambda
-export const handler = serverless(app);
+// Wrap serverless handler with try-catch
+const serverlessHandler = serverless(app);
+
+export const handler = async (event: any, context: any) => {
+  try {
+    return await serverlessHandler(event, context);
+  } catch (error) {
+    console.error('Handler error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      })
+    };
+  }
+};
 
 // Export app for local development
 export default app;

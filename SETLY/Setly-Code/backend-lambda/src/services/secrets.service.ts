@@ -35,18 +35,42 @@ class SecretsService {
   }
 
   async getGoogleMapsApiKey(): Promise<string> {
-    const secret = await this.getSecret('google-maps-api-key');
-    return secret.apiKey;
+    try {
+      const command = new GetSecretValueCommand({
+        SecretId: `setly/${process.env.STAGE}/google-maps-api-key`
+      });
+      const response = await client.send(command);
+      return response.SecretString || '';
+    } catch (error) {
+      console.warn('Google Maps API key not configured');
+      return '';
+    }
   }
 
   async getTicketmasterApiKey(): Promise<string> {
-    const secret = await this.getSecret('ticketmaster-api-key');
-    return secret.apiKey;
+    try {
+      const command = new GetSecretValueCommand({
+        SecretId: `setly/${process.env.STAGE}/ticketmaster-api-key`
+      });
+      const response = await client.send(command);
+      return response.SecretString || '';
+    } catch (error) {
+      console.warn('Ticketmaster API key not configured');
+      return '';
+    }
   }
 
   async getEventbriteApiKey(): Promise<string> {
-    const secret = await this.getSecret('eventbrite-api-key');
-    return secret.apiKey;
+    try {
+      const command = new GetSecretValueCommand({
+        SecretId: `setly/${process.env.STAGE}/eventbrite-api-key`
+      });
+      const response = await client.send(command);
+      return response.SecretString || '';
+    } catch (error) {
+      console.warn('Eventbrite API key not configured');
+      return '';
+    }
   }
 
   async getAllApiKeys(): Promise<{

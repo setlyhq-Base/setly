@@ -10,8 +10,8 @@ export const environment = {
     appId: "1:577734262579:web:de22f8e59f43303e1f4846",
     measurementId: "G-NVJEGLQLR3"
   },
-  apiUrl: '/api',
-  apiBaseUrl: '/api',
+  apiUrl: 'https://o4cov0eb78.execute-api.us-east-1.amazonaws.com/prod/api',
+  apiBaseUrl: 'https://o4cov0eb78.execute-api.us-east-1.amazonaws.com/prod/api',
   analytics: {
     gaMeasurementId: ''
   },

@@ -29,6 +29,31 @@ const batchUploadSchema = Joi.object({
 });
 
 /**
+ * GET /api/upload/presigned-url (query params)
+ * Legacy endpoint for getting presigned URL via query string
+ */
+router.get('/presigned-url', async (req: Request, res: Response, next) => {
+  try {
+    const { fileName, fileType, userId, category } = req.query;
+    
+    if (!fileName || !fileType || !userId || !category) {
+      throw new AppError(400, 'Missing required query parameters');
+    }
+
+    const result = await s3Service.getUploadUrl(
+      category as EntityType,
+      userId as string,
+      fileName as string,
+      fileType as string
+    );
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * POST /api/upload/signed-url
  * Get a signed URL for uploading a single file
  */

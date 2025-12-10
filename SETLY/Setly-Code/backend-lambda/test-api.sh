@@ -44,8 +44,9 @@ test_endpoint() {
             -d "$data" 2>/dev/null || echo "000")
     fi
     
-    status_code=$(echo "$response" | tail -n1)
-    body=$(echo "$response" | head -n-1)
+    # Portable split: last line is status, others are body
+    status_code=$(printf "%s\n" "$response" | awk 'END{print $0}')
+    body=$(printf "%s\n" "$response" | sed '$d')
     
     if [ "$status_code" == "$expected_status" ] || [ "$status_code" == "200" ] || [ "$status_code" == "201" ]; then
         echo -e "${GREEN}✓ PASSED${NC} (HTTP $status_code)"

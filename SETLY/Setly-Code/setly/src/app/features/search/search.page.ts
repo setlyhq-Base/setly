@@ -621,8 +621,59 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
               </div>
             </div>
 
-            <!-- Premium Results Grid with Animation -->
-            <div *ngIf="!loading() && results().length > 0" class="results-grid animate-fade-in-up" [class.filters-visible]="!filtersHidden()" [class.loading]="loading()">
+            <!-- Default Catalog Sections (when no filters applied) -->
+            <div *ngIf="!loading() && !hasActiveFilters()" class="catalog-sections">
+              <!-- Rooms Catalog -->
+              <div *ngIf="activeTab() === 'rooms'">
+                <div *ngFor="let section of roomCatalogSections()" class="catalog-section">
+                  <h3 class="catalog-section-title">{{ section.title }}</h3>
+                  <div class="results-grid animate-fade-in-up">
+                    <app-room-result-card 
+                      *ngFor="let item of section.items; trackBy: trackById" 
+                      [item]="item"
+                      [isSelected]="selectedCardId() === item.id"
+                      (cardClick)="onRoomCardClick(item)"
+                      class="animate-scale-in">
+                    </app-room-result-card>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rides Catalog -->
+              <div *ngIf="activeTab() === 'rides'">
+                <div *ngFor="let section of rideCatalogSections()" class="catalog-section">
+                  <h3 class="catalog-section-title">{{ section.title }}</h3>
+                  <div class="results-grid animate-fade-in-up">
+                    <app-ride-result-card 
+                      *ngFor="let item of section.items; trackBy: trackById" 
+                      [item]="item"
+                      [isSelected]="selectedCardId() === item.id"
+                      (cardClick)="openRideModal(item)"
+                      class="animate-scale-in">
+                    </app-ride-result-card>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Market Catalog -->
+              <div *ngIf="activeTab() === 'market'">
+                <div *ngFor="let section of marketCatalogSections()" class="catalog-section">
+                  <h3 class="catalog-section-title">{{ section.title }}</h3>
+                  <div class="results-grid animate-fade-in-up">
+                    <app-market-result-card 
+                      *ngFor="let item of section.items; trackBy: trackById" 
+                      [item]="item"
+                      [isSelected]="selectedCardId() === item.id"
+                      (cardClick)="onMarketCardClick(item)"
+                      class="animate-scale-in">
+                    </app-market-result-card>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Premium Results Grid with Animation (when filters applied) -->
+            <div *ngIf="!loading() && hasActiveFilters() && results().length > 0" class="results-grid animate-fade-in-up" [class.filters-visible]="!filtersHidden()" [class.loading]="loading()">
               <ng-container [ngSwitch]="activeTab()">
                 <ng-container *ngSwitchCase="'rooms'">
                   <app-room-result-card 
@@ -673,7 +724,7 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
             </div>
 
             <!-- Premium Empty State -->
-            <div *ngIf="!loading() && results().length === 0" class="text-center py-32">
+            <div *ngIf="!loading() && hasActiveFilters() && results().length === 0" class="text-center py-32">
               <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 mb-6">
                 <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -706,6 +757,8 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       <!-- Filter Drawer (Bottom Sheet) -->
       <app-filter-drawer
         [isOpen]="filterDrawerOpen"
+        [activeTab]="activeTab()"
+        (filtersChanged)="onFiltersChanged($event)"
         (closed)="closeFilterDrawer()">
       </app-filter-drawer>
       
@@ -1641,6 +1694,27 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Catalog Sections */
+    .catalog-sections {
+      width: 100%;
+    }
+
+    .catalog-section {
+      margin-bottom: 48px;
+    }
+
+    .catalog-section:last-child {
+      margin-bottom: 24px;
+    }
+
+    .catalog-section-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0A1A3F;
+      margin-bottom: 20px;
+      padding-left: 4px;
+    }
+
     /* Premium Results Grid - Mobile First */
     .results-grid {
       display: grid;
@@ -1897,14 +1971,112 @@ export class SearchPage implements AfterViewInit {
 
   // Convert filters to signals for reactive updates
   roomsFilters = signal({ price: 5000, priceMin: 0, place: '', type: '', property: '', amenities: [] as string[], studentVerified: false, rating: '' });
-  ridesFilters = signal({ from: '', to: '', date: '', time: '', priceMax: 0, seats: 1, radius: 0, rating: '' });
-  marketFilters = signal({ category: '', maxPrice: 0, condition: '', place: '', seller: '' });
+  ridesFilters = signal({ from: '', to: '', date: '', time: '', priceMax: 0, seats: 1, radius: 0, rating: '', verified: false });
+  marketFilters = signal({ category: '', maxPrice: 0, minPrice: 0, condition: '', place: '', seller: '', categories: [] as string[], verified: false });
   amenities = ['Wi-Fi','Laundry','Parking','Kitchen','AC'];
 
   // Use shared data service instead of local dummy data
   browseRoomItems = this.sharedData.rooms;
   rideResults = this.sharedData.rides;
   marketResults = this.sharedData.marketplace;
+
+  // Check if any filters are applied
+  hasActiveFilters = computed(() => {
+    const tab = this.activeTab();
+    if (tab === 'rooms') {
+      const f = this.roomsFilters();
+      return !!(f.place || f.type || f.property || f.amenities.length > 0 || 
+                f.studentVerified || f.rating || f.price < 5000);
+    }
+    if (tab === 'rides') {
+      const f = this.ridesFilters();
+      return !!(f.from || f.to || f.date || f.time || f.priceMax > 0 || 
+                f.seats > 1 || f.radius > 0 || f.rating || f.verified);
+    }
+    // market
+    const f = this.marketFilters();
+    return !!(f.category || f.maxPrice > 0 || f.minPrice > 0 || f.condition || 
+              f.place || f.seller || f.categories.length > 0 || f.verified);
+  });
+
+  // Curated catalog sections for each tab
+  roomCatalogSections = computed(() => {
+    const allRooms = this.browseRoomItems();
+    return [
+      {
+        title: 'Trending Rooms',
+        items: allRooms.slice(0, 6)
+      },
+      {
+        title: 'Budget-Friendly Rooms',
+        items: allRooms.filter(r => r.priceNum < 800).slice(0, 6)
+      },
+      {
+        title: 'Top Rated Rooms',
+        items: allRooms.filter(r => r.rating >= 4.5).slice(0, 6)
+      },
+      {
+        title: 'Student Picks',
+        items: allRooms.filter(r => r.verified).slice(0, 6)
+      },
+      {
+        title: 'Newly Added Rooms',
+        items: allRooms.slice(-6).reverse()
+      }
+    ];
+  });
+
+  rideCatalogSections = computed(() => {
+    const allRides = this.rideResults();
+    return [
+      {
+        title: 'Trending Rides',
+        items: allRides.slice(0, 6)
+      },
+      {
+        title: 'Airport Rides',
+        items: allRides.filter(r => r.to?.toLowerCase().includes('airport')).slice(0, 6)
+      },
+      {
+        title: 'Long Distance Rides',
+        items: allRides.filter(r => r.priceNum > 50).slice(0, 6)
+      },
+      {
+        title: 'Student Ride Picks',
+        items: allRides.filter(r => r.verified).slice(0, 6)
+      },
+      {
+        title: 'Rides Happening Today',
+        items: allRides.slice(0, 6)
+      }
+    ];
+  });
+
+  marketCatalogSections = computed(() => {
+    const allItems = this.marketResults();
+    return [
+      {
+        title: 'Trending Items',
+        items: allItems.slice(0, 6)
+      },
+      {
+        title: 'Furniture Deals',
+        items: allItems.filter(m => m.category?.toLowerCase().includes('furniture')).slice(0, 6)
+      },
+      {
+        title: 'Electronics',
+        items: allItems.filter(m => m.category?.toLowerCase().includes('electronic')).slice(0, 6)
+      },
+      {
+        title: 'Recently Added Items',
+        items: allItems.slice(-6).reverse()
+      },
+      {
+        title: 'Student Essentials',
+        items: allItems.filter(m => m.priceNum < 100).slice(0, 6)
+      }
+    ];
+  });
 
   ngAfterViewInit() {
     // Store original position of category pills
@@ -2220,12 +2392,16 @@ export class SearchPage implements AfterViewInit {
       priceMax: 0, 
       seats: 1, 
       radius: 0, 
-      rating: '' 
+      rating: '',
+      verified: false
     });
     this.marketFilters.set({ 
       category: '', 
-      maxPrice: 0, 
-      condition: '', 
+      maxPrice: 0,
+      minPrice: 0,
+      condition: '',
+      categories: [],
+      verified: false, 
       place: '', 
       seller: '' 
     });
@@ -2259,6 +2435,41 @@ export class SearchPage implements AfterViewInit {
   
   closeFilterDrawer() {
     this.filterDrawerOpen.set(false);
+  }
+  
+  onFiltersChanged(filters: any) {
+    console.log('Filters applied:', filters);
+    // Apply filters based on active tab
+    const activeTab = this.activeTab();
+    
+    if (activeTab === 'rooms') {
+      // Update rooms filters
+      this.roomsFilters.set({
+        ...this.roomsFilters(),
+        price: filters.priceRange?.max || 5000,
+        type: filters.roomTypes?.length > 0 ? filters.roomTypes[0] : '',
+        amenities: filters.amenities || [],
+        studentVerified: filters.verifiedOnly || false
+      });
+    } else if (activeTab === 'rides') {
+      // Update rides filters
+      this.ridesFilters.set({
+        ...this.ridesFilters(),
+        priceMax: filters.priceRange?.max || 0,
+        seats: filters.seatsAvailable || 1,
+        verified: filters.verifiedOnly || false
+      });
+    } else if (activeTab === 'market') {
+      // Update marketplace filters
+      this.marketFilters.set({
+        ...this.marketFilters(),
+        minPrice: filters.priceRange?.min || 0,
+        maxPrice: filters.priceRange?.max || 0,
+        categories: filters.categories || [],
+        condition: filters.condition || '',
+        verified: filters.verifiedOnly || false
+      });
+    }
   }
   
   // Notifications methods

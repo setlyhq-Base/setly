@@ -276,6 +276,7 @@ import { Subject, takeUntil, debounceTime } from 'rxjs';
       <!-- Filter Drawer -->
       <app-filter-drawer
         [isOpen]="filterDrawerOpen"
+        [activeTab]="'rooms'"
         (closed)="closeFilterDrawer()">
       </app-filter-drawer>
 

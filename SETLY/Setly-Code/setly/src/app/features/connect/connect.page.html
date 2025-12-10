@@ -157,7 +157,7 @@
   <!-- Filter Drawer (Mobile) -->
   <app-filter-drawer
     [isOpen]="filterDrawerOpen"
-    [resultsCount]="filteredPosts().length"
+    [activeTab]="'rooms'"
     (filtersChanged)="onFilterDrawerChange($event)"
     (closed)="filterDrawerOpen.set(false)">
   </app-filter-drawer>

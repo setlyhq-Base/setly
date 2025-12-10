@@ -13,7 +13,11 @@ export class PresenceService {
   ttlMs = computed(() => this._ttlMs());
 
   fetchOnline() {
-    this.http.get<OnlineResponse>('/api/presence/online').subscribe({
+    // Presence feature disabled - backend endpoint not yet implemented
+    // TODO: Re-enable when backend /api/presence/online is ready
+    return;
+    
+    /* this.http.get<OnlineResponse>('/api/presence/online').subscribe({
       next: (res) => {
         this._ttlMs.set(res.ttlMs || 60000);
         this.onlineIds.set(new Set(res.online || []));
@@ -21,6 +25,6 @@ export class PresenceService {
       error: () => {
         // keep stale presence; noop
       }
-    });
+    }); */
   }
 }

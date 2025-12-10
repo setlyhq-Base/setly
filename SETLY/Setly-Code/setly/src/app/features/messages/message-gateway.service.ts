@@ -137,11 +137,15 @@ export class MessageGatewayService {
   }
 
   async markRead(withId: string, market?: string){
-    const body: any = { with: withId };
+    // Message read tracking - backend endpoint not yet available
+    // TODO: Re-enable when backend supports /api/messages/read
+    return;
+    
+    /* const body: any = { with: withId };
     if (market) body.market = market;
     try {
       await this.http.post('/api/messages/read', body).toPromise();
-    } catch {}
+    } catch {} */
   }
 
   async getThreads(): Promise<Array<{ with: string; market?: string; lastText?: string; lastAt?: string; lastFrom?: 'me'|'them'; unread: number }>>{
@@ -191,17 +195,15 @@ export class MessageGatewayService {
   // Presence helpers
   private presenceInterval?: any;
   startPresence(){
-    // Only refresh online list; heartbeat handled centrally by AuthSyncService now
-    const refresh = async () => {
-      try {
-        const res: any = await this.http.get('/api/presence/online').toPromise();
-        const list: string[] = Array.isArray(res?.online) ? res.online : [];
-        this.store.mergeOnline(list);
-        if (res?.map && typeof res.map === 'object') this.store.mergePresenceMap(res.map as Record<string, number>);
-      } catch {}
-    };
-    refresh();
-    if (this.presenceInterval) { try { clearInterval(this.presenceInterval); } catch {} }
-    this.presenceInterval = setInterval(() => { refresh(); }, 30_000);
+    // Presence feature disabled - backend endpoint not implemented
+    // TODO: Re-enable when /api/presence/online is available
+    return;
+  }
+  
+  stopPresence(){
+    if (this.presenceInterval) { 
+      try { clearInterval(this.presenceInterval); } catch {} 
+      this.presenceInterval = undefined;
+    }
   }
 }

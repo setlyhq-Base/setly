@@ -1,4 +1,4 @@
-import { Component, signal, inject, computed } from '@angular/core';
+import { Component, signal, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfileHeaderCardComponent } from './components/profile-header-card.component';
@@ -19,9 +19,14 @@ import { ActivatedRoute } from '@angular/router';
 import { InViewDirective } from '../../shared/directives/in-view.directive';
 import { CountUpDirective } from '../../shared/directives/count-up.directive';
 import { ToastService } from '../../core/services/toast.service';
+import { RoomsApiService } from '../../core/services/rooms-api.service';
+import { RidesApiService } from '../../core/services/rides-api.service';
+import { MarketplaceApiService } from '../../core/services/marketplace-api.service';
+import { UsersApiService } from '../../core/services/users-api.service';
+import { Router } from '@angular/router';
 
 // Profile section types
-export type ProfileSection = 'overview' | 'my-rooms' | 'past-rides' | 'marketplace' | 'connections' | 'verification' | 'preferences' | 'settings' | 'data';
+export type ProfileSection = 'overview' | 'my-rooms' | 'past-rides' | 'marketplace' | 'saved' | 'connections' | 'verification' | 'preferences' | 'settings' | 'data';
 
 @Component({
   selector: 'app-profile-v2',
@@ -200,6 +205,85 @@ export type ProfileSection = 'overview' | 'my-rooms' | 'past-rides' | 'marketpla
           <!-- Section: Marketplace -->
           <div *ngIf="section() === 'marketplace'" class="section-content">
             <app-my-listings [items]="marketplaceListings()"></app-my-listings>
+          </div>
+
+          <!-- Section: Saved Items -->
+          <div *ngIf="section() === 'saved'" class="section-content">
+            <div class="profile-card">
+              <h3 class="section-title mb-6">
+                <span class="section-title-icon">❤️</span>
+                Saved Items
+              </h3>
+              
+              <div *ngIf="loadingSaved()" class="text-center py-8">
+                <div class="loading-spinner"></div>
+                <p class="text-gray-600 mt-2">Loading saved items...</p>
+              </div>
+              
+              <div *ngIf="!loadingSaved()" class="space-y-8">
+                <!-- Saved Rooms -->
+                <div *ngIf="_savedItems().rooms.length > 0">
+                  <h4 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    🏠 Saved Rooms <span class="text-sm text-gray-500">({{ _savedItems().rooms.length }})</span>
+                  </h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div *ngFor="let roomId of _savedItems().rooms" 
+                         class="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                         (click)="router.navigate(['/listing', roomId])">
+                      <p class="text-sm text-gray-600">Room ID: {{ roomId }}</p>
+                      <button class="text-red-500 text-sm mt-2 hover:underline" 
+                              (click)="unsaveRoom(roomId); $event.stopPropagation()">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Saved Rides -->
+                <div *ngIf="_savedItems().rides.length > 0">
+                  <h4 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    🚗 Saved Rides <span class="text-sm text-gray-500">({{ _savedItems().rides.length }})</span>
+                  </h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div *ngFor="let rideId of _savedItems().rides" 
+                         class="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                         (click)="router.navigate(['/listing', rideId])">
+                      <p class="text-sm text-gray-600">Ride ID: {{ rideId }}</p>
+                      <button class="text-red-500 text-sm mt-2 hover:underline" 
+                              (click)="unsaveRide(rideId); $event.stopPropagation()">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Saved Marketplace -->
+                <div *ngIf="_savedItems().marketplace.length > 0">
+                  <h4 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    🛍️ Saved Marketplace <span class="text-sm text-gray-500">({{ _savedItems().marketplace.length }})</span>
+                  </h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div *ngFor="let itemId of _savedItems().marketplace" 
+                         class="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                         (click)="router.navigate(['/listing', itemId])">
+                      <p class="text-sm text-gray-600">Item ID: {{ itemId }}</p>
+                      <button class="text-red-500 text-sm mt-2 hover:underline" 
+                              (click)="unsaveMarketplace(itemId); $event.stopPropagation()">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div *ngIf="_savedItems().rooms.length === 0 && _savedItems().rides.length === 0 && _savedItems().marketplace.length === 0" 
+                     class="text-center py-12">
+                  <div class="text-6xl mb-4">❤️</div>
+                  <h4 class="text-xl font-semibold text-gray-700 mb-2">No saved items yet</h4>
+                  <p class="text-gray-600">Save rooms, rides, and marketplace items to see them here</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Section: Connections (dedicated) -->
@@ -1012,15 +1096,30 @@ export type ProfileSection = 'overview' | 'my-rooms' | 'past-rides' | 'marketpla
     }
   `]
 })
-export class ProfileV2Page {
+export class ProfileV2Page implements OnInit {
   section = signal<ProfileSection>('overview');
   private editDirty = false;
   private userStore = inject(UserStore);
   private profileStore = inject(ProfileStore);
   private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
+  private roomsApi = inject(RoomsApiService);
+  private ridesApi = inject(RidesApiService);
+  private marketplaceApi = inject(MarketplaceApiService);
+  private usersApi = inject(UsersApiService);
+  private router = inject(Router);
 
   showEdit = signal(false);
+  
+  // API-loaded data signals
+  private _myRooms = signal<any[]>([]);
+  private _myRides = signal<any[]>([]);
+  private _myMarketplace = signal<any[]>([]);
+  private _savedItems = signal<{rooms: string[], rides: string[], marketplace: string[]}>({rooms: [], rides: [], marketplace: []});
+  loadingRooms = signal(false);
+  loadingRides = signal(false);
+  loadingMarketplace = signal(false);
+  loadingSaved = signal(false);
 
   // Derived profile from authenticated user; falls back to realistic dummy data
   user = computed<UserProfile>(() => {
@@ -1342,8 +1441,9 @@ export class ProfileV2Page {
   navSections: { id: ProfileSection; label: string; icon: string }[] = [
     { id: 'overview', label: 'Overview', icon: '👤' },
     { id: 'my-rooms', label: 'My Rooms', icon: '🏠' },
-    { id: 'past-rides', label: 'Past Rides', icon: '🚗' },
-    { id: 'marketplace', label: 'Marketplace', icon: '🛍️' },
+    { id: 'past-rides', label: 'My Rides', icon: '🚗' },
+    { id: 'marketplace', label: 'My Marketplace', icon: '🛍️' },
+    { id: 'saved', label: 'Saved', icon: '❤️' },
     { id: 'connections', label: 'Connections', icon: '🌍' },
     { id: 'verification', label: 'Verification', icon: '✅' },
     { id: 'preferences', label: 'Preferences', icon: '🛠️' },
@@ -1351,12 +1451,13 @@ export class ProfileV2Page {
     { id: 'data', label: 'Your Data', icon: '📦' }
   ];
 
-  metrics = [
-    { label: 'Rooms', value: this.listings.filter(l=>l.type==='room').length },
-    { label: 'Rides', value: this.listings.filter(l=>l.type==='ride').length },
-    { label: 'Marketplace', value: this.listings.filter(l=>l.type==='marketplace').length },
+  // Computed metrics using API data
+  metrics = computed(() => [
+    { label: 'Rooms', value: this._myRooms().length || this.listings.filter(l=>l.type==='room').length },
+    { label: 'Rides', value: this._myRides().length || this.listings.filter(l=>l.type==='ride').length },
+    { label: 'Marketplace', value: this._myMarketplace().length || this.listings.filter(l=>l.type==='marketplace').length },
     { label: 'Connections', value: this.connections.length },
-  ];
+  ]);
 
   activityFeed: { id: string; text: string; at: string; icon: string }[] = [];
   shareCooldown = false;
@@ -1435,6 +1536,74 @@ export class ProfileV2Page {
     // initialize public view from route if needed
     const seg = this.route.snapshot.url[0]?.path;
     if (seg === 'u') this._publicView.set(true);
+    
+    // Load user's listings and saved items from backend
+    this.loadUserListings();
+    this.loadSavedItems();
+  }
+  
+  /**
+   * Load all user listings from backend APIs
+   */
+  private loadUserListings() {
+    const userId = this.user().id;
+    
+    // Load rooms
+    this.loadingRooms.set(true);
+    this.roomsApi.getRoomsByUser(userId).subscribe({
+      next: (rooms) => {
+        this._myRooms.set(rooms);
+        this.loadingRooms.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load rooms:', err);
+        this.loadingRooms.set(false);
+        // Keep mock data for now if backend fails
+      }
+    });
+    
+    // Load rides
+    this.loadingRides.set(true);
+    this.ridesApi.getRidesByUser(userId).subscribe({
+      next: (rides) => {
+        this._myRides.set(rides);
+        this.loadingRides.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load rides:', err);
+        this.loadingRides.set(false);
+      }
+    });
+    
+    // Load marketplace items
+    this.loadingMarketplace.set(true);
+    this.marketplaceApi.getItemsByUser(userId).subscribe({
+      next: (items) => {
+        this._myMarketplace.set(items);
+        this.loadingMarketplace.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load marketplace items:', err);
+        this.loadingMarketplace.set(false);
+      }
+    });
+  }
+  
+  /**
+   * Load saved items from backend
+   */
+  private loadSavedItems() {
+    this.loadingSaved.set(true);
+    this.usersApi.getSavedItems().subscribe({
+      next: (saved) => {
+        this._savedItems.set(saved);
+        this.loadingSaved.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load saved items:', err);
+        this.loadingSaved.set(false);
+      }
+    });
   }
 
   onVerify(key: keyof VerificationState) {
@@ -1514,10 +1683,66 @@ export class ProfileV2Page {
     }, 300);
   }
 
-  // ----- Listing filter methods -----
-  roomListings = () => this.listings.filter(l => l.type === 'room');
-  rideListings = () => this.listings.filter(l => l.type === 'ride');
-  marketplaceListings = () => this.listings.filter(l => l.type === 'marketplace');
+  // ----- Listing filter methods (convert API data to ListingCardItem format) -----
+  roomListings = (): ListingCardItem[] => {
+    const apiRooms = this._myRooms();
+    if (apiRooms.length > 0) {
+      return apiRooms.map(room => ({
+        id: room.id || room.roomId,
+        type: 'room' as const,
+        title: room.title,
+        city: room.city,
+        state: room.state,
+        price: room.price,
+        coverImage: room.images?.[0] || room.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop',
+        description: room.description || room.notes,
+        postedDate: room.createdAt
+      }));
+    }
+    // Fallback to mock data
+    return this.listings.filter(l => l.type === 'room');
+  };
+  
+  rideListings = (): ListingCardItem[] => {
+    const apiRides = this._myRides();
+    if (apiRides.length > 0) {
+      return apiRides.map(ride => ({
+        id: ride.id || ride.rideId,
+        type: 'ride' as const,
+        title: `${ride.pickupAddress} → ${ride.dropoffAddress}`,
+        city: ride.pickupAddress?.split(',')[0] || 'Unknown',
+        state: '',
+        destination: ride.dropoffAddress,
+        price: ride.pricePerSeat || 0,
+        seatsAvailable: ride.seatsAvailable,
+        coverImage: ride.images?.[0] || 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&h=600&fit=crop',
+        description: ride.notes,
+        rideDate: ride.rideDate
+      }));
+    }
+    // Fallback to mock data
+    return this.listings.filter(l => l.type === 'ride');
+  };
+  
+  marketplaceListings = (): ListingCardItem[] => {
+    const apiItems = this._myMarketplace();
+    if (apiItems.length > 0) {
+      return apiItems.map(item => ({
+        id: item.id || item.itemId,
+        type: 'marketplace' as const,
+        title: item.title,
+        city: item.location,
+        state: '',
+        price: item.price,
+        coverImage: item.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=600&fit=crop',
+        description: item.description,
+        condition: item.condition,
+        category: item.category
+      }));
+    }
+    // Fallback to mock data
+    return this.listings.filter(l => l.type === 'marketplace');
+  };
 
   // ----- Data section helpers -----
   profileJson(): string {
@@ -1547,5 +1772,65 @@ export class ProfileV2Page {
     } catch {
       this.toast.error('Copy failed');
     }
+  }
+  
+  /**
+   * Unsave a room
+   */
+  unsaveRoom(roomId: string) {
+    this.usersApi.unsaveRoom(roomId).subscribe({
+      next: () => {
+        const current = this._savedItems();
+        this._savedItems.set({
+          ...current,
+          rooms: current.rooms.filter(id => id !== roomId)
+        });
+        this.toast.success('Room removed from saved items');
+      },
+      error: (err) => {
+        console.error('Failed to unsave room:', err);
+        this.toast.error('Failed to remove room');
+      }
+    });
+  }
+  
+  /**
+   * Unsave a ride
+   */
+  unsaveRide(rideId: string) {
+    this.usersApi.unsaveRide(rideId).subscribe({
+      next: () => {
+        const current = this._savedItems();
+        this._savedItems.set({
+          ...current,
+          rides: current.rides.filter(id => id !== rideId)
+        });
+        this.toast.success('Ride removed from saved items');
+      },
+      error: (err) => {
+        console.error('Failed to unsave ride:', err);
+        this.toast.error('Failed to remove ride');
+      }
+    });
+  }
+  
+  /**
+   * Unsave a marketplace item
+   */
+  unsaveMarketplace(itemId: string) {
+    this.usersApi.unsaveMarketplaceItem(itemId).subscribe({
+      next: () => {
+        const current = this._savedItems();
+        this._savedItems.set({
+          ...current,
+          marketplace: current.marketplace.filter(id => id !== itemId)
+        });
+        this.toast.success('Item removed from saved items');
+      },
+      error: (err) => {
+        console.error('Failed to unsave item:', err);
+        this.toast.error('Failed to remove item');
+      }
+    });
   }
 }

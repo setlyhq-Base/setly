@@ -1,7 +1,7 @@
 import { Component, signal, computed, HostListener, inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FilterPanelComponent } from './components/filter-panel.component';
 import { RoomResultCardComponent } from './components/room-result-card.component';
 import { RideResultCardComponent } from './components/ride-result-card.component';
@@ -1828,6 +1828,7 @@ export class SearchPage implements AfterViewInit {
   private roomStore = inject(RoomStore);
   private activeTabService = inject(ActiveTabService);
   private sharedData = inject(SharedDataService);
+  private router = inject(Router);
   
   // ViewChild references for category pills
   @ViewChild('categoryPills') categoryPillsElement!: ElementRef<HTMLDivElement>;
@@ -2281,15 +2282,17 @@ export class SearchPage implements AfterViewInit {
   // Room card click handler
   onRoomCardClick(room: any) {
     this.selectedCardId.set(room.id);
-    // TODO: Implement room detail modal similar to ride modal
     console.log('Room card clicked:', room);
+    // Navigate to room detail page
+    this.router.navigate(['/listing', room.id]);
   }
   
   // Market card click handler
   onMarketCardClick(item: any) {
     this.selectedCardId.set(item.id);
-    // TODO: Implement market detail modal
     console.log('Market card clicked:', item);
+    // Navigate to marketplace item detail page
+    this.router.navigate(['/listing', item.id]);
   }
 
   // Bottom Sheet Methods

@@ -1,0 +1,49 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd SETLY/Setly-Code/setly
+        - npm ci --legacy-peer-deps
+    build:
+      commands:
+        - npm run build -- --configuration=$AMPLIFY_ENV
+  artifacts:
+    baseDirectory: SETLY/Setly-Code/setly/dist/setly/browser
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - SETLY/Setly-Code/setly/node_modules/**/*
+
+# Redirects and rewrites
+# IMPORTANT: Add your API Gateway URL here after deployment
+customHeaders:
+  - pattern: '**/*'
+    headers:
+      - key: 'Strict-Transport-Security'
+        value: 'max-age=31536000; includeSubDomains'
+      - key: 'X-Content-Type-Options'
+        value: 'nosniff'
+      - key: 'X-Frame-Options'
+        value: 'DENY'
+      - key: 'X-XSS-Protection'
+        value: '1; mode=block'
+      - key: 'Referrer-Policy'
+        value: 'strict-origin-when-cross-origin'
+  - pattern: '**/*.js'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=31536000, immutable'
+  - pattern: '**/*.css'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=31536000, immutable'
+  - pattern: '**/*.{jpg,jpeg,png,gif,svg,webp}'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=31536000, immutable'
+  - pattern: 'index.html'
+    headers:
+      - key: 'Cache-Control'
+        value: 'no-cache, no-store, must-revalidate'

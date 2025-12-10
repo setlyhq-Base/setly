@@ -4,7 +4,7 @@ import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { environment } from '../environments/environment';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, ErrorHandler } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 import { importProvidersFrom } from '@angular/core';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -14,6 +14,7 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ApiBaseUrlInterceptor } from './core/interceptors/api-base-url.interceptor';
 import { AuthTokenInterceptor } from './core/interceptors/auth-token.interceptor';
 import { PermissionErrorInterceptor } from './core/interceptors/permission-error.interceptor';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
 
 class GlobalErrorHandler implements ErrorHandler {
   handleError(error: any): void {
@@ -27,7 +28,10 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideAnimationsAsync(),
     importProvidersFrom(OverlayModule),
-  provideHttpClient(withInterceptorsFromDi()),
+    provideHttpClient(
+      withInterceptorsFromDi(),
+      withInterceptors([errorInterceptor])
+    ),
     provideRouter(routes),
     // Only initialize Firebase when config exists to avoid runtime errors in demo mode
     ...(environment?.firebase?.apiKey

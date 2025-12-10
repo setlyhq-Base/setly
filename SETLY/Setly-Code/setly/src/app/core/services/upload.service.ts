@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { BackendApiService } from './backend-api.service';
 
 export interface UploadResponse {
   url: string;
@@ -21,6 +22,7 @@ export interface UploadProgress {
 })
 export class UploadService {
   private http = inject(HttpClient);
+  private backendApi = inject(BackendApiService);
   private apiUrl = environment.apiUrl;
 
   /**
@@ -160,15 +162,15 @@ export class UploadService {
       xhr.send(formData);
     });
   }
-
   /**
-   * Uploads an image for a listing
+   * Uploads an image for a listing using backend API
    */
   async uploadListingImage(
     file: File,
-    listingId: string,
+    entityType: 'rooms' | 'rides' | 'marketplace' | 'users',
+    entityId: string,
     onProgress?: (progress: UploadProgress) => void
-  ): Promise<{ key: string; contentType: string; width: number; height: number; bytes: number }> {
+  ): Promise<{ cloudFrontUrl: string; contentType: string; width: number; height: number; bytes: number }> {
     try {
       // Validate and optimize image
       const optimizedFile = await this.validateAndOptimizeImage(file);
@@ -176,15 +178,12 @@ export class UploadService {
       // Get image dimensions
       const dimensions = await this.getImageDimensions(optimizedFile);
 
-      // Get presigned POST URL
-      const uploadData = await this.requestSignature(optimizedFile, listingId);
-
-      // Upload to S3
-      await this.uploadToS3(optimizedFile, uploadData, onProgress);
+      // Upload using backend API (presigned URL flow)
+      const cloudFrontUrl = await this.backendApi.uploadImage(entityType, entityId, optimizedFile);
 
       // Return metadata for storage
       return {
-        key: uploadData.key,
+        cloudFrontUrl,
         contentType: optimizedFile.type,
         width: dimensions.width,
         height: dimensions.height,
@@ -195,6 +194,37 @@ export class UploadService {
         throw error;
       }
       throw new Error('Upload failed');
+    }
+  }
+
+  /**
+   * Upload multiple images in parallel
+   */
+  async uploadMultipleImages(
+    files: File[],
+    entityType: 'rooms' | 'rides' | 'marketplace' | 'users',
+    entityId: string,
+    onProgress?: (index: number, progress: UploadProgress) => void
+  ): Promise<string[]> {
+    try {
+      // Validate and optimize all files first
+      const optimizedFiles = await Promise.all(
+        files.map(file => this.validateAndOptimizeImage(file))
+      );
+
+      // Upload all images in parallel using backend API
+      const cloudFrontUrls = await this.backendApi.uploadMultipleImages(
+        entityType,
+        entityId,
+        optimizedFiles
+      );
+
+      return cloudFrontUrls;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Batch upload failed');
     }
   }
 }

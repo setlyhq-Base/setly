@@ -21,11 +21,16 @@ app.use(helmet());
 app.use(cors({
   origin: [
     'https://setly.in',
+    'https://www.setly.in',
     'https://stage.setly.in',
     'https://dev.setly.in',
-    'http://localhost:4200'
+    'http://localhost:4200',
+    /\.amplifyapp\.com$/
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Request-Id']
 }));
 
 app.use(express.json({ limit: '10mb' }));

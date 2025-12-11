@@ -93,10 +93,17 @@ class DatabaseService {
     dropoffCity?: string;
     rideDate?: Date;
     userId?: string;
+    tag?: string; // Filter by tag: nearby, today, shared, airport, top-rated
+    includeFallback?: boolean; // Whether to include fallback data
   }) {
     await connectToDatabase();
 
     const query: any = { status: 'active' };
+
+    // If tag filter is provided, prioritize tag-based search
+    if (filters.tag) {
+      query.tags = filters.tag;
+    }
 
     if (filters.pickupCity) {
       query.pickupAddress = new RegExp(filters.pickupCity, 'i');
@@ -118,8 +125,44 @@ class DatabaseService {
       query.userId = filters.userId;
     }
 
-    const rides = await Ride.find(query).sort({ rideDate: 1 }).limit(100).lean();
-    return rides.map((r: any) => ({ ...r, id: r.rideId, _id: undefined, __v: undefined }));
+    // Fetch real user rides
+    const realRides = await Ride.find({ ...query, isFallback: { $ne: true } })
+      .sort({ rideDate: 1, createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    let rides = [...realRides];
+
+    // If we have few real rides AND fallback is allowed, blend in fallback data
+    const shouldIncludeFallback = filters.includeFallback !== false; // Default to true
+    if (shouldIncludeFallback && realRides.length < 10) {
+      const fallbackQuery = { ...query, isFallback: true };
+      const fallbackLimit = Math.max(10 - realRides.length, 20); // Get at least 20 fallback rides
+      
+      const fallbackRides = await Ride.find(fallbackQuery)
+        .sort({ rideDate: 1, createdAt: -1 })
+        .limit(fallbackLimit)
+        .lean();
+
+      // Blend real and fallback rides, keeping real rides first
+      rides = [...realRides, ...fallbackRides];
+    }
+
+    // Limit total results to 100
+    rides = rides.slice(0, 100);
+
+    return rides.map((r: any) => ({ 
+      ...r, 
+      id: r.rideId, 
+      _id: undefined, 
+      __v: undefined,
+      // Map fields to frontend expectations
+      from: r.pickupAddress,
+      to: r.dropoffAddress,
+      postType: r.type,
+      driver: r.type === 'driver' ? r.user : undefined,
+      author: r.type === 'seeker' ? r.user : undefined,
+    }));
   }
 
   async getRideById(rideId: string) {

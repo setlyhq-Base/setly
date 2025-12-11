@@ -12,7 +12,8 @@
     "deploy:stage": "npm run build && serverless deploy --stage stage",
     "deploy:prod": "npm run build && serverless deploy --stage prod",
     "local": "serverless offline start",
-    "test": "jest"
+    "test": "jest",
+    "seed:fallback-rides": "npx tsx src/scripts/seed-fallback-rides.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.511.0",

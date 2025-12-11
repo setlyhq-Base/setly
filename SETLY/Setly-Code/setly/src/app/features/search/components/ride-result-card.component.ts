@@ -314,7 +314,7 @@ import { CommonModule } from '@angular/common';
       background: var(--color-white);
       border: 2px solid var(--color-border);
       border-radius: var(--radius-lg);
-      padding: var(--spacing-lg);
+      padding: 12px 14px;
       margin-bottom: var(--spacing-md);
       box-shadow: var(--shadow-card);
       cursor: pointer;

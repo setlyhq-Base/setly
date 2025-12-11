@@ -621,52 +621,67 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
               </div>
             </div>
 
-            <!-- Default Catalog Sections (when no filters applied) -->
-            <div *ngIf="!loading() && !hasActiveFilters()" class="catalog-sections">
+            <!-- Netflix-Style Catalog Sections (when no filters applied) -->
+            <div *ngIf="!loading() && !hasActiveFilters()" class="netflix-catalog">
               <!-- Rooms Catalog -->
               <div *ngIf="activeTab() === 'rooms'">
-                <div *ngFor="let section of roomCatalogSections()" class="catalog-section">
-                  <h3 class="catalog-section-title">{{ section.title }}</h3>
-                  <div class="results-grid animate-fade-in-up">
-                    <app-room-result-card 
-                      *ngFor="let item of section.items; trackBy: trackById" 
-                      [item]="item"
-                      [isSelected]="selectedCardId() === item.id"
-                      (cardClick)="onRoomCardClick(item)"
-                      class="animate-scale-in">
-                    </app-room-result-card>
+                <div *ngFor="let section of roomCatalogSections()" class="catalog-row">
+                  <div class="catalog-row-header">
+                    <h3 class="catalog-row-title">{{ section.title }}</h3>
+                    <button class="see-all-btn">See all →</button>
+                  </div>
+                  <div class="catalog-horizontal-scroll">
+                    <div class="catalog-cards-container">
+                      <app-room-result-card 
+                        *ngFor="let item of section.items; trackBy: trackById" 
+                        [item]="item"
+                        [isSelected]="selectedCardId() === item.id"
+                        (cardClick)="onRoomCardClick(item)"
+                        class="catalog-card">
+                      </app-room-result-card>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <!-- Rides Catalog -->
               <div *ngIf="activeTab() === 'rides'">
-                <div *ngFor="let section of rideCatalogSections()" class="catalog-section">
-                  <h3 class="catalog-section-title">{{ section.title }}</h3>
-                  <div class="results-grid animate-fade-in-up">
-                    <app-ride-result-card 
-                      *ngFor="let item of section.items; trackBy: trackById" 
-                      [item]="item"
-                      [isSelected]="selectedCardId() === item.id"
-                      (cardClick)="openRideModal(item)"
-                      class="animate-scale-in">
-                    </app-ride-result-card>
+                <div *ngFor="let section of rideCatalogSections()" class="catalog-row">
+                  <div class="catalog-row-header">
+                    <h3 class="catalog-row-title">{{ section.title }}</h3>
+                    <button class="see-all-btn">See all →</button>
+                  </div>
+                  <div class="catalog-horizontal-scroll">
+                    <div class="catalog-cards-container">
+                      <app-ride-result-card 
+                        *ngFor="let item of section.items; trackBy: trackById" 
+                        [item]="item"
+                        [isSelected]="selectedCardId() === item.id"
+                        (cardClick)="openRideModal(item)"
+                        class="catalog-card">
+                      </app-ride-result-card>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <!-- Market Catalog -->
               <div *ngIf="activeTab() === 'market'">
-                <div *ngFor="let section of marketCatalogSections()" class="catalog-section">
-                  <h3 class="catalog-section-title">{{ section.title }}</h3>
-                  <div class="results-grid animate-fade-in-up">
-                    <app-market-result-card 
-                      *ngFor="let item of section.items; trackBy: trackById" 
-                      [item]="item"
-                      [isSelected]="selectedCardId() === item.id"
-                      (cardClick)="onMarketCardClick(item)"
-                      class="animate-scale-in">
-                    </app-market-result-card>
+                <div *ngFor="let section of marketCatalogSections()" class="catalog-row">
+                  <div class="catalog-row-header">
+                    <h3 class="catalog-row-title">{{ section.title }}</h3>
+                    <button class="see-all-btn">See all →</button>
+                  </div>
+                  <div class="catalog-horizontal-scroll">
+                    <div class="catalog-cards-container">
+                      <app-market-result-card 
+                        *ngFor="let item of section.items; trackBy: trackById" 
+                        [item]="item"
+                        [isSelected]="selectedCardId() === item.id"
+                        (cardClick)="onMarketCardClick(item)"
+                        class="catalog-card">
+                      </app-market-result-card>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1694,25 +1709,126 @@ import { GlobalSearchOverlayComponent } from '../../shared/components/global-sea
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Catalog Sections */
-    .catalog-sections {
+    /* Netflix-Style Catalog */
+    .netflix-catalog {
       width: 100%;
+      padding: 0;
     }
 
-    .catalog-section {
-      margin-bottom: 48px;
+    .catalog-row {
+      margin-bottom: 40px;
     }
 
-    .catalog-section:last-child {
-      margin-bottom: 24px;
+    .catalog-row:last-child {
+      margin-bottom: 20px;
     }
 
-    .catalog-section-title {
-      font-size: 24px;
+    .catalog-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .catalog-row-title {
+      font-size: 20px;
       font-weight: 700;
       color: #0A1A3F;
-      margin-bottom: 20px;
-      padding-left: 4px;
+      margin: 0;
+    }
+
+    .see-all-btn {
+      font-size: 14px;
+      font-weight: 600;
+      color: #6366F1;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .see-all-btn:hover {
+      background: #F5F3FF;
+      transform: translateX(4px);
+    }
+
+    .catalog-horizontal-scroll {
+      position: relative;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      margin: 0 -4px;
+      padding: 0 4px;
+    }
+
+    .catalog-horizontal-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .catalog-cards-container {
+      display: flex;
+      gap: 16px;
+      padding-bottom: 8px;
+    }
+
+    /* Compact Catalog Card */
+    .catalog-card {
+      flex: 0 0 auto;
+      width: 280px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .catalog-card:hover {
+      transform: scale(1.03);
+    }
+
+    @media (min-width: 640px) {
+      .catalog-card {
+        width: 300px;
+      }
+
+      .catalog-row-title {
+        font-size: 22px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .catalog-card {
+        width: 320px;
+      }
+
+      .catalog-cards-container {
+        gap: 20px;
+      }
+
+      .catalog-row {
+        margin-bottom: 48px;
+      }
+
+      .catalog-row-title {
+        font-size: 24px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .catalog-card {
+        width: 340px;
+      }
+    }
+
+    @media (min-width: 1280px) {
+      .catalog-card {
+        width: 360px;
+      }
+
+      .catalog-cards-container {
+        gap: 24px;
+      }
     }
 
     /* Premium Results Grid - Mobile First */
@@ -2004,24 +2120,32 @@ export class SearchPage implements AfterViewInit {
     const allRooms = this.browseRoomItems();
     return [
       {
-        title: 'Trending Rooms',
-        items: allRooms.slice(0, 6)
+        title: '🔥 Trending Rooms',
+        items: allRooms.slice(0, 10)
       },
       {
-        title: 'Budget-Friendly Rooms',
-        items: allRooms.filter(r => r.priceNum < 800).slice(0, 6)
+        title: '💰 Budget-Friendly Rooms',
+        items: allRooms.filter(r => r.priceNum < 800).slice(0, 10)
       },
       {
-        title: 'Top Rated Rooms',
-        items: allRooms.filter(r => r.rating >= 4.5).slice(0, 6)
+        title: '⭐ Top Rated Rooms',
+        items: allRooms.filter(r => r.rating >= 4.5).slice(0, 10)
       },
       {
-        title: 'Student Picks',
-        items: allRooms.filter(r => r.verified).slice(0, 6)
+        title: '🎓 Student Picks',
+        items: allRooms.filter(r => r.verified).slice(0, 10)
       },
       {
-        title: 'Newly Added Rooms',
-        items: allRooms.slice(-6).reverse()
+        title: '✨ Newly Added Rooms',
+        items: allRooms.slice(-10).reverse()
+      },
+      {
+        title: '🏠 Premium Apartments',
+        items: allRooms.filter(r => r.propertyType === 'Apartment').slice(0, 10)
+      },
+      {
+        title: '📍 Popular Near You',
+        items: allRooms.slice(5, 15)
       }
     ];
   });
@@ -2030,24 +2154,32 @@ export class SearchPage implements AfterViewInit {
     const allRides = this.rideResults();
     return [
       {
-        title: 'Trending Rides',
-        items: allRides.slice(0, 6)
+        title: '🔥 Trending Rides',
+        items: allRides.slice(0, 10)
       },
       {
-        title: 'Airport Rides',
-        items: allRides.filter(r => r.to?.toLowerCase().includes('airport')).slice(0, 6)
+        title: '✈️ Airport Rides',
+        items: allRides.filter(r => r.to?.toLowerCase().includes('airport')).slice(0, 10)
       },
       {
-        title: 'Long Distance Rides',
-        items: allRides.filter(r => r.priceNum > 50).slice(0, 6)
+        title: '🛣️ Long Distance Rides',
+        items: allRides.filter(r => r.priceNum > 50).slice(0, 10)
       },
       {
-        title: 'Student Ride Picks',
-        items: allRides.filter(r => r.verified).slice(0, 6)
+        title: '🎓 Student Ride Picks',
+        items: allRides.filter(r => r.verified).slice(0, 10)
       },
       {
-        title: 'Rides Happening Today',
-        items: allRides.slice(0, 6)
+        title: '📅 Rides Happening Today',
+        items: allRides.slice(0, 10)
+      },
+      {
+        title: '💺 Shared Rides',
+        items: allRides.filter(r => r.seatsAvailable > 1).slice(0, 10)
+      },
+      {
+        title: '⭐ Top Rated Drivers',
+        items: allRides.filter(r => r.rating >= 4.5).slice(0, 10)
       }
     ];
   });
@@ -2056,24 +2188,32 @@ export class SearchPage implements AfterViewInit {
     const allItems = this.marketResults();
     return [
       {
-        title: 'Trending Items',
-        items: allItems.slice(0, 6)
+        title: '🔥 Trending Items',
+        items: allItems.slice(0, 10)
       },
       {
-        title: 'Furniture Deals',
-        items: allItems.filter(m => m.category?.toLowerCase().includes('furniture')).slice(0, 6)
+        title: '🛋️ Furniture Deals',
+        items: allItems.filter(m => m.category?.toLowerCase().includes('furniture')).slice(0, 10)
       },
       {
-        title: 'Electronics',
-        items: allItems.filter(m => m.category?.toLowerCase().includes('electronic')).slice(0, 6)
+        title: '💻 Electronics',
+        items: allItems.filter(m => m.category?.toLowerCase().includes('electronic')).slice(0, 10)
       },
       {
-        title: 'Recently Added Items',
-        items: allItems.slice(-6).reverse()
+        title: '✨ Recently Added Items',
+        items: allItems.slice(-10).reverse()
       },
       {
-        title: 'Student Essentials',
-        items: allItems.filter(m => m.priceNum < 100).slice(0, 6)
+        title: '🎓 Student Essentials',
+        items: allItems.filter(m => m.priceNum < 100).slice(0, 10)
+      },
+      {
+        title: '📚 Books & Study Materials',
+        items: allItems.filter(m => m.category?.toLowerCase().includes('book')).slice(0, 10)
+      },
+      {
+        title: '💰 Best Deals Under $50',
+        items: allItems.filter(m => m.priceNum < 50).slice(0, 10)
       }
     ];
   });

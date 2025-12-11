@@ -98,7 +98,7 @@ import { CommonModule } from '@angular/common';
     .image-container {
       position: relative;
       width: 100%;
-      padding-top: 66.67%; /* 3:2 aspect ratio */
+      padding-top: 56.25%; /* 16:9 aspect ratio - more compact */
       overflow: hidden;
       background: #F7F8FA;
     }
@@ -120,16 +120,16 @@ import { CommonModule } from '@angular/common';
     /* Top Tag (Condition) */
     .top-tag {
       position: absolute;
-      top: 12px;
-      left: 12px;
+      top: 10px;
+      left: 10px;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 6px 12px;
+      gap: 3px;
+      padding: 5px 10px;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(8px);
       border-radius: 8px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
       color: var(--text-primary);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -139,13 +139,13 @@ import { CommonModule } from '@angular/common';
     /* Price Badge */
     .price-badge {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      padding: 8px 14px;
+      top: 10px;
+      right: 10px;
+      padding: 6px 11px;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(8px);
-      border-radius: 12px;
-      font-size: 14px;
+      border-radius: 10px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--text-primary);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -198,14 +198,14 @@ import { CommonModule } from '@angular/common';
     
     /* Card Content */
     .card-content {
-      padding: 14px 16px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
     
     .card-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--text-primary);
       line-height: 1.3;
@@ -213,7 +213,7 @@ import { CommonModule } from '@angular/common';
       overflow: hidden;
       text-overflow: ellipsis;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
     }
     
@@ -221,7 +221,7 @@ import { CommonModule } from '@angular/common';
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-secondary);
       margin: 0;
     }

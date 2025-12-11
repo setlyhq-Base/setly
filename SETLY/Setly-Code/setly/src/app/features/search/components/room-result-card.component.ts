@@ -187,7 +187,7 @@ import { CommonModule } from '@angular/common';
 
     .image-wrapper {
       position: relative;
-      padding-top: 66.67%; /* 3:2 aspect ratio */
+      padding-top: 56.25%; /* 16:9 aspect ratio - more compact */
       overflow: hidden;
     }
 
@@ -223,16 +223,16 @@ import { CommonModule } from '@angular/common';
     /* ========== PREMIUM VERIFIED BADGE ========== */
     .verified-badge {
       position: absolute;
-      top: 14px;
-      left: 14px;
+      top: 10px;
+      left: 10px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
+      gap: 4px;
+      padding: 6px 10px;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
       backdrop-filter: blur(12px);
       border-radius: 999px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       color: var(--success-green);
       box-shadow: 
@@ -260,15 +260,15 @@ import { CommonModule } from '@angular/common';
     /* ========== PREMIUM PRICE BADGE ========== */
     .price-badge {
       position: absolute;
-      top: 14px;
-      right: 14px;
+      top: 10px;
+      right: 10px;
       display: flex;
       align-items: baseline;
-      gap: 3px;
-      padding: 10px 16px;
+      gap: 2px;
+      padding: 7px 12px;
       background: linear-gradient(135deg, rgba(10, 26, 63, 0.95) 0%, rgba(10, 26, 63, 0.9) 100%);
       backdrop-filter: blur(12px);
-      border-radius: 14px;
+      border-radius: 12px;
       box-shadow: 
         0 4px 20px rgba(0, 0, 0, 0.25),
         0 0 0 1px rgba(255, 255, 255, 0.1) inset;
@@ -285,14 +285,14 @@ import { CommonModule } from '@angular/common';
     }
 
     .price-amount {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       color: #FFFFFF;
       letter-spacing: -0.02em;
     }
 
     .price-period {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 500;
       color: rgba(255, 255, 255, 0.8);
     }
@@ -382,13 +382,13 @@ import { CommonModule } from '@angular/common';
     .quick-view-btn {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 14px 28px;
+      gap: 8px;
+      padding: 10px 20px;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%);
       backdrop-filter: blur(16px);
       border: none;
       border-radius: 999px;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--text-primary);
       cursor: pointer;
@@ -414,22 +414,22 @@ import { CommonModule } from '@angular/common';
 
     /* ========== CARD CONTENT ========== */
     .card-content {
-      padding: 18px 20px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
     }
 
     .card-title {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--text-primary);
-      line-height: 1.4;
+      line-height: 1.3;
       margin: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
       letter-spacing: -0.01em;
       transition: color 0.2s;
@@ -442,8 +442,8 @@ import { CommonModule } from '@angular/common';
     .card-location {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 14px;
+      gap: 5px;
+      font-size: 12px;
       color: var(--text-secondary);
       margin: 0;
       font-weight: 500;

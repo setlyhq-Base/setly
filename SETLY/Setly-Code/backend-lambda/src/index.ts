@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 
 // Route imports
+import authRoutes from './routes/auth.routes';
 import exploreRoutes from './routes/explore.routes';
 import uploadRoutes from './routes/upload.routes';
 import roomsRoutes from './routes/rooms.routes';
@@ -57,6 +58,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/explore', exploreRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/rooms', roomsRoutes);

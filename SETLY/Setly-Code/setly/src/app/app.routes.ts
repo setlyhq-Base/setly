@@ -153,36 +153,37 @@ export const routes: Routes = [
     title: 'Post a Ride - Setly',
     canActivate: [AuthGuard, TrustedActionGuard]
   },
-  {
-    path: 'connect',
-    loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
-    title: 'Connect - Setly'
-  },
-  {
-    path: 'connect/rooms',
-    loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
-    title: 'Connect - Rooms - Setly'
-  },
-  {
-    path: 'connect/people',
-    loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
-    title: 'Connect - People - Setly'
-  },
-  {
-    path: 'connect/rides',
-    loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
-    title: 'Connect - Rides - Setly'
-  },
-  {
-    path: 'connect/marketplace',
-    loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
-    title: 'Connect - Marketplace - Setly'
-  },
-  {
-    path: 'connect/topics',
-    loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
-    title: 'Connect - Topics - Setly'
-  },
+  // Connect page temporarily hidden - Will be enabled when messaging/connections are fully implemented
+  // {
+  //   path: 'connect',
+  //   loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
+  //   title: 'Connect - Setly'
+  // },
+  // {
+  //   path: 'connect/rooms',
+  //   loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
+  //   title: 'Connect - Rooms - Setly'
+  // },
+  // {
+  //   path: 'connect/people',
+  //   loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
+  //   title: 'Connect - People - Setly'
+  // },
+  // {
+  //   path: 'connect/rides',
+  //   loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
+  //   title: 'Connect - Rides - Setly'
+  // },
+  // {
+  //   path: 'connect/marketplace',
+  //   loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
+  //   title: 'Connect - Marketplace - Setly'
+  // },
+  // {
+  //   path: 'connect/topics',
+  //   loadComponent: () => import('./features/connect/connect.page').then(m => m.ConnectPage),
+  //   title: 'Connect - Topics - Setly'
+  // },
   {
     path: 'profile/:id',
     loadComponent: () => import('./features/user-profile/user-profile.page').then(m => m.UserProfilePage),

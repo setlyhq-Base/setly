@@ -1,6 +1,8 @@
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserStore } from '../../../core/state/user.store';
 import { ProfileStore } from '../../../core/state/profile.store';
@@ -9,11 +11,12 @@ import { PhoneOtpModalComponent } from '../components/phone-otp.modal';
 import { ProfileQuickCaptureModalComponent } from '../../../shared/ui/profile-quick-capture.modal';
 import { AuthSyncService } from '../../../core/services/auth-sync.service';
 import { AnalyticsService } from '../../../core/services/analytics.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-sign-in-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, PhoneOtpModalComponent, ProfileQuickCaptureModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PhoneOtpModalComponent, ProfileQuickCaptureModalComponent],
   template: `
     <div class="min-h-screen flex flex-col lg:flex-row" data-testid="auth-layout">
       <!-- Brand Panel -->
@@ -36,21 +39,77 @@ import { AnalyticsService } from '../../../core/services/analytics.service';
           </div>
 
           <div class="space-y-3 mb-6">
-            <button type="button" data-testid="btn-google" aria-label="Continue with Google" (click)="provider('google')" [disabled]="loading()" class="provider-btn bg-white border border-gray-300 text-gray-800">
-              <span class="provider-icon google"></span> Continue with Google
-              <span *ngIf="loadingProvider() === 'google'" class="spinner"></span>
-            </button>
-            <button type="button" data-testid="btn-microsoft" aria-label="Continue with Microsoft" (click)="provider('microsoft')" [disabled]="loading()" class="provider-btn bg-white border border-gray-300 text-gray-800">
-              <span class="provider-icon microsoft"></span> Continue with Microsoft
-              <span *ngIf="loadingProvider() === 'microsoft'" class="spinner"></span>
-            </button>
-            <button type="button" data-testid="btn-facebook" aria-label="Continue with Facebook" (click)="provider('facebook')" [disabled]="loading()" class="provider-btn bg-[#1877F2] text-white">
-              <span class="provider-icon facebook"></span> Continue with Facebook
-              <span *ngIf="loadingProvider() === 'facebook'" class="spinner"></span>
-            </button>
-            <button type="button" data-testid="btn-phone" aria-label="Continue with Phone number" (click)="openPhoneModal()" [disabled]="loading()" class="provider-btn bg-white border border-gray-300 text-gray-800">
-              <span class="provider-icon phone"></span> Continue with Phone number
-            </button>
+            <!-- Email/Password Login Form -->
+            <div *ngIf="showEmailLogin()" class="space-y-3">
+              <input 
+                type="email" 
+                [(ngModel)]="email" 
+                placeholder="Email" 
+                class="w-full h-12 px-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                [disabled]="loading()"
+              />
+              <div class="relative">
+                <input 
+                  [type]="showPassword() ? 'text' : 'password'"
+                  [(ngModel)]="password" 
+                  placeholder="Password" 
+                  class="w-full h-12 px-4 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  [disabled]="loading()"
+                  (keyup.enter)="signInWithEmail()"
+                />
+                <button 
+                  type="button"
+                  (click)="showPassword.set(!showPassword())"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  <svg *ngIf="!showPassword()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                  </svg>
+                  <svg *ngIf="showPassword()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                  </svg>
+                </button>
+              </div>
+              <button 
+                type="button" 
+                (click)="signInWithEmail()" 
+                [disabled]="loading() || !email || !password"
+                class="provider-btn bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+              >
+                Sign In
+                <span *ngIf="loadingProvider() === 'email'" class="spinner"></span>
+              </button>
+              <button 
+                type="button"
+                (click)="showEmailLogin.set(false)"
+                class="w-full text-sm text-gray-600 hover:text-gray-800"
+              >
+                ← Back to social login
+              </button>
+            </div>
+
+            <!-- Social Login Buttons -->
+            <div *ngIf="!showEmailLogin()" class="space-y-3">
+              <button type="button" data-testid="btn-email" aria-label="Sign in with Email" (click)="showEmailLogin.set(true)" [disabled]="loading()" class="provider-btn bg-blue-500 text-white hover:bg-blue-600">
+                <span class="provider-icon email"></span> Sign in with Email
+              </button>
+              <button type="button" data-testid="btn-google" aria-label="Continue with Google" (click)="provider('google')" [disabled]="loading()" class="provider-btn bg-white border border-gray-300 text-gray-800">
+                <span class="provider-icon google"></span> Continue with Google
+                <span *ngIf="loadingProvider() === 'google'" class="spinner"></span>
+              </button>
+              <button type="button" data-testid="btn-microsoft" aria-label="Continue with Microsoft" (click)="provider('microsoft')" [disabled]="loading()" class="provider-btn bg-white border border-gray-300 text-gray-800">
+                <span class="provider-icon microsoft"></span> Continue with Microsoft
+                <span *ngIf="loadingProvider() === 'microsoft'" class="spinner"></span>
+              </button>
+              <button type="button" data-testid="btn-facebook" aria-label="Continue with Facebook" (click)="provider('facebook')" [disabled]="loading()" class="provider-btn bg-[#1877F2] text-white">
+                <span class="provider-icon facebook"></span> Continue with Facebook
+                <span *ngIf="loadingProvider() === 'facebook'" class="spinner"></span>
+              </button>
+              <button type="button" data-testid="btn-phone" aria-label="Continue with Phone number" (click)="openPhoneModal()" [disabled]="loading()" class="provider-btn bg-white border border-gray-300 text-gray-800">
+                <span class="provider-icon phone"></span> Continue with Phone number
+              </button>
+            </div>
           </div>
 
           <p class="sr-only" aria-hidden="true">or</p>
@@ -92,6 +151,7 @@ import { AnalyticsService } from '../../../core/services/analytics.service';
   .provider-btn { @apply w-full h-12 rounded-xl font-medium flex items-center justify-center gap-3 relative transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60; }
     .provider-icon { @apply inline-block w-5 h-5; }
   /* Use root-relative paths so Angular resolves from /src/assets */
+  .provider-icon.email { background: url('/assets/email.svg') center/contain no-repeat; }
   .provider-icon.google { background: url('/assets/google.svg') center/contain no-repeat; }
   .provider-icon.microsoft { background: url('/assets/microsoft.svg') center/contain no-repeat; }
   .provider-icon.facebook { background: url('/assets/facebook.svg') center/contain no-repeat; }
@@ -107,20 +167,87 @@ export class SignInPage {
   prefilledEmail = signal<string | undefined>(undefined);
   toastMessage = signal('');
   toastType = signal<'error' | 'success' | ''>('');
-  testimonial = signal('“Great matches and super fast!” – Beta User');
+  testimonial = signal('"Great matches and super fast!" – Beta User');
+  showEmailLogin = signal(false);
+  showPassword = signal(false);
+  email = '';
+  password = '';
   private testimonialIdx = 0;
   private testimonials = [
-    '“Great matches and super fast!” – Beta User',
-    '“I found a trusted roommate in 2 days.” – Priya',
-    '“The phone verification feels safe.” – David'
+    '"Great matches and super fast!" – Beta User',
+    '"I found a trusted roommate in 2 days." – Priya',
+    '"The phone verification feels safe." – David'
   ];
 
   private sync = inject(AuthSyncService);
+  private http = inject(HttpClient);
+  
   constructor(private auth: AuthService, private router: Router, private analytics: AnalyticsService, public userStore: UserStore, private profileStore: ProfileStore, private route: ActivatedRoute, public authStore: AuthStore) {
     this.rotateTestimonials();
     this.analytics.fire('auth_viewed', { page: 'sign-in' });
     // Ensure sync is initialized so profile is hydrated post-login
     this.sync.init();
+  }
+
+  async signInWithEmail(): Promise<void> {
+    if (!this.email || !this.password) {
+      this.toast('Please enter both email and password', 'error');
+      return;
+    }
+
+    this.analytics.fire('auth_provider_click', { provider: 'email' });
+    this.loading.set(true);
+    this.loadingProvider.set('email');
+
+    try {
+      const apiUrl = environment.apiUrl || 'https://api.setly.in';
+      const response = await this.http.post<{user: any, token: string}>(`${apiUrl}/auth/login`, {
+        email: this.email,
+        password: this.password
+      }).toPromise();
+
+      if (response?.token) {
+        // Store JWT token
+        localStorage.setItem('setly_auth_token', response.token);
+        
+        // Store user data in auth store
+        this.authStore.setUser({
+          userId: response.user.userId,
+          email: response.user.email,
+          displayName: response.user.name,
+          photoURL: response.user.photoUrl,
+          isNew: false
+        });
+
+        // Update user store
+        await this.userStore.refresh();
+
+        this.toast('Signed in successfully', 'success');
+        this.analytics.fire('auth_success', { provider: 'email', isNew: false });
+
+        // Navigate to next or home
+        const next = this.route.snapshot.queryParamMap.get('next');
+        setTimeout(() => {
+          if (next) this.router.navigateByUrl(next);
+          else this.router.navigate(['/']);
+        }, 500);
+      }
+    } catch (err: any) {
+      console.error('Email login error:', err);
+      this.analytics.fire('auth_failed', { provider: 'email', reason: err?.error?.error || err?.message });
+      
+      const errorMessage = err?.error?.error || err?.message || 'Login failed';
+      if (errorMessage.includes('Invalid email or password')) {
+        this.toast('Invalid email or password', 'error');
+      } else if (errorMessage.includes('social login')) {
+        this.toast('This account uses social login. Please sign in with Google, Microsoft, or Facebook.', 'error');
+      } else {
+        this.toast(errorMessage, 'error');
+      }
+    } finally {
+      this.loading.set(false);
+      this.loadingProvider.set(null);
+    }
   }
 
   provider(name: 'google' | 'microsoft' | 'facebook'): void {

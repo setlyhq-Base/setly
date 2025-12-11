@@ -14,7 +14,8 @@
     "local": "serverless offline start",
     "test": "jest",
     "seed:fallback-rides": "npx tsx src/scripts/seed-fallback-rides.ts",
-    "seed:dummy-users": "npx tsx src/scripts/seed-dummy-users.ts"
+    "seed:dummy-users": "npx tsx src/scripts/seed-dummy-users.ts",
+    "seed:posts": "npx tsx src/scripts/seed-posts.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.511.0",

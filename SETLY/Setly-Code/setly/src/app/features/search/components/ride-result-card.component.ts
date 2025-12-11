@@ -18,28 +18,27 @@ import { CommonModule } from '@angular/common';
       role="button"
       [attr.aria-label]="'View ride from ' + getFromShort() + ' to ' + getToShort()"
     >
-      <!-- Role Chip (Top Left) -->
-      <div class="role-chip" [class.driver]="isDriver()" [class.seeker]="!isDriver()">
-        <span *ngIf="isDriver()">🚗 Driver Ride</span>
-        <span *ngIf="!isDriver()">🙋‍♂️ Ride Needed</span>
+      <!-- Single Chip (Top Right) - Different for Driver vs Seeker -->
+      <!-- Seeker: "Ride Needed" Purple Chip -->
+      <div class="single-chip seeker-chip" *ngIf="!isDriver()">
+        <span class="chip-icon">🙋‍♂️</span>
+        <span class="chip-text">Ride Needed</span>
       </div>
 
-      <!-- Countdown Timer Chip (Top Right - Driver Only) -->
-      <div class="countdown-chip" *ngIf="isDriver() && getCountdownText()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+      <!-- Driver: "Quick Ride" Blue Chip (or countdown timer if available) -->
+      <div class="single-chip driver-chip" *ngIf="isDriver()">
+        <svg *ngIf="!getCountdownText()" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+        </svg>
+        <svg *ngIf="getCountdownText()" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
         </svg>
-        <span>{{ getCountdownText() }}</span>
+        <span class="chip-text">{{ getCountdownText() || 'Quick Ride' }}</span>
       </div>
 
       <!-- Route Header -->
       <div class="route-header">
         <h3 class="route-title">{{ getFromShort() }} → {{ getToShort() }}</h3>
-        
-        <!-- Optional Tag Badge -->
-        <div class="tag-badge" *ngIf="getTag()">
-          <span>{{ getTag() }}</span>
-        </div>
       </div>
 
       <!-- Timing Section - Different for Driver vs Seeker -->
@@ -148,11 +147,11 @@ import { CommonModule } from '@angular/common';
         0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
-    /* ========== ROLE CHIP (Top Left) ========== */
-    .role-chip {
+    /* ========== SINGLE CHIP (Top Right) ========== */
+    .single-chip {
       position: absolute;
       top: 8px;
-      left: 8px;
+      right: 8px;
       padding: 4px 10px;
       border-radius: 999px;
       font-size: 10px;
@@ -164,47 +163,38 @@ import { CommonModule } from '@angular/common';
       z-index: 2;
     }
 
-    .role-chip.driver {
-      background: linear-gradient(135deg, var(--driver-blue), #5EA3FF);
-      color: #FFFFFF;
-      box-shadow: 0 2px 8px rgba(62, 143, 255, 0.25);
-    }
-
-    .role-chip.seeker {
+    .single-chip.seeker-chip {
       background: linear-gradient(135deg, var(--seeker-purple), #A78BFA);
       color: #FFFFFF;
       box-shadow: 0 2px 8px rgba(139, 92, 246, 0.25);
     }
 
-    /* ========== COUNTDOWN CHIP (Top Right - Driver Only) ========== */
-    .countdown-chip {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      padding: 4px 8px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(8px);
-      border-radius: 8px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-      z-index: 2;
+    .single-chip.driver-chip {
+      background: linear-gradient(135deg, var(--driver-blue), #5EA3FF);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(62, 143, 255, 0.25);
     }
 
-    .countdown-chip svg {
-      color: var(--driver-blue);
+    .chip-icon {
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    .chip-text {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .single-chip svg {
+      color: currentColor;
+      opacity: 0.9;
     }
 
     /* ========== ROUTE HEADER ========== */
     .route-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 8px;
     }
 
@@ -218,18 +208,6 @@ import { CommonModule } from '@angular/common';
       text-overflow: ellipsis;
       white-space: nowrap;
       flex: 1;
-    }
-
-    .tag-badge {
-      flex-shrink: 0;
-      padding: 4px 8px;
-      background: linear-gradient(135deg, var(--brand-azure), #5EA3FF);
-      border-radius: 6px;
-      font-size: 9px;
-      font-weight: 700;
-      color: #FFFFFF;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     /* ========== TIMING SECTION ========== */

@@ -2152,34 +2152,41 @@ export class SearchPage implements AfterViewInit {
 
   rideCatalogSections = computed(() => {
     const allRides = this.rideResults();
+    const today = new Date().toDateString();
+    
     return [
       {
-        title: '🔥 Trending Rides',
-        items: allRides.slice(0, 10)
-      },
-      {
-        title: '✈️ Airport Rides',
-        items: allRides.filter(r => r.to?.toLowerCase().includes('airport')).slice(0, 10)
-      },
-      {
-        title: '🛣️ Long Distance Rides',
-        items: allRides.filter(r => r.priceNum > 50).slice(0, 10)
-      },
-      {
-        title: '🎓 Student Ride Picks',
-        items: allRides.filter(r => r.verified).slice(0, 10)
+        title: '📍 Rides Near You',
+        items: allRides.slice(0, 10) // In production: sort by distance from user location
       },
       {
         title: '📅 Rides Happening Today',
-        items: allRides.slice(0, 10)
+        items: allRides.filter(r => {
+          const rideDate = r.departureDate ? new Date(r.departureDate).toDateString() : null;
+          return rideDate === today;
+        }).slice(0, 10)
       },
       {
         title: '💺 Shared Rides',
-        items: allRides.filter(r => r.seatsAvailable > 1).slice(0, 10)
+        items: allRides.filter(r => r.seatsAvailable && r.seatsAvailable > 1).slice(0, 10)
+      },
+      {
+        title: '✈️ Airport Rides',
+        items: allRides.filter(r => {
+          const destination = (r.to || '').toLowerCase();
+          return destination.includes('airport') || 
+                 destination.includes('ewr') || 
+                 destination.includes('jfk') || 
+                 destination.includes('lga') ||
+                 destination.includes('bos') ||
+                 destination.includes('phl') ||
+                 destination.includes('sfo') ||
+                 destination.includes('ord');
+        }).slice(0, 10)
       },
       {
         title: '⭐ Top Rated Drivers',
-        items: allRides.filter(r => r.rating >= 4.5).slice(0, 10)
+        items: allRides.filter(r => r.rating >= 4.5).slice(0, 10) // Backend sorted by rating
       }
     ];
   });

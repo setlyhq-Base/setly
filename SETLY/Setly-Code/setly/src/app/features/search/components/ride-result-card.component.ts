@@ -18,6 +18,20 @@ import { CommonModule } from '@angular/common';
       role="button"
       [attr.aria-label]="'View ride from ' + getFromShort() + ' to ' + getToShort()"
     >
+      <!-- Role Chip (Top Left) -->
+      <div class="role-chip" [class.driver]="isDriver()" [class.seeker]="!isDriver()">
+        <span *ngIf="isDriver()">🚗 Driver Ride</span>
+        <span *ngIf="!isDriver()">🙋‍♂️ Ride Needed</span>
+      </div>
+
+      <!-- Countdown Timer Chip (Top Right - Driver Only) -->
+      <div class="countdown-chip" *ngIf="isDriver() && getCountdownText()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
+        </svg>
+        <span>{{ getCountdownText() }}</span>
+      </div>
+
       <!-- Route Header -->
       <div class="route-header">
         <h3 class="route-title">{{ getFromShort() }} → {{ getToShort() }}</h3>
@@ -28,48 +42,56 @@ import { CommonModule } from '@angular/common';
         </div>
       </div>
 
-      <!-- Timing Section -->
+      <!-- Timing Section - Different for Driver vs Seeker -->
       <div class="timing-section">
-        <div class="time-row">
-          <svg class="time-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <span class="time-label">Pickup</span>
-          <span class="time-dot">•</span>
-          <span class="time-value">{{ item.departureTime || '10:00 AM' }}</span>
+        <!-- Driver Post: Show Pickup + Drop-off Times -->
+        <div *ngIf="isDriver()" class="driver-times">
+          <div class="time-row compact">
+            <svg class="time-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="time-label">Pickup</span>
+            <span class="time-dot">•</span>
+            <span class="time-value">{{ item.departureTime || '10:00 AM' }}</span>
+            <span class="time-separator">|</span>
+            <span class="time-label">Drop-off</span>
+            <span class="time-dot">•</span>
+            <span class="time-value">{{ item.arrivalTime || '11:00 AM' }}</span>
+          </div>
         </div>
 
-        <div class="time-row">
-          <svg class="time-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <span class="time-label">Drop-off</span>
-          <span class="time-dot">•</span>
-          <span class="time-value">{{ item.arrivalTime || '11:00 AM' }}</span>
+        <!-- Seeker Post: Show Flexible Timing or Specific Time -->
+        <div *ngIf="!isDriver()" class="seeker-timing">
+          <div class="time-row">
+            <svg class="time-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="timing-text">{{ getSeekerTiming() }}</span>
+          </div>
         </div>
       </div>
 
-      <!-- Driver Section -->
-      <div class="driver-section">
-        <div class="driver-avatar">
+      <!-- User Section - Different for Driver vs Seeker -->
+      <div class="user-section">
+        <div class="user-avatar">
           <img 
-            *ngIf="item.driver?.avatar" 
-            [src]="item.driver.avatar" 
-            [alt]="item.driver?.name || 'Driver'"
+            *ngIf="getUserAvatar()" 
+            [src]="getUserAvatar()" 
+            [alt]="getUserName()"
             class="avatar-image"
             loading="lazy"
           />
-          <div *ngIf="!item.driver?.avatar" class="avatar-placeholder">
-            {{ getDriverInitial() }}
+          <div *ngIf="!getUserAvatar()" class="avatar-placeholder">
+            {{ getUserInitial() }}
           </div>
           
-          <!-- Online/Offline Status Dot -->
-          <div class="status-dot" [class.online]="isDriverOnline()"></div>
+          <!-- Online/Offline Status Dot (Driver Only) -->
+          <div class="status-dot" *ngIf="isDriver()" [class.online]="isDriverOnline()"></div>
         </div>
         
-        <span class="driver-name">{{ getDriverFirstName() }}</span>
+        <span class="user-name">{{ getUserFirstName() }}</span>
       </div>
     </div>
   `,
@@ -78,6 +100,8 @@ import { CommonModule } from '@angular/common';
     :host {
       --brand-azure: #3E8FFF;
       --brand-navy: #0A1A3F;
+      --driver-blue: #3E8FFF;
+      --seeker-purple: #8B5CF6;
       --text-primary: #1A1A1A;
       --text-secondary: #6B7280;
       --border-color: #E5E7EB;
@@ -94,7 +118,7 @@ import { CommonModule } from '@angular/common';
       background: #FFFFFF;
       border-radius: 16px;
       border: 1px solid var(--border-color);
-      padding: 12px 14px;
+      padding: 32px 14px 12px 14px;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: var(--shadow-card);
@@ -122,6 +146,58 @@ import { CommonModule } from '@angular/common';
       box-shadow: 
         0 0 0 4px rgba(62, 143, 255, 0.2),
         0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    /* ========== ROLE CHIP (Top Left) ========== */
+    .role-chip {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 2;
+    }
+
+    .role-chip.driver {
+      background: linear-gradient(135deg, var(--driver-blue), #5EA3FF);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(62, 143, 255, 0.25);
+    }
+
+    .role-chip.seeker {
+      background: linear-gradient(135deg, var(--seeker-purple), #A78BFA);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.25);
+    }
+
+    /* ========== COUNTDOWN CHIP (Top Right - Driver Only) ========== */
+    .countdown-chip {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      z-index: 2;
+    }
+
+    .countdown-chip svg {
+      color: var(--driver-blue);
     }
 
     /* ========== ROUTE HEADER ========== */
@@ -163,6 +239,14 @@ import { CommonModule } from '@angular/common';
       gap: 6px;
     }
 
+    .driver-times .time-row.compact {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      flex-wrap: wrap;
+    }
+
     .time-row {
       display: flex;
       align-items: center;
@@ -190,8 +274,27 @@ import { CommonModule } from '@angular/common';
       font-weight: 600;
     }
 
-    /* ========== DRIVER SECTION ========== */
-    .driver-section {
+    .time-separator {
+      color: var(--border-color);
+      font-weight: 600;
+      margin: 0 4px;
+    }
+
+    /* Seeker Timing */
+    .seeker-timing .time-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .timing-text {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    /* ========== USER SECTION ========== */
+    .user-section {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -199,7 +302,7 @@ import { CommonModule } from '@angular/common';
       border-top: 1px solid var(--border-color);
     }
 
-    .driver-avatar {
+    .user-avatar {
       position: relative;
       width: 32px;
       height: 32px;
@@ -252,7 +355,7 @@ import { CommonModule } from '@angular/common';
     /* ========== RESPONSIVE ========== */
     @media (max-width: 640px) {
       .premium-card {
-        padding: 10px 12px;
+        padding: 28px 12px 10px 12px;
       }
 
       .route-title {
@@ -263,7 +366,7 @@ import { CommonModule } from '@angular/common';
         font-size: 11px;
       }
 
-      .driver-name {
+      .user-name {
         font-size: 12px;
       }
     }
@@ -281,6 +384,68 @@ export class RideResultCardComponent {
     this.cardClicked.emit(this.item);
     // Navigate to ride details page
     this.router.navigate(['/rides', this.item.id || 'detail']);
+  }
+
+  isDriver(): boolean {
+    // Check if post type is 'driver'
+    return this.item?.type === 'driver' || this.item?.postType === 'driver';
+  }
+
+  getCountdownText(): string | null {
+    if (!this.isDriver() || !this.item.departureDate || !this.item.departureTime) {
+      return null;
+    }
+
+    try {
+      const now = new Date();
+      const departureDateTime = new Date(`${this.item.departureDate} ${this.item.departureTime}`);
+      const diffMs = departureDateTime.getTime() - now.getTime();
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+      if (diffHours < 0) return 'Departed';
+      if (diffHours < 1) return 'Leaving soon';
+      if (diffHours < 24) return `${diffHours}h`;
+      const diffDays = Math.floor(diffHours / 24);
+      return `${diffDays}d`;
+    } catch {
+      return null;
+    }
+  }
+
+  getSeekerTiming(): string {
+    // For seeker posts, show flexible timing or specific need
+    if (this.item.departureTime) {
+      return `Needs ride at ${this.item.departureTime}`;
+    }
+    return 'Flexible timing';
+  }
+
+  getUserAvatar(): string | null {
+    if (this.isDriver()) {
+      return this.item?.driver?.avatar || null;
+    } else {
+      // For seeker, use the post author's avatar
+      return this.item?.user?.avatar || this.item?.author?.avatar || null;
+    }
+  }
+
+  getUserName(): string {
+    if (this.isDriver()) {
+      return this.item?.driver?.name || 'Driver';
+    } else {
+      return this.item?.user?.name || this.item?.author?.name || 'User';
+    }
+  }
+
+  getUserFirstName(): string {
+    const fullName = this.getUserName();
+    const firstName = fullName.split(' ')[0];
+    return firstName;
+  }
+
+  getUserInitial(): string {
+    const name = this.getUserName();
+    return name.charAt(0).toUpperCase();
   }
 
   getFromShort(): string {
@@ -329,22 +494,11 @@ export class RideResultCardComponent {
     return null;
   }
 
-  getDriverFirstName(): string {
-    if (!this.item?.driver?.name) return 'Driver';
-    
-    const firstName = this.item.driver.name.split(' ')[0];
-    return firstName;
-  }
-
-  getDriverInitial(): string {
-    if (!this.item?.driver?.name) return 'D';
-    
-    return this.item.driver.name.charAt(0).toUpperCase();
-  }
-
   isDriverOnline(): boolean {
     // Random online status for demo - in production, check actual status
-    return this.item?.driver?.online ?? Math.random() > 0.5;
+    if (this.isDriver()) {
+      return this.item?.driver?.online ?? Math.random() > 0.5;
+    }
+    return false;
   }
 }
-

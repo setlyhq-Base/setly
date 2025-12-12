@@ -26,6 +26,8 @@ export const environment = {
     siteKey: '6LfLjgcsAAAAAjs6Y6rPaWmNpekSyGAUD7Qv5tT'
   },
   featureFlags: {
+    // Production always uses the real Lambda + MongoDB + S3 stack.
+    useDummyData: false,
     softDisableAuth: false,
     mockPhoneAuth: false,
     disableRecaptchaEnterprise: false,

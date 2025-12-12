@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { DirectoryUser } from './people-directory.service';
+import { environment } from '../../../environments/environment';
 
 export interface DummyUser extends DirectoryUser {
   tagline?: string;
   about?: string;
   interests: string[];
   mutualInterests?: string[];
+  languages?: string[];
   hasRoom?: boolean;
   offersRides?: boolean;
   isTrader?: boolean;
@@ -17,6 +19,7 @@ export interface DummyUser extends DirectoryUser {
 
 @Injectable({ providedIn: 'root' })
 export class DummyPeopleService {
+  private readonly STORAGE_KEY = 'setly_dummy_users_v1';
   private dummyUsers: DummyUser[] = [
     {
       id: 'user-1',
@@ -35,6 +38,7 @@ export class DummyPeopleService {
       about: 'Graduate student passionate about AI/ML. Love exploring Boston coffee shops and attending tech meetups.',
       interests: ['Coffee', 'Hackathons', 'AI/ML', 'Photography', 'Hiking', 'Indian Food'],
       mutualInterests: ['Coffee', 'Hackathons', 'Photography'],
+      languages: ['English', 'Hindi'],
       hasRoom: true,
       isGuide: true,
       lat: 42.3398,
@@ -57,6 +61,7 @@ export class DummyPeopleService {
       about: 'Computer Science major at MIT. Building a startup on the side. Always up for cricket on weekends!',
       interests: ['Startups', 'Cricket', 'Coding', 'Biking', 'Gaming', 'Street Food'],
       mutualInterests: ['Coding', 'Gaming'],
+      languages: ['English', 'Gujarati'],
       offersRides: true,
       isSenior: true,
       lat: 42.3601,
@@ -79,6 +84,7 @@ export class DummyPeopleService {
       about: 'MBA student at Harvard Business School. Love exploring New England and practicing yoga.',
       interests: ['Yoga', 'Travel', 'Consulting', 'Cooking', 'Reading', 'Wine Tasting'],
       mutualInterests: ['Travel', 'Cooking'],
+      languages: ['English', 'Telugu'],
       hasRoom: false,
       isGuide: true,
       lat: 42.3770,
@@ -555,6 +561,175 @@ export class DummyPeopleService {
       lng: -71.0892
     }
   ];
+
+  // Snapshot so we can reliably reset back to the curated base set.
+  private readonly baseUsers: DummyUser[] = this.dummyUsers.map(u => ({
+    ...u,
+    badges: u.badges ? { ...u.badges } : { email: true, phone: false, university: false, photo: true },
+    interests: Array.isArray(u.interests) ? [...u.interests] : [],
+    mutualInterests: Array.isArray(u.mutualInterests) ? [...u.mutualInterests] : undefined,
+    languages: Array.isArray(u.languages) ? [...u.languages] : undefined,
+  }));
+
+  constructor() {
+    if ((environment as any)?.featureFlags?.useDummyData) {
+      this.loadFromStorage();
+    }
+    this.ensureMinimumUsers(50);
+    if ((environment as any)?.featureFlags?.useDummyData) {
+      this.saveToStorage();
+    }
+  }
+
+  /**
+   * Dev/demo-only helper: clears persisted dummy users and reseeds a fresh deterministic dataset.
+   * Safe to call repeatedly.
+   */
+  reseed(): void {
+    try {
+      localStorage.removeItem(this.STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+
+    this.dummyUsers = this.baseUsers.map(u => ({
+      ...u,
+      badges: u.badges ? { ...u.badges } : { email: true, phone: false, university: false, photo: true },
+      interests: Array.isArray(u.interests) ? [...u.interests] : [],
+      mutualInterests: Array.isArray(u.mutualInterests) ? [...u.mutualInterests] : undefined,
+      languages: Array.isArray(u.languages) ? [...u.languages] : undefined,
+    }));
+    this.ensureMinimumUsers(50);
+    if ((environment as any)?.featureFlags?.useDummyData) {
+      this.saveToStorage();
+    }
+  }
+
+  private loadFromStorage(): void {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        this.dummyUsers = parsed;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  private saveToStorage(): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.dummyUsers));
+    } catch {
+      // ignore
+    }
+  }
+
+  private ensureMinimumUsers(min: number) {
+    if (this.dummyUsers.length >= min) {
+      // Normalize a few fields to keep UI consistent.
+      this.dummyUsers = this.dummyUsers.map(u => ({
+        ...u,
+        languages: Array.isArray(u.languages) && u.languages.length ? u.languages : ['English'],
+        badges: u.badges || { email: true, phone: false, university: false, photo: true },
+      }));
+      return;
+    }
+
+    const universities: Array<{ id: string; org: string; city: string; state: string; lat: number; lng: number }> = [
+      { id: 'northeastern', org: 'Northeastern University', city: 'Boston', state: 'MA', lat: 42.3398, lng: -71.0892 },
+      { id: 'mit', org: 'MIT', city: 'Cambridge', state: 'MA', lat: 42.3601, lng: -71.0942 },
+      { id: 'harvard', org: 'Harvard University', city: 'Cambridge', state: 'MA', lat: 42.3770, lng: -71.1167 },
+      { id: 'bu', org: 'Boston University', city: 'Boston', state: 'MA', lat: 42.3505, lng: -71.1054 },
+      { id: 'yale', org: 'Yale University', city: 'New Haven', state: 'CT', lat: 41.3163, lng: -72.9223 },
+      { id: 'unh', org: 'University of New Haven', city: 'West Haven', state: 'CT', lat: 41.2706, lng: -72.9469 },
+      { id: 'nyu', org: 'NYU', city: 'New York', state: 'NY', lat: 40.7295, lng: -73.9965 },
+      { id: 'columbia', org: 'Columbia University', city: 'New York', state: 'NY', lat: 40.8075, lng: -73.9626 },
+      { id: 'stanford', org: 'Stanford University', city: 'Stanford', state: 'CA', lat: 37.4275, lng: -122.1697 },
+      { id: 'berkeley', org: 'UC Berkeley', city: 'Berkeley', state: 'CA', lat: 37.8715, lng: -122.2730 },
+      { id: 'usc', org: 'USC', city: 'Los Angeles', state: 'CA', lat: 34.0224, lng: -118.2851 },
+      { id: 'uw', org: 'University of Washington', city: 'Seattle', state: 'WA', lat: 47.6553, lng: -122.3035 },
+      { id: 'princeton', org: 'Princeton University', city: 'Princeton', state: 'NJ', lat: 40.3430, lng: -74.6514 },
+    ];
+
+    const firstNames = ['Aarav','Aisha','Akhil','Anaya','Arnav','Diya','Ishaan','Kiran','Maya','Neel','Nisha','Riya','Sahil','Sanya','Varun','Zara','Kabir','Meera','Rohan','Tanvi','Vivek','Ira','Jai','Leena','Naveen','Pooja','Rehan','Siddhi','Tara','Yash'];
+    const lastNames = ['Shah','Patel','Reddy','Iyer','Mehta','Kapoor','Nair','Gupta','Singh','Menon','Joshi','Bose','Khan','Chandra','Verma','Das','Kulkarni','Saxena','Bhat','Malhotra'];
+    const languagePool = ['English','Hindi','Telugu','Tamil','Gujarati','Marathi','Spanish','French','Mandarin'];
+    const interestPool = ['Coffee','Gym','Cooking','Gaming','Photography','Hiking','Startups','Research','Travel','Yoga','Music','Food','Basketball','Cricket','Design','Volunteering','Reading','Networking','Movies','Running'];
+    const rolePool = ['Student','Working Professional','Alumni'];
+
+    const uniq = <T>(arr: T[]) => Array.from(new Set(arr));
+    const pickN = <T>(arr: T[], n: number, seed: number): T[] => {
+      const out: T[] = [];
+      for (let i = 0; i < arr.length && out.length < n; i++) {
+        const idx = (seed + i * 7) % arr.length;
+        const v = arr[idx];
+        if (!out.includes(v)) out.push(v);
+      }
+      return out;
+    };
+
+    const nextId = () => {
+      const existing = new Set(this.dummyUsers.map(u => u.id));
+      for (let i = 1; ; i++) {
+        const id = `user-${i}`;
+        if (!existing.has(id)) return i;
+      }
+    };
+
+    // Normalize existing users and then append generated ones.
+    this.dummyUsers = this.dummyUsers.map(u => ({
+      ...u,
+      languages: Array.isArray(u.languages) && u.languages.length ? u.languages : ['English'],
+      badges: u.badges || { email: true, phone: false, university: false, photo: true },
+    }));
+
+    while (this.dummyUsers.length < min) {
+      const i = nextId();
+      const uni = universities[i % universities.length];
+      const first = firstNames[i % firstNames.length];
+      const last = lastNames[(i * 3) % lastNames.length];
+      const name = `${first} ${last}`;
+      const avatarUrl = `https://i.pravatar.cc/150?img=${(i % 70) + 1}`;
+      const role = rolePool[(i * 5) % rolePool.length];
+      const interests = pickN(interestPool, 6, i * 11);
+      const languages = uniq(pickN(languagePool, 2 + (i % 2), i * 13));
+      const lastSeen = new Date(Date.now() - (i % 120) * 60 * 1000).toISOString();
+
+      this.dummyUsers.push({
+        id: `user-${i}`,
+        name,
+        avatarUrl,
+        universityId: uni.id,
+        organization: uni.org,
+        role,
+        city: uni.city,
+        state: uni.state,
+        country: 'USA',
+        location: `${uni.city}, ${uni.state}`,
+        lastSeen,
+        badges: {
+          email: true,
+          phone: i % 3 !== 0,
+          university: role !== 'Working Professional',
+          photo: true,
+        },
+        tagline: `${uni.org.split(' ')[0]} | ${role} | ${interests[0]}`,
+        about: `Based in ${uni.city}. Into ${interests.slice(0, 3).join(', ')}.`,
+        interests,
+        mutualInterests: interests.slice(0, 3),
+        languages,
+        hasRoom: i % 4 === 0,
+        offersRides: i % 6 === 0,
+        isTrader: i % 7 === 0,
+        isGuide: i % 8 === 0,
+        isSenior: i % 9 === 0,
+        lat: uni.lat + ((i % 7) - 3) * 0.003,
+        lng: uni.lng + ((i % 7) - 3) * 0.003,
+      });
+    }
+  }
 
   getAllUsers(): DummyUser[] {
     return this.dummyUsers;

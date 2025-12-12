@@ -29,6 +29,8 @@ export const environment = {
     siteKey: '6LfLjgcsAAAAAjs6Y6rPaWmNpekSyGAUD7Qv5tT'
   },
   featureFlags: {
+    // Dev should never depend on real API data. Flip to false only for final backend integration.
+    useDummyData: true,
     softDisableAuth: false,
     mockPhoneAuth: true,
     disableRecaptchaEnterprise: true,

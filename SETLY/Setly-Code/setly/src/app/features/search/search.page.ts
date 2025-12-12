@@ -2118,36 +2118,49 @@ export class SearchPage implements AfterViewInit {
   // Curated catalog sections for each tab
   roomCatalogSections = computed(() => {
     const allRooms = this.browseRoomItems();
-    return [
+    
+    // Helper to ensure minimum items in a section
+    const ensureMinItems = (items: any[], minCount: number = 3) => {
+      if (items.length >= minCount) return items;
+      // Fill with random rooms from allRooms to meet minimum
+      const needed = minCount - items.length;
+      const available = allRooms.filter(r => !items.some(i => i.id === r.id));
+      return [...items, ...available.slice(0, needed)];
+    };
+
+    const sections = [
       {
         title: '🔥 Trending Rooms',
-        items: allRooms.slice(0, 10)
+        items: ensureMinItems(allRooms.slice(0, 10), 5)
       },
       {
         title: '💰 Budget-Friendly Rooms',
-        items: allRooms.filter(r => r.priceNum < 800).slice(0, 10)
+        items: ensureMinItems(allRooms.filter(r => r.priceNum < 1000).slice(0, 10), 3)
       },
       {
         title: '⭐ Top Rated Rooms',
-        items: allRooms.filter(r => r.rating >= 4.5).slice(0, 10)
+        items: ensureMinItems(allRooms.filter(r => r.rating && r.rating >= 4).slice(0, 10), 3)
       },
       {
         title: '🎓 Student Picks',
-        items: allRooms.filter(r => r.verified).slice(0, 10)
+        items: ensureMinItems(allRooms.filter(r => r.verifiedHost || r.verified).slice(0, 10), 3)
       },
       {
         title: '✨ Newly Added Rooms',
-        items: allRooms.slice(-10).reverse()
+        items: ensureMinItems(allRooms.slice(0).reverse().slice(0, 10), 3)
       },
       {
         title: '🏠 Premium Apartments',
-        items: allRooms.filter(r => r.propertyType === 'Apartment').slice(0, 10)
+        items: ensureMinItems(allRooms.filter(r => r.propertyType === 'Apartment' || r.priceNum > 1000).slice(0, 10), 3)
       },
       {
         title: '📍 Popular Near You',
-        items: allRooms.slice(5, 15)
+        items: ensureMinItems(allRooms.slice(2, 12), 3)
       }
     ];
+
+    // Filter out sections with no items
+    return sections.filter(section => section.items.length > 0);
   });
 
   rideCatalogSections = computed(() => {
@@ -2372,7 +2385,7 @@ export class SearchPage implements AfterViewInit {
     }
   }
 
-  results = computed(() => {
+  results = computed<any[]>(() => {
     if (this.activeTab() === 'rooms') {
       const f = this.roomsFilters(); // Access signal value
       return this.browseRoomItems().filter(r => {

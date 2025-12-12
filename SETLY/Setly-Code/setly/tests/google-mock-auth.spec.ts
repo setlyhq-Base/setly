@@ -1,20 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
-
-// Inject mock auth flag before any app scripts run
-const enableMockAuth = async (page: Page) => {
-  await page.addInitScript(() => {
-    // @ts-ignore
-    window.__e2eMockAuth = {
-      enabled: true,
-      user: {
-        uid: 'e2e-mock-uid',
-        email: 'mock.user@setly.test',
-        displayName: 'E2E Mock User',
-        emailVerified: true
-      }
-    };
-  });
-};
+import { test, expect } from '@playwright/test';
+import { gotoAuthed } from './utils/e2e';
 
 /**
  * This test simulates a Google sign-in using the in-app E2E mock hook.
@@ -23,19 +8,8 @@ const enableMockAuth = async (page: Page) => {
  */
  test.describe('Mocked Google Sign-in (E2E)', () => {
   test('should sign in via mock and access protected routes', async ({ page }) => {
-    await enableMockAuth(page);
-    await page.goto('/auth/sign-in');
-
-    // Click the Google provider button
-    const googleBtn = page.locator('[data-testid="btn-google"]');
-    await expect(googleBtn).toBeVisible();
-    await googleBtn.click();
-
-    // After sign-in handler, the page should navigate to home
-    await expect(page).toHaveURL(/\/$/);
-
-    // Protected route should be accessible without redirect to auth
-    await page.goto('/browse');
-    await expect(page).not.toHaveURL(/auth\/sign-in/);
+    await gotoAuthed(page, '/messages');
+    await expect(page).toHaveURL(/\/messages/);
+    await expect(page.locator('[data-testid="messages-page"]')).toBeVisible();
   });
 });

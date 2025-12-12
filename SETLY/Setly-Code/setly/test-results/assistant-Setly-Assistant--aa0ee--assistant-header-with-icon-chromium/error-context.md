@@ -4,194 +4,348 @@
 - generic [ref=e2]:
   - banner [ref=e4]:
     - generic [ref=e5]:
-      - link "SETLY" [ref=e6] [cursor=pointer]:
+      - link "Setly" [ref=e7] [cursor=pointer]:
         - /url: /
-        - generic [ref=e8]: SETLY
-      - generic [ref=e11]:
-        - textbox "Search for rooms" [ref=e12]:
+        - generic [ref=e11]: Setly
+      - generic [ref=e14]:
+        - textbox "Search for rooms" [ref=e15]:
           - /placeholder: Search for rooms near USA universities...
         - generic:
           - img
-        - button "Submit search" [ref=e13] [cursor=pointer]:
-          - img [ref=e14]
-      - navigation [ref=e16]:
-        - link "Connect" [ref=e17] [cursor=pointer]:
-          - /url: /connect
-        - link "Browse" [ref=e18] [cursor=pointer]:
+      - navigation [ref=e17]:
+        - link "People" [ref=e18] [cursor=pointer]:
+          - /url: /people
+        - link "Home" [ref=e19] [cursor=pointer]:
+          - /url: /home
+        - link "Post" [ref=e20] [cursor=pointer]:
+          - /url: /post
+        - link "Browse" [ref=e21] [cursor=pointer]:
           - /url: /browse
-        - link "Post Room" [ref=e19] [cursor=pointer]:
-          - /url: /open-room
-        - link "Messages" [ref=e20] [cursor=pointer]:
+        - link "Messages" [ref=e22] [cursor=pointer]:
           - /url: /messages
-        - link "Ride" [ref=e21] [cursor=pointer]:
-          - /url: /ride
-        - link "Profile" [ref=e22] [cursor=pointer]:
-          - /url: /profile
         - button "Sign In" [ref=e23] [cursor=pointer]
   - main [ref=e24]:
-    - generic [ref=e26]:
-      - generic [ref=e27]: home-component-mounted
-      - region "Complete your profile" [ref=e30]:
-        - generic [ref=e31]:
-          - generic [ref=e32]: "0"
-          - generic [ref=e33]:
-            - generic [ref=e34]: Finish your profile to post a room or message hosts (0%)
-            - generic [ref=e35]: Complete a few quick steps to unlock trusted actions.
-        - button "Complete profile" [ref=e36] [cursor=pointer]
-      - generic [ref=e42]:
-        - generic [ref=e43]:
-          - generic [ref=e44]:
-            - generic [ref=e45]: Trusted student housing & rides
-            - heading "Your next move." [level=1] [ref=e47]
-            - paragraph [ref=e48]: Find trusted homes and rides near your university — connect, live, and move with confidence.
-          - generic [ref=e49]:
-            - button "Explore Rooms" [ref=e50] [cursor=pointer]:
-              - generic [ref=e52]:
-                - img [ref=e53]
-                - text: Explore Rooms
-            - button "Book a Ride" [ref=e55] [cursor=pointer]:
-              - img [ref=e56]
-              - text: Book a Ride
-          - generic [ref=e61]:
-            - generic [ref=e62]:
-              - generic [ref=e63]: 10k+
-              - generic [ref=e64]: Students
-            - generic [ref=e65]:
-              - generic [ref=e66]: 500+
-              - generic [ref=e67]: Universities
-            - generic [ref=e68]:
-              - generic [ref=e69]: 95%
-              - generic [ref=e70]: Satisfaction
-        - generic [ref=e71]:
-          - generic [ref=e79]:
-            - combobox "Search universities or cities" [ref=e81]
-            - generic [ref=e82]:
-              - generic [ref=e85]:
-                - generic [ref=e86]: Check-in
-                - textbox "Check-in" [ref=e87]:
-                  - /placeholder: Select date
-              - generic [ref=e90]:
-                - generic [ref=e91]: Check-out
-                - textbox "Check-out" [ref=e92]:
-                  - /placeholder: Select date
-            - generic [ref=e93]:
-              - button "shared" [pressed] [ref=e94] [cursor=pointer]
-              - button "Private" [ref=e95] [cursor=pointer]
-            - generic [ref=e96]:
-              - generic [ref=e97]:
-                - checkbox "Student-verified rooms only" [ref=e98]
-                - generic [ref=e99]: Student-verified rooms only
-              - paragraph [ref=e100]: All listings are verified by current students
-            - button "Search for rooms" [ref=e101] [cursor=pointer]: Search
-          - paragraph [ref=e102]: Verified profiles • Fast messaging • Secure platform
-      - generic [ref=e105]:
-        - generic [ref=e106]:
-          - heading "Featured Rooms" [level=2] [ref=e107]
-          - paragraph [ref=e108]: Curated spaces with quality, comfort and the right vibe – refreshed daily.
-        - button "Browse all" [ref=e110] [cursor=pointer]:
-          - text: Browse all
-          - img [ref=e111]
-      - generic [ref=e168]:
-        - generic [ref=e169]:
-          - heading "SetlyRide" [level=2] [ref=e170]
-          - paragraph [ref=e171]: Trusted Setly rides near you.
-        - generic [ref=e172]:
-          - generic [ref=e173]:
-            - generic [ref=e174]:
-              - img [ref=e176]
-              - heading "SetlyRide" [level=3] [ref=e181]
-              - paragraph [ref=e182]: Carpool with a Setly near you.
-            - button "Request SetlyRide" [ref=e183] [cursor=pointer]
-          - generic [ref=e184]:
-            - generic [ref=e185]:
-              - generic [ref=e187]: U
-              - heading "Uber" [level=3] [ref=e188]
-              - paragraph [ref=e189]: Quick ride with Uber.
-            - button "Open Uber" [ref=e190] [cursor=pointer]
-  - contentinfo [ref=e192]:
-    - generic [ref=e193]:
-      - generic [ref=e194]:
-        - generic [ref=e195]:
-          - generic [ref=e198]: SETLY
-          - paragraph [ref=e199]: Setly - Find Your next Room near your university with roommates who match your lifestyle.
-        - generic [ref=e200]:
-          - heading "Company" [level=3] [ref=e201]
-          - list [ref=e202]:
-            - listitem [ref=e203]:
-              - link "About Setly" [ref=e204] [cursor=pointer]:
+    - main [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - button "Filters" [ref=e29] [cursor=pointer]:
+            - img [ref=e30]
+          - button "Map view" [ref=e32] [cursor=pointer]:
+            - img [ref=e33]
+        - generic [ref=e41]: SETLY
+        - generic [ref=e42]:
+          - button "Search" [ref=e43] [cursor=pointer]:
+            - img [ref=e44]
+          - button "Notifications" [ref=e47] [cursor=pointer]:
+            - img [ref=e48]
+      - generic [ref=e54]:
+        - button "Rooms 0" [ref=e56] [cursor=pointer]:
+          - img [ref=e57]
+          - generic [ref=e60]: Rooms
+          - generic [ref=e61]: "0"
+        - button "Rides" [ref=e62] [cursor=pointer]:
+          - img [ref=e63]
+          - generic [ref=e67]: Rides
+        - button "Market" [ref=e68] [cursor=pointer]:
+          - img [ref=e69]
+          - generic [ref=e72]: Market
+      - generic [ref=e75]:
+        - heading "Find your next move" [level=1] [ref=e76]
+        - paragraph [ref=e77]: Discover trusted rooms, instant rides, and connect with your community — all in one place.
+      - generic [ref=e80]:
+        - button "Around current location Tap to select location" [ref=e81] [cursor=pointer]:
+          - img [ref=e83]
+          - generic [ref=e86]:
+            - generic [ref=e87]: Around current location
+            - generic [ref=e88]: Tap to select location
+          - img [ref=e89]
+        - button "Check-in → Check-out Select dates" [ref=e91] [cursor=pointer]:
+          - img [ref=e93]
+          - generic [ref=e96]:
+            - generic [ref=e97]: Check-in → Check-out
+            - generic [ref=e98]: Select dates
+          - img [ref=e99]
+        - button "Room type Any Room" [ref=e101] [cursor=pointer]:
+          - img [ref=e103]
+          - generic [ref=e106]:
+            - generic [ref=e107]: Room type
+            - generic [ref=e108]: Any Room
+          - img [ref=e109]
+        - button "Search Rooms" [ref=e111] [cursor=pointer]:
+          - img [ref=e112]
+          - generic [ref=e115]: Search Rooms
+      - generic [ref=e117]:
+        - complementary "Filters" [ref=e118]:
+          - generic [ref=e120]:
+            - generic [ref=e121]:
+              - generic [ref=e122]:
+                - img [ref=e124]
+                - generic [ref=e126]:
+                  - heading "Filters" [level=2] [ref=e127]
+                  - paragraph [ref=e128]: Refine your search
+              - button "Hide filters" [ref=e130] [cursor=pointer]:
+                - img [ref=e131]
+            - generic [ref=e134]:
+              - generic [ref=e135]:
+                - button "Price Range" [ref=e136] [cursor=pointer]:
+                  - generic [ref=e137]:
+                    - img [ref=e139]
+                    - heading "Price Range" [level=3] [ref=e141]
+                  - img [ref=e142]
+                - generic [ref=e145]:
+                  - generic [ref=e146]:
+                    - generic [ref=e147]:
+                      - generic [ref=e148]: Min
+                      - generic [ref=e149]:
+                        - generic [ref=e150]: $
+                        - spinbutton [ref=e151]: "0"
+                    - generic [ref=e152]: —
+                    - generic [ref=e153]:
+                      - generic [ref=e154]: Max
+                      - generic [ref=e155]:
+                        - generic [ref=e156]: $
+                        - spinbutton [ref=e157]: "5000"
+                  - slider [ref=e159] [cursor=pointer]: "5000"
+                  - generic [ref=e160]:
+                    - button "Under $1K" [ref=e161] [cursor=pointer]
+                    - button "$1K-$2K" [ref=e162] [cursor=pointer]
+                    - button "$2K-$3K" [ref=e163] [cursor=pointer]
+                    - button "$3K+" [ref=e164] [cursor=pointer]
+              - generic [ref=e166]:
+                - button "Location" [ref=e167] [cursor=pointer]:
+                  - generic [ref=e168]:
+                    - img [ref=e170]
+                    - heading "Location" [level=3] [ref=e173]
+                  - img [ref=e174]
+                - generic [ref=e176]:
+                  - generic [ref=e177]:
+                    - img
+                    - textbox "Search university or city" [ref=e178]
+                  - generic [ref=e179]:
+                    - paragraph [ref=e180]: "Popular:"
+                    - generic [ref=e181]:
+                      - button "Boston" [ref=e182] [cursor=pointer]:
+                        - img [ref=e183]
+                        - text: Boston
+                      - button "New York" [ref=e185] [cursor=pointer]:
+                        - img [ref=e186]
+                        - text: New York
+                      - button "Berkeley" [ref=e188] [cursor=pointer]:
+                        - img [ref=e189]
+                        - text: Berkeley
+                      - button "Stanford" [ref=e191] [cursor=pointer]:
+                        - img [ref=e192]
+                        - text: Stanford
+                      - button "MIT" [ref=e194] [cursor=pointer]:
+                        - img [ref=e195]
+                        - text: MIT
+                      - button "Harvard" [ref=e197] [cursor=pointer]:
+                        - img [ref=e198]
+                        - text: Harvard
+              - generic [ref=e201]:
+                - button "Room Details" [ref=e202] [cursor=pointer]:
+                  - generic [ref=e203]:
+                    - img [ref=e205]
+                    - heading "Room Details" [level=3] [ref=e208]
+                  - img [ref=e209]
+                - generic [ref=e211]:
+                  - generic [ref=e212]: Room type
+                  - generic [ref=e213]:
+                    - button "Shared" [ref=e214] [cursor=pointer]:
+                      - img [ref=e215]
+                      - generic [ref=e217]: Shared
+                    - button "Private" [ref=e218] [cursor=pointer]:
+                      - img [ref=e219]
+                      - generic [ref=e221]: Private
+              - generic [ref=e223]:
+                - button "Property Type" [ref=e224] [cursor=pointer]:
+                  - heading "Property Type" [level=3] [ref=e225]
+                  - img [ref=e226]
+                - generic [ref=e228]:
+                  - img [ref=e229]
+                  - combobox [ref=e231]:
+                    - option "Any type" [selected]
+                    - option "Dorm"
+                    - option "Apartment"
+                    - option "House"
+                    - option "Shared house"
+              - generic [ref=e233]:
+                - button "Amenities" [ref=e234] [cursor=pointer]:
+                  - heading "Amenities" [level=3] [ref=e235]
+                  - img [ref=e236]
+                - generic [ref=e238]:
+                  - button "Wi-Fi" [ref=e239] [cursor=pointer]:
+                    - img [ref=e240]
+                    - text: Wi-Fi
+                  - button "Laundry" [ref=e242] [cursor=pointer]:
+                    - img [ref=e243]
+                    - text: Laundry
+                  - button "Parking" [ref=e245] [cursor=pointer]:
+                    - img [ref=e246]
+                    - text: Parking
+                  - button "Kitchen" [ref=e248] [cursor=pointer]:
+                    - img [ref=e249]
+                    - text: Kitchen
+                  - button "AC" [ref=e251] [cursor=pointer]:
+                    - img [ref=e252]
+                    - text: AC
+              - generic [ref=e255]:
+                - button "Verification" [ref=e256] [cursor=pointer]:
+                  - heading "Verification" [level=3] [ref=e257]
+                  - img [ref=e258]
+                - generic [ref=e261]:
+                  - text: Student-Verified Only
+                  - button "Student-Verified Only" [ref=e262] [cursor=pointer]
+              - generic [ref=e264]:
+                - button "Rating" [ref=e265] [cursor=pointer]:
+                  - heading "Rating" [level=3] [ref=e266]
+                  - img [ref=e267]
+                - combobox [ref=e269]:
+                  - option "Any rating" [selected]
+                  - option "⭐⭐⭐⭐⭐ 5 stars"
+                  - option "⭐⭐⭐⭐ 4+ stars"
+                  - option "⭐⭐⭐ 3+ stars"
+                  - option "⭐⭐ 2+ stars"
+                  - option "⭐ 1+ star"
+        - generic [ref=e271]:
+          - button "Filters" [ref=e273] [cursor=pointer]:
+            - img [ref=e274]
+            - text: Filters
+          - generic [ref=e276]:
+            - generic [ref=e277]: 0results
+            - combobox [ref=e278] [cursor=pointer]:
+              - option "Most relevant" [selected]
+              - option "Newest"
+              - 'option "Price: Low to High"'
+              - 'option "Price: High to Low"'
+              - option "Highest Rated"
+      - generic [ref=e279]:
+        - generic [ref=e282]:
+          - heading "Filters" [level=2] [ref=e283]
+          - button "Close filters" [ref=e284] [cursor=pointer]:
+            - img [ref=e285]
+        - generic [ref=e289]:
+          - generic [ref=e290]:
+            - heading "Room Filters" [level=3] [ref=e291]
+            - button "Reset" [ref=e292] [cursor=pointer]
+          - generic [ref=e293]:
+            - generic [ref=e294]: Price Range
+            - generic [ref=e295]:
+              - generic [ref=e296]:
+                - spinbutton [ref=e297]: "0"
+                - generic [ref=e298]: "-"
+                - spinbutton [ref=e299]: "5000"
+              - generic [ref=e300]:
+                - slider [ref=e301]: "0"
+                - slider [ref=e302]: "5000"
+          - generic [ref=e303]:
+            - generic [ref=e304]: Room Type
+            - generic [ref=e305]:
+              - button "Single" [ref=e306] [cursor=pointer]
+              - button "Shared" [ref=e307] [cursor=pointer]
+              - button "Studio" [ref=e308] [cursor=pointer]
+              - button "Apartment" [ref=e309] [cursor=pointer]
+          - generic [ref=e310]:
+            - generic [ref=e311]: Move-in Date
+            - textbox [ref=e312]
+          - generic [ref=e313]:
+            - generic [ref=e314]: Amenities
+            - generic [ref=e315]:
+              - generic [ref=e316] [cursor=pointer]:
+                - checkbox "WiFi" [ref=e317]
+                - generic [ref=e318]: WiFi
+              - generic [ref=e319] [cursor=pointer]:
+                - checkbox "Parking" [ref=e320]
+                - generic [ref=e321]: Parking
+              - generic [ref=e322] [cursor=pointer]:
+                - checkbox "Laundry" [ref=e323]
+                - generic [ref=e324]: Laundry
+              - generic [ref=e325] [cursor=pointer]:
+                - checkbox "Kitchen" [ref=e326]
+                - generic [ref=e327]: Kitchen
+              - generic [ref=e328] [cursor=pointer]:
+                - checkbox "AC" [ref=e329]
+                - generic [ref=e330]: AC
+              - generic [ref=e331] [cursor=pointer]:
+                - checkbox "Heating" [ref=e332]
+                - generic [ref=e333]: Heating
+          - generic [ref=e334]:
+            - generic [ref=e335]: Maximum Distance (miles)
+            - generic [ref=e336]:
+              - slider [ref=e337]: "10"
+              - generic [ref=e338]: 10 mi
+          - generic [ref=e339]:
+            - generic [ref=e342] [cursor=pointer]: Furnished
+            - generic [ref=e345] [cursor=pointer]: Pets Allowed
+            - generic [ref=e348] [cursor=pointer]: Verified Only
+          - button "Apply Filters" [ref=e350] [cursor=pointer]
+    - generic:
+      - generic:
+        - generic: online
+  - contentinfo [ref=e353]:
+    - generic [ref=e354]:
+      - generic [ref=e355]:
+        - generic [ref=e356]:
+          - generic [ref=e359]: SETLY
+          - paragraph [ref=e360]: Setly - Find Your next Room near your university with roommates who match your lifestyle.
+        - generic [ref=e361]:
+          - heading "Company" [level=3] [ref=e362]
+          - list [ref=e363]:
+            - listitem [ref=e364]:
+              - link "About Setly" [ref=e365] [cursor=pointer]:
                 - /url: /about
                 - text: About
-            - listitem [ref=e205]:
-              - link "Careers at Setly" [ref=e206] [cursor=pointer]:
+            - listitem [ref=e366]:
+              - link "Careers at Setly" [ref=e367] [cursor=pointer]:
                 - /url: /careers
                 - text: Careers
-            - listitem [ref=e207]:
-              - link "Setly blog" [ref=e208] [cursor=pointer]:
+            - listitem [ref=e368]:
+              - link "Setly blog" [ref=e369] [cursor=pointer]:
                 - /url: /blog
                 - text: Blog
-            - listitem [ref=e209]:
-              - link "Safety information" [ref=e210] [cursor=pointer]:
+            - listitem [ref=e370]:
+              - link "Safety information" [ref=e371] [cursor=pointer]:
                 - /url: /safety
                 - text: Safety
-            - listitem [ref=e211]:
-              - link "Help center" [ref=e212] [cursor=pointer]:
+            - listitem [ref=e372]:
+              - link "Help center" [ref=e373] [cursor=pointer]:
                 - /url: /help
                 - text: Help
-        - generic [ref=e213]:
-          - heading "Support" [level=3] [ref=e214]
-          - list [ref=e215]:
-            - listitem [ref=e216]:
-              - link "Terms of service" [ref=e217] [cursor=pointer]:
+        - generic [ref=e374]:
+          - heading "Support" [level=3] [ref=e375]
+          - list [ref=e376]:
+            - listitem [ref=e377]:
+              - link "Terms of service" [ref=e378] [cursor=pointer]:
                 - /url: /terms
                 - text: Terms
-            - listitem [ref=e218]:
-              - link "Privacy policy" [ref=e219] [cursor=pointer]:
+            - listitem [ref=e379]:
+              - link "Privacy policy" [ref=e380] [cursor=pointer]:
                 - /url: /privacy
                 - text: Privacy
-            - listitem [ref=e220]:
-              - link "Contact support" [ref=e221] [cursor=pointer]:
+            - listitem [ref=e381]:
+              - link "Contact support" [ref=e382] [cursor=pointer]:
                 - /url: mailto:support@setly.com
                 - text: Contact
-        - generic [ref=e222]:
-          - heading "Connect" [level=3] [ref=e223]
-          - list [ref=e224]:
-            - listitem [ref=e225]:
-              - link "Follow us on Facebook" [ref=e226] [cursor=pointer]:
+        - generic [ref=e383]:
+          - heading "Connect" [level=3] [ref=e384]
+          - list [ref=e385]:
+            - listitem [ref=e386]:
+              - link "Follow us on Facebook" [ref=e387] [cursor=pointer]:
                 - /url: https://facebook.com/setly
                 - text: Facebook
-            - listitem [ref=e227]:
-              - link "Follow us on Twitter" [ref=e228] [cursor=pointer]:
+            - listitem [ref=e388]:
+              - link "Follow us on Twitter" [ref=e389] [cursor=pointer]:
                 - /url: https://twitter.com/setly
                 - text: Twitter
-            - listitem [ref=e229]:
-              - link "Follow us on Instagram" [ref=e230] [cursor=pointer]:
+            - listitem [ref=e390]:
+              - link "Follow us on Instagram" [ref=e391] [cursor=pointer]:
                 - /url: https://instagram.com/setly
                 - text: Instagram
-            - listitem [ref=e231]:
-              - link "Follow us on LinkedIn" [ref=e232] [cursor=pointer]:
+            - listitem [ref=e392]:
+              - link "Follow us on LinkedIn" [ref=e393] [cursor=pointer]:
                 - /url: https://linkedin.com/company/setly
                 - text: LinkedIn
-      - paragraph [ref=e234]: © 2025 Setly. All rights reserved.
-  - dialog "Setly Assistant" [ref=e236]:
-    - banner [ref=e237]:
-      - generic [ref=e238]:
-        - generic [ref=e239]: ⭐
-        - generic [ref=e240]:
-          - generic [ref=e241]: Setly Assistant beta
-          - generic [ref=e242]: Housing
-      - generic [ref=e243]:
-        - button "Conversations" [ref=e244] [cursor=pointer]: ☰
-        - button "Help" [ref=e245] [cursor=pointer]: "?"
-        - button "Minimize" [ref=e246] [cursor=pointer]: —
-        - button "Close" [ref=e247] [cursor=pointer]: ×
-    - generic [ref=e252]:
-      - text: Welcome to Setly Assistant ⭐ Housing • Rides • Settling in Ask anything or start a playbook below.
-      - generic [ref=e253]:
-        - button "Feedback up" [ref=e254] [cursor=pointer]: 👍
-        - button "Feedback down" [ref=e255] [cursor=pointer]: 👎
-    - generic [ref=e257]:
-      - textbox "Ask anything about moving to the US…" [active] [ref=e258]
-      - button "Send" [disabled] [ref=e259]
+      - paragraph [ref=e395]: © 2025 Setly. All rights reserved.
   - generic:
     - status
 ```

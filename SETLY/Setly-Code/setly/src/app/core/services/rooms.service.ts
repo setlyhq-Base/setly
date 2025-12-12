@@ -54,7 +54,11 @@ export class RoomsService {
   }
 
   getRoomById(id: string): Observable<Room | undefined> {
-    // Try backend first
+    // Prefer local rooms first to avoid console noise when backend isn't running.
+    const local = this.roomStore.getRoomById(id);
+    if (local) return of(local);
+
+    // Fall back to backend for non-local listing ids.
     return this.http.get<any>(`/api/rooms/${id}`).pipe(
       map(dto => this.mapToRoom(dto)),
       catchError(() => of(this.roomStore.getRoomById(id)))
@@ -91,6 +95,7 @@ export class RoomsService {
     return {
       id: dto.id,
       title: dto.title,
+      description: dto.description,
       price: Number(dto.price) || 0,
       deposit: dto.deposit,
       city: dto.city,
@@ -107,6 +112,10 @@ export class RoomsService {
       createdAt: dto.createdAt || new Date().toISOString(),
       image: Array.isArray(dto.photos) && dto.photos.length ? dto.photos[0] : dto.image,
       amenities: dto.amenities,
+      availabilityStart: dto.availabilityStart,
+      availabilityEnd: dto.availabilityEnd,
+      studentVerified: dto.studentVerified,
+      minStayDays: dto.minStayDays,
       videos: Array.isArray(dto.videos) ? dto.videos.map((u: string) => ({ url: u })) : undefined
     } as Room;
   }

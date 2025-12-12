@@ -1,5 +1,6 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Room } from '../models/room.model';
+import { DummyPeopleService } from './dummy-people.service';
 
 interface Filters {
   budgetMin: number;
@@ -22,6 +23,7 @@ interface Filters {
   providedIn: 'root'
 })
 export class RoomStoreService {
+  private dummyPeople = inject(DummyPeopleService);
   // Use a distinct key from the lightweight RoomCard store to avoid collisions and bloat
   private readonly ROOMS_KEY = 'rooms_full_v1';
   private readonly LEGACY_KEY = 'rooms';
@@ -126,9 +128,142 @@ export class RoomStoreService {
   constructor() {
     this.loadFromStorage();
     this.seedMockData();
+    this.ensureMinimumRooms(30);
     // Ensure all rooms carry rich mock meta so the entire app can render consistently
     this.enrichAllRoomsWithMockMeta();
     this.saveToStorage();
+  }
+
+  /**
+   * Dev/demo-only helper: clears dummy room storage and reseeds a fresh deterministic dataset.
+   * Safe to call repeatedly.
+   */
+  resetDemoData(): void {
+    try {
+      localStorage.removeItem(this.ROOMS_KEY);
+      localStorage.removeItem(this.LEGACY_KEY);
+    } catch {
+      // ignore
+    }
+
+    this._rooms.set([]);
+    this._query.set('');
+    this._filters.set({
+      budgetMin: 0,
+      budgetMax: 10000,
+      vegetarian: false,
+      smoking: false,
+      petsOk: false,
+      furnished: false,
+      roomType: '',
+      city: '',
+      universityId: '',
+      checkIn: undefined,
+      checkOut: undefined,
+      guests: undefined,
+      studentVerifiedOnly: undefined
+    });
+
+    this.seedMockData();
+    this.ensureMinimumRooms(30);
+    this.enrichAllRoomsWithMockMeta();
+    this.saveToStorage();
+  }
+
+  private ensureMinimumRooms(min: number) {
+    const rooms = Array.isArray(this._rooms()) ? [...this._rooms()] : [];
+    if (rooms.length >= min) return;
+
+    const existingIds = new Set(rooms.map(r => r.id));
+    const nextNumericId = () => {
+      for (let i = 1; ; i++) {
+        const id = String(i);
+        if (!existingIds.has(id)) return id;
+      }
+    };
+
+    const cityPool = [
+      { city: 'Boston', state: 'MA', coords: { lat: 42.3601, lng: -71.0589 } },
+      { city: 'Cambridge', state: 'MA', coords: { lat: 42.3736, lng: -71.1097 } },
+      { city: 'New Haven', state: 'CT', coords: { lat: 41.3083, lng: -72.9279 } },
+      { city: 'New York', state: 'NY', coords: { lat: 40.7128, lng: -74.0060 } },
+      { city: 'Stanford', state: 'CA', coords: { lat: 37.4275, lng: -122.1697 } },
+      { city: 'Berkeley', state: 'CA', coords: { lat: 37.8715, lng: -122.2730 } },
+      { city: 'Los Angeles', state: 'CA', coords: { lat: 34.0522, lng: -118.2437 } },
+      { city: 'Seattle', state: 'WA', coords: { lat: 47.6062, lng: -122.3321 } },
+      { city: 'Princeton', state: 'NJ', coords: { lat: 40.3573, lng: -74.6672 } },
+    ];
+    const titlePool = [
+      'Sunlit Room in a Quiet Home',
+      'Modern Apartment Steps from Campus',
+      'Private Room with Study Nook',
+      'Shared Space with Friendly Roommates',
+      'Entire Place — Ideal for Focused Study',
+      'Calm Retreat Near Transit',
+    ];
+
+    const ROOM_IMAGES = [
+      '/assets/images%20/jon-stebbe-paydk0JcIOQ-unsplash.jpg',
+      '/assets/images%20/kam-idris-_HqHX3LBN18-unsplash.jpg',
+      '/assets/images%20/kam-idris-kyt0PkBSCNQ-unsplash.jpg',
+      '/assets/images%20/kara-eads-L7EwHkq1B2s-unsplash.jpg',
+      '/assets/images%20/kenny-eliason-Wp7t4cWN-68-unsplash.jpg',
+      '/assets/images%20/lotus-design-n-print-0sDzRgrN_pI-unsplash.jpg',
+      '/assets/images%20/lotus-design-n-print-r_y2VBvEOIE-unsplash.jpg',
+      '/assets/images%20/alexandra-gorn-JIUjvqe2ZHg-unsplash.jpg',
+      '/assets/images%20/andy-vult-zwZpdhoTbU0-unsplash.jpg',
+      '/assets/images%20/becca-tapert-dO3qTKxwik0-unsplash.jpg'
+    ];
+
+    const pickDeterministic = <T>(arr: T[], seed: number) => arr[seed % arr.length];
+    const pickPhotosDeterministic = (seed: number, minPhotos = 3, maxPhotos = 6) => {
+      const count = minPhotos + (seed % (maxPhotos - minPhotos + 1));
+      const photos: string[] = [];
+      for (let i = 0; i < ROOM_IMAGES.length && photos.length < count; i++) {
+        const idx = (seed + i * 3) % ROOM_IMAGES.length;
+        const p = ROOM_IMAGES[idx];
+        if (!photos.includes(p)) photos.push(p);
+      }
+      return photos;
+    };
+
+    while (rooms.length < min) {
+      const id = nextNumericId();
+      existingIds.add(id);
+      const seed = Number(id) || rooms.length + 1;
+      const loc = pickDeterministic(cityPool, seed * 5);
+
+      const roomType = (seed % 12 === 0) ? 'entire' : (seed % 3 === 0 ? 'shared' : 'private');
+      const bath = roomType === 'entire' ? 'private' : (seed % 4 === 0 ? 'private' : 'shared');
+      const furnished = seed % 5 !== 0;
+      const price = 700 + (seed % 9) * 125 + (roomType === 'entire' ? 900 : 0);
+
+      rooms.push({
+        id,
+        title: pickDeterministic(titlePool, seed * 7),
+        description: undefined,
+        price,
+        city: loc.city,
+        state: loc.state,
+        coords: loc.coords,
+        universityId: String((seed % 13) + 1),
+        distanceKm: Math.round((0.6 + (seed % 28) / 10) * 10) / 10,
+        roomType,
+        bath,
+        furnished,
+        rules: {
+          vegetarian: seed % 4 === 0,
+          smoking: seed % 11 === 0,
+          petsOk: seed % 3 === 0,
+        },
+        photos: pickPhotosDeterministic(seed, 3, 6),
+        hostId: `host${id}`,
+        createdAt: new Date(Date.now() - (seed % 40) * 24 * 60 * 60 * 1000).toISOString(),
+        tags: [roomType === 'entire' ? 'Entire place' : 'Student-friendly', furnished ? 'Furnished' : 'Unfurnished']
+      });
+    }
+
+    this._rooms.set(rooms);
   }
 
   private loadFromStorage(): void {
@@ -290,7 +425,8 @@ export class RoomStoreService {
           bath: 'shared',
           furnished: false,
           rules: { vegetarian: false, smoking: false, petsOk: true },
-          photos: pickPhotos(),
+          // Intentionally a single photo to validate carousel edge-cases
+          photos: pickPhotos(1, 1),
           hostId: 'host2',
           createdAt: new Date().toISOString(),
           tags: ['Pets ok', 'No smoking']
@@ -517,9 +653,62 @@ export class RoomStoreService {
   }
 
   private enrichRoom(r: Room): Room {
-    const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-    const pick = <T>(arr: T[]) => arr[rand(0, arr.length - 1)];
+    const hashIndex = (seed: string, mod: number) => {
+      if (mod <= 0) return 0;
+      let h = 2166136261;
+      for (let i = 0; i < seed.length; i++) {
+        h ^= seed.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return Math.abs(h) % mod;
+    };
+
+    // Deterministic PRNG (stable across refreshes and E2E)
+    let prngState = (() => {
+      let h = 2166136261;
+      const s = `room:${r.id}`;
+      for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return (h >>> 0) || 1;
+    })();
+    const prng = () => {
+      // xorshift32
+      prngState ^= prngState << 13;
+      prngState ^= prngState >>> 17;
+      prngState ^= prngState << 5;
+      return (prngState >>> 0) / 4294967296;
+    };
+    const rand = (min: number, max: number) => Math.floor(prng() * (max - min + 1)) + min;
+    const pick = <T>(arr: T[]) => arr[Math.max(0, Math.min(arr.length - 1, Math.floor(prng() * arr.length)))];
     const uniq = <T>(arr: T[]) => Array.from(new Set(arr));
+
+    const allUsers = this.dummyPeople.getAllUsers();
+    const hostUser = allUsers.find(u => u.id === r.hostId) || allUsers[hashIndex(`host:${r.id}`, allUsers.length)];
+    const hostId = hostUser?.id || r.hostId;
+    const shouldNormalizeUniversity = typeof r.universityId === 'string' && /^\d+$/.test(r.universityId);
+    const universityId = (!r.universityId || shouldNormalizeUniversity) ? (hostUser?.universityId || r.universityId) : r.universityId;
+
+    const existingRoommateIds = Array.isArray(r.roommateIds) ? r.roommateIds.filter(Boolean) : [];
+    const roommateIds = existingRoommateIds.length
+      ? uniq(existingRoommateIds).filter(id => id !== hostId)
+      : (() => {
+          const preferred = universityId
+            ? allUsers.filter(u => u.id !== hostId && u.universityId === universityId)
+            : allUsers.filter(u => u.id !== hostId);
+          const pool = preferred.length >= 5 ? preferred : allUsers.filter(u => u.id !== hostId);
+          const start = hashIndex(`roommates:${r.id}`, pool.length);
+          const picked: string[] = [];
+          for (let i = 0; i < pool.length && picked.length < 4; i++) {
+            const u = pool[(start + i) % pool.length];
+            if (!u?.id) continue;
+            if (u.id === hostId) continue;
+            if (picked.includes(u.id)) continue;
+            picked.push(u.id);
+          }
+          return picked;
+        })();
 
     const amenityPool = [
       'High-speed Wi‑Fi','In-unit laundry','Heating','Air conditioning','Desk','Closet space',
@@ -535,8 +724,37 @@ export class RoomStoreService {
     const availabilityStart = r.availabilityStart || new Date(Date.now() + rand(3,14)*24*60*60*1000).toISOString();
     const availabilityEnd = r.availabilityEnd || new Date(Date.now() + rand(60,240)*24*60*60*1000).toISOString();
 
+    const existingMemories = Array.isArray(r.memories) ? r.memories : [];
+    const memoryAuthorPool = uniq([hostId, ...roommateIds]).filter(Boolean);
+    const memories = existingMemories.length
+      ? existingMemories
+      : (() => {
+          const out: NonNullable<Room['memories']> = [];
+          const themes = ['Coffee run', 'Gym session', 'Study grind', 'Weekend market', 'Sunset walk', 'Movie night', 'Library day', 'Campus event'];
+          const photoPool = photos.length ? photos : ['/assets/placeholder-room.jpg'];
+          const count = 3;
+          for (let i = 0; i < count; i++) {
+            const authorId = memoryAuthorPool[(hashIndex(`mem-author:${r.id}:${i}`, memoryAuthorPool.length || 1)) % (memoryAuthorPool.length || 1)] || hostId;
+            const theme = themes[(hashIndex(`mem-theme:${r.id}:${i}`, themes.length)) % themes.length];
+            const when = new Date(Date.now() - (rand(1, 180)) * 24 * 60 * 60 * 1000).toISOString();
+            out.push({
+              id: `${r.id}-mem-${i + 1}`,
+              authorId,
+              createdAt: when,
+              title: theme,
+              story: `${theme} near ${city} — one of our favorite little routines.`,
+              photoUrl: photoPool[i % photoPool.length],
+            });
+          }
+          return out;
+        })();
+
     const enriched: Room = {
       ...r,
+      hostId,
+      universityId,
+      roommateIds,
+      memories,
       address: r.address || `${rand(10,999)} ${pick(['Commonwealth Ave','Massachusetts Ave','Huntington Ave','Beacon St','Boylston St'])}, ${city}, ${state}`,
       amenities: r.amenities && r.amenities.length ? r.amenities : uniq(Array.from({ length: rand(6, 10) }, () => pick(amenityPool))),
       features: r.features && r.features.length ? r.features : uniq(Array.from({ length: rand(2, 4) }, () => pick(featurePool))),

@@ -2,7 +2,7 @@ import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { environment } from '../environments/environment';
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, ErrorHandler } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, ErrorHandler, provideAppInitializer, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 import { importProvidersFrom } from '@angular/core';
@@ -15,6 +15,7 @@ import { ApiBaseUrlInterceptor } from './core/interceptors/api-base-url.intercep
 import { AuthTokenInterceptor } from './core/interceptors/auth-token.interceptor';
 import { PermissionErrorInterceptor } from './core/interceptors/permission-error.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { DemoDataResetService } from './core/services/demo-data-reset.service';
 
 class GlobalErrorHandler implements ErrorHandler {
   handleError(error: any): void {
@@ -33,6 +34,14 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([errorInterceptor])
     ),
     provideRouter(routes),
+    ...(!environment.production
+      ? [
+          provideAppInitializer(() => {
+            const reset = inject(DemoDataResetService);
+            reset.registerGlobalHelper();
+          })
+        ]
+      : []),
     // Only initialize Firebase when config exists to avoid runtime errors in demo mode
     ...(environment?.firebase?.apiKey
       ? [

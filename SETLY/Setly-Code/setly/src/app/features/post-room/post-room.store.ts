@@ -22,7 +22,7 @@ export interface PostRoomDraft {
   city: string;
   state: string;
   nearUniversityId: string;
-  roomType: 'private' | 'shared' | '';
+  roomType: 'private' | 'shared' | 'entire' | '';
   bath: 'private' | 'shared' | '';
   furnished: boolean;
   rules: {

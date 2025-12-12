@@ -211,6 +211,23 @@ export class MessagesPage implements OnInit {
   @ViewChild('inputEl') inputEl?: ElementRef<HTMLTextAreaElement>;
   @ViewChild('scrollArea') scrollArea?: ElementRef<HTMLDivElement>;
 
+  // Auto-scroll when near bottom on new messages in active conversation.
+  // Must be created in an injection context (field initializer), not ngOnInit.
+  private readonly autoScrollEffect = effect(() => {
+    const conv = this.active();
+    if (!conv && this.mobilePane() === 'chat' && !this.isDesktopWidth()) {
+      this.mobilePane.set('list');
+    }
+    const len = conv?.messages?.length || 0;
+    if (!len) return;
+    setTimeout(() => {
+      const el = this.scrollArea?.nativeElement;
+      if (!el) return;
+      const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distance < 120) this.scrollToBottom();
+    }, 0);
+  });
+
   ngOnInit(): void {
     // Establish real-time connection (SSE)
     this.gateway.connect();
@@ -240,22 +257,6 @@ export class MessagesPage implements OnInit {
       this.focusChatOnMobile();
     }
     if (text) this.messageText = text; else if (withId) this.messageText = this.loadDraft(withId) || '';
-
-    // Auto-scroll when near bottom on new messages in active conversation
-    effect(() => {
-      const conv = this.active();
-      if (!conv && this.mobilePane()==='chat' && !this.isDesktopWidth()) {
-        this.mobilePane.set('list');
-      }
-      const len = conv?.messages?.length || 0; // track
-      if (!len) return;
-      setTimeout(() => {
-        const el = this.scrollArea?.nativeElement;
-        if (!el) return;
-        const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-        if (distance < 120) this.scrollToBottom();
-      }, 0);
-    });
   }
 
   sendMessage(): void {

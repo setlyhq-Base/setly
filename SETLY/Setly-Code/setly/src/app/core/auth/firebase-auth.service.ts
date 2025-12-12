@@ -32,8 +32,7 @@ export class FirebaseAuthService {
   private phoneMockEnabled = !!environment?.featureFlags?.mockPhoneAuth;
   private phoneMockCode = '123456';
 
-  constructor(private auth: Auth) {
-    // Check for E2E mock flag injected by Playwright before app boot
+  private refreshE2eMockFromWindow(): void {
     try {
       const w = window as any;
       if (w && w.__e2eMockAuth && w.__e2eMockAuth.enabled) {
@@ -48,9 +47,32 @@ export class FirebaseAuthService {
     } catch {}
   }
 
+  constructor(private auth: Auth) {
+    // Dev-only E2E hook (so AuthGuard can be bypassed without timing-sensitive init scripts)
+    try {
+      if (!environment.production) {
+        const qp = new URL(window.location.href).searchParams;
+        if (qp.get('e2eMockAuth') === '1') {
+          this.mockEnabled = true;
+          this.mockUser = {
+            uid: 'e2e-mock-uid',
+            email: 'mock.user@setly.test',
+            displayName: 'E2E Mock User',
+            emailVerified: true
+          } as Partial<FirebaseUser>;
+        }
+      }
+    } catch {}
+
+    // Check for E2E mock flag injected by Playwright before app boot
+    this.refreshE2eMockFromWindow();
+  }
+
   // Social Login Methods
   async signInWithGoogle(): Promise<FirebaseUser> {
     console.log('🔐 [Firebase Auth] Starting Google sign-in...');
+
+    this.refreshE2eMockFromWindow();
     
     if (this.mockEnabled && this.mockUser) {
       console.log('🎭 [Firebase Auth] Using mock user for testing');
@@ -260,6 +282,7 @@ export class FirebaseAuthService {
 
   // Auth State
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void): () => void {
+    this.refreshE2eMockFromWindow();
     if (this.mockEnabled) {
       // Invoke immediately with mock user; return no-op unsubscribe
       setTimeout(() => callback(this.mockUser as FirebaseUser), 0);
@@ -277,6 +300,7 @@ export class FirebaseAuthService {
   async getIdToken(): Promise<string | null> {
     // Only return a mock token in full E2E mock mode; do NOT use phone mock here
     // so that real Firebase tokens are sent to the backend for verification.
+    this.refreshE2eMockFromWindow();
     if (this.mockEnabled) return 'e2e-mock-token';
     const user = this.auth.currentUser;
     return user ? await user.getIdToken() : null;

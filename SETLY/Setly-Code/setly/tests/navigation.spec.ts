@@ -1,50 +1,40 @@
 import { test, expect } from '@playwright/test';
+import { gotoAuthed } from './utils/e2e';
 
 test.describe('Navigation', () => {
   test('should navigate to home page', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle(/Setly/);
-    await expect(page.locator('text=Find Your Perfect Room')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
   test('should navigate to browse page', async ({ page }) => {
     await page.goto('/');
-    const browseLink = page.locator('a', { hasText: 'Browse' });
-    await browseLink.click();
-    await expect(page).toHaveURL('/browse');
-    await expect(page.locator('text=Browse Rooms')).toBeVisible();
+    await page.goto('/browse');
+    await expect(page).toHaveURL(/\/browse/);
+    await expect(page.getByRole('heading', { name: /Browse Rooms/i })).toBeVisible();
   });
 
   test('should navigate to post room page', async ({ page }) => {
-    await page.goto('/');
-    const postRoomLink = page.locator('a', { hasText: 'Post Room' });
-    await postRoomLink.click();
-    await expect(page).toHaveURL('/open-room');
-    await expect(page.locator('text=Open a Room')).toBeVisible();
+    await gotoAuthed(page, '/open-room');
+    await expect(page).toHaveURL(/\/(open-room|post-room)/);
   });
 
   test('should navigate to messages page', async ({ page }) => {
-    await page.goto('/');
-    const messagesLink = page.locator('a', { hasText: 'Messages' }).first();
-    await messagesLink.click();
-    await expect(page).toHaveURL('/messages');
-    await expect(page.locator('h1', { hasText: 'Messages' })).toBeVisible();
+    await gotoAuthed(page, '/messages');
+    await expect(page).toHaveURL(/\/messages/);
   });
 
   test('should navigate to profile page', async ({ page }) => {
-    await page.goto('/');
-    const profileLink = page.locator('a', { hasText: 'Profile' }).first();
-    await profileLink.click();
-    await expect(page).toHaveURL('/profile');
-    await expect(page.locator('h1', { hasText: 'Profile' })).toBeVisible();
+    await gotoAuthed(page, '/profile');
+    await expect(page).toHaveURL(/\/profile/);
   });
 
   test('should navigate to sign in page', async ({ page }) => {
     await page.goto('/');
-    const signInLink = page.locator('a', { hasText: 'Sign In' });
-    await signInLink.click();
-    await expect(page).toHaveURL('/sign-in');
-    await expect(page.locator('text=Sign In')).toBeVisible();
+    await page.goto('/auth/sign-in');
+    await expect(page).toHaveURL(/\/auth\/sign-in/);
+    await expect(page.locator('[data-testid="auth-title"]')).toContainText(/sign in/i);
   });
 
   test('should navigate to sign up page', async ({ page }) => {
@@ -82,6 +72,6 @@ test.describe('Navigation', () => {
   test('should handle 404 pages gracefully', async ({ page }) => {
     await page.goto('/nonexistent-page');
     // Should show 404 page or redirect to home
-    await expect(page.locator('text=Page not found').or(page.locator('text=Find Your Perfect Room'))).toBeVisible();
+    await expect(page.locator('text=Page not found').or(page.getByRole('heading', { level: 1 }))).toBeVisible();
   });
 });

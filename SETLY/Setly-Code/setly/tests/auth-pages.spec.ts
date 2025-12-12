@@ -29,13 +29,8 @@ test.describe('Auth Pages', () => {
   });
 
   test('unauthenticated guard redirect preserves next param', async ({ page }) => {
-    await page.goto('/messages');
-    await expect(page).toHaveURL(/auth\/sign-in\?next=%2Fmessages/);
-  });
-
-  test('browse requires auth (redirect)', async ({ page }) => {
-    await page.goto('/browse');
-    await expect(page).toHaveURL(/auth\/sign-in/);
+    await page.goto('/post-room');
+    await expect(page).toHaveURL(/auth\/sign-in\?next=%2Fpost-room/);
   });
 });
 

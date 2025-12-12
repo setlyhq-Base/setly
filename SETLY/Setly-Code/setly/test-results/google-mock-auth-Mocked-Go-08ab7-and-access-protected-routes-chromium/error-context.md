@@ -4,29 +4,25 @@
 - generic [ref=e2]:
   - banner [ref=e4]:
     - generic [ref=e5]:
-      - link "SETLY" [ref=e6] [cursor=pointer]:
+      - link "Setly" [ref=e7] [cursor=pointer]:
         - /url: /
-        - generic [ref=e8]: SETLY
-      - generic [ref=e11]:
-        - textbox "Search for rooms" [ref=e12]:
+        - generic [ref=e11]: Setly
+      - generic [ref=e14]:
+        - textbox "Search for rooms" [ref=e15]:
           - /placeholder: Search for rooms near USA universities...
         - generic:
           - img
-        - button "Submit search" [ref=e13] [cursor=pointer]:
-          - img [ref=e14]
-      - navigation [ref=e16]:
-        - link "Connect" [ref=e17] [cursor=pointer]:
-          - /url: /connect
-        - link "Browse" [ref=e18] [cursor=pointer]:
+      - navigation [ref=e17]:
+        - link "People" [ref=e18] [cursor=pointer]:
+          - /url: /people
+        - link "Home" [ref=e19] [cursor=pointer]:
+          - /url: /home
+        - link "Post" [ref=e20] [cursor=pointer]:
+          - /url: /post
+        - link "Browse" [ref=e21] [cursor=pointer]:
           - /url: /browse
-        - link "Post Room" [ref=e19] [cursor=pointer]:
-          - /url: /open-room
-        - link "Messages" [ref=e20] [cursor=pointer]:
+        - link "Messages" [ref=e22] [cursor=pointer]:
           - /url: /messages
-        - link "Ride" [ref=e21] [cursor=pointer]:
-          - /url: /ride
-        - link "Profile" [ref=e22] [cursor=pointer]:
-          - /url: /profile
         - button "Sign In" [ref=e23] [cursor=pointer]
   - main [ref=e24]:
     - generic [ref=e26]:
@@ -34,131 +30,95 @@
         - generic [ref=e28]:
           - heading "Find verified homes & rides — where trust meets community." [level=1] [ref=e29]
           - paragraph [ref=e30]: Join a trusted network of students & professionals discovering their next space or ride together.
-        - generic [ref=e31]: “I found a trusted roommate in 2 days.” – Priya
+        - generic [ref=e31]: "\"I found a trusted roommate in 2 days.\" – Priya"
       - generic [ref=e33]:
         - generic [ref=e34]:
           - heading "Sign in to Setly" [level=2] [ref=e35]
           - paragraph [ref=e36]: Welcome back
-        - generic [ref=e37]:
-          - button "Continue with Google" [ref=e38] [cursor=pointer]: Continue with Google
-          - button "Continue with Microsoft" [ref=e40] [cursor=pointer]: Continue with Microsoft
-          - button "Continue with Facebook" [ref=e42] [cursor=pointer]: Continue with Facebook
-          - button "Continue with Phone number" [ref=e44] [cursor=pointer]: Continue with Phone number
-        - paragraph [ref=e46]: or
-        - link "Don’t have an account? Sign Up" [ref=e48] [cursor=pointer]:
+        - generic [ref=e38]:
+          - button "Sign in with Email" [ref=e39] [cursor=pointer]: Sign in with Email
+          - button "Continue with Google" [ref=e41] [cursor=pointer]: Continue with Google
+          - button "Continue with Microsoft" [ref=e43] [cursor=pointer]: Continue with Microsoft
+          - button "Continue with Facebook" [ref=e45] [cursor=pointer]: Continue with Facebook
+          - button "Continue with Phone number" [ref=e47] [cursor=pointer]: Continue with Phone number
+        - paragraph [ref=e49]: or
+        - link "Don’t have an account? Sign Up" [ref=e51] [cursor=pointer]:
           - /url: /auth/sign-up
-        - paragraph [ref=e49]:
+        - paragraph [ref=e52]:
           - text: By continuing, you agree to Setly’s
-          - link "Terms" [ref=e50] [cursor=pointer]:
+          - link "Terms" [ref=e53] [cursor=pointer]:
             - /url: /terms
           - text: and
-          - link "Privacy Policy" [ref=e51] [cursor=pointer]:
+          - link "Privacy Policy" [ref=e54] [cursor=pointer]:
             - /url: /privacy
           - text: .
-        - dialog "Complete Your Profile" [ref=e54]:
-          - heading "Complete Your Profile" [level=2] [ref=e55]
-          - paragraph [ref=e56]: Just a couple details so Setly Community know who you are.
-          - generic [ref=e57]:
-            - generic [ref=e58]:
-              - generic [ref=e59]: Full Name *
-              - textbox "Full Name * Name is required" [ref=e60]:
-                - /placeholder: Jane Doe
-              - generic [ref=e61]: Name is required
-            - generic [ref=e62]:
-              - generic [ref=e63]: Role *
-              - generic [ref=e64]:
-                - generic [ref=e65]:
-                  - radio "Student" [checked] [ref=e66]
-                  - text: Student
-                - generic [ref=e67]:
-                  - radio "Working professional" [ref=e68]
-                  - text: Working professional
-            - generic [ref=e69]:
-              - generic [ref=e70]: University *
-              - combobox "Search your university…" [ref=e73]
-              - generic [ref=e74]: Please select your university
-            - generic [ref=e75]:
-              - generic [ref=e76]: Location
-              - textbox "Location" [ref=e77]:
-                - /placeholder: Boston, MA
-            - generic [ref=e78]:
-              - generic [ref=e79]: Mobile *
-              - textbox "Mobile * Phone number is required" [ref=e80]:
-                - /placeholder: +1 555 555 5555
-              - generic [ref=e81]: Phone number is required
-            - generic [ref=e82]:
-              - generic [ref=e83]: Email
-              - textbox "Email" [disabled] [ref=e84]:
-                - /placeholder: you@example.com
-            - generic [ref=e85]:
-              - button "Cancel" [ref=e86] [cursor=pointer]
-              - button "Save" [disabled] [ref=e87]
-  - contentinfo [ref=e89]:
-    - generic [ref=e90]:
-      - generic [ref=e91]:
-        - generic [ref=e92]:
-          - generic [ref=e95]: SETLY
-          - paragraph [ref=e96]: Setly - Find Your next Room near your university with roommates who match your lifestyle.
-        - generic [ref=e97]:
-          - heading "Company" [level=3] [ref=e98]
-          - list [ref=e99]:
-            - listitem [ref=e100]:
-              - link "About Setly" [ref=e101] [cursor=pointer]:
+    - generic:
+      - generic:
+        - generic: online
+  - contentinfo [ref=e57]:
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e63]: SETLY
+          - paragraph [ref=e64]: Setly - Find Your next Room near your university with roommates who match your lifestyle.
+        - generic [ref=e65]:
+          - heading "Company" [level=3] [ref=e66]
+          - list [ref=e67]:
+            - listitem [ref=e68]:
+              - link "About Setly" [ref=e69] [cursor=pointer]:
                 - /url: /about
                 - text: About
-            - listitem [ref=e102]:
-              - link "Careers at Setly" [ref=e103] [cursor=pointer]:
+            - listitem [ref=e70]:
+              - link "Careers at Setly" [ref=e71] [cursor=pointer]:
                 - /url: /careers
                 - text: Careers
-            - listitem [ref=e104]:
-              - link "Setly blog" [ref=e105] [cursor=pointer]:
+            - listitem [ref=e72]:
+              - link "Setly blog" [ref=e73] [cursor=pointer]:
                 - /url: /blog
                 - text: Blog
-            - listitem [ref=e106]:
-              - link "Safety information" [ref=e107] [cursor=pointer]:
+            - listitem [ref=e74]:
+              - link "Safety information" [ref=e75] [cursor=pointer]:
                 - /url: /safety
                 - text: Safety
-            - listitem [ref=e108]:
-              - link "Help center" [ref=e109] [cursor=pointer]:
+            - listitem [ref=e76]:
+              - link "Help center" [ref=e77] [cursor=pointer]:
                 - /url: /help
                 - text: Help
-        - generic [ref=e110]:
-          - heading "Support" [level=3] [ref=e111]
-          - list [ref=e112]:
-            - listitem [ref=e113]:
-              - link "Terms of service" [ref=e114] [cursor=pointer]:
+        - generic [ref=e78]:
+          - heading "Support" [level=3] [ref=e79]
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - link "Terms of service" [ref=e82] [cursor=pointer]:
                 - /url: /terms
                 - text: Terms
-            - listitem [ref=e115]:
-              - link "Privacy policy" [ref=e116] [cursor=pointer]:
+            - listitem [ref=e83]:
+              - link "Privacy policy" [ref=e84] [cursor=pointer]:
                 - /url: /privacy
                 - text: Privacy
-            - listitem [ref=e117]:
-              - link "Contact support" [ref=e118] [cursor=pointer]:
+            - listitem [ref=e85]:
+              - link "Contact support" [ref=e86] [cursor=pointer]:
                 - /url: mailto:support@setly.com
                 - text: Contact
-        - generic [ref=e119]:
-          - heading "Connect" [level=3] [ref=e120]
-          - list [ref=e121]:
-            - listitem [ref=e122]:
-              - link "Follow us on Facebook" [ref=e123] [cursor=pointer]:
+        - generic [ref=e87]:
+          - heading "Connect" [level=3] [ref=e88]
+          - list [ref=e89]:
+            - listitem [ref=e90]:
+              - link "Follow us on Facebook" [ref=e91] [cursor=pointer]:
                 - /url: https://facebook.com/setly
                 - text: Facebook
-            - listitem [ref=e124]:
-              - link "Follow us on Twitter" [ref=e125] [cursor=pointer]:
+            - listitem [ref=e92]:
+              - link "Follow us on Twitter" [ref=e93] [cursor=pointer]:
                 - /url: https://twitter.com/setly
                 - text: Twitter
-            - listitem [ref=e126]:
-              - link "Follow us on Instagram" [ref=e127] [cursor=pointer]:
+            - listitem [ref=e94]:
+              - link "Follow us on Instagram" [ref=e95] [cursor=pointer]:
                 - /url: https://instagram.com/setly
                 - text: Instagram
-            - listitem [ref=e128]:
-              - link "Follow us on LinkedIn" [ref=e129] [cursor=pointer]:
+            - listitem [ref=e96]:
+              - link "Follow us on LinkedIn" [ref=e97] [cursor=pointer]:
                 - /url: https://linkedin.com/company/setly
                 - text: LinkedIn
-      - paragraph [ref=e131]: © 2025 Setly. All rights reserved.
-  - button "Open Setly Assistant" [ref=e132] [cursor=pointer]:
-    - generic [ref=e133]: ⭐
+      - paragraph [ref=e99]: © 2025 Setly. All rights reserved.
   - generic:
     - status
 ```

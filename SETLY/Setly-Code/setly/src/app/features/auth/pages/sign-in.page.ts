@@ -215,7 +215,7 @@ export class SignInPage {
           userId: response.user.userId,
           email: response.user.email,
           displayName: response.user.name,
-          photoURL: response.user.photoUrl,
+          avatarUrl: response.user.photoUrl,
           isNew: false
         });
 

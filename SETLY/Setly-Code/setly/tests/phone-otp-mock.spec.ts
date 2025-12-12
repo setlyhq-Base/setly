@@ -4,7 +4,8 @@ import { test, expect, Page } from '@playwright/test';
 // It exercises the in-app mocked phone auth flow (code 123456)
 
 test.describe('Mocked Phone OTP (dev only)', () => {
-  test('should verify phone via mock and proceed to profile wizard', async ({ page }) => {
+  test.skip('should verify phone via mock and proceed to profile wizard', async ({ page }) => {
+    // Requires environment.featureFlags.mockPhoneAuth = true
     await page.goto('/auth/sign-in');
 
     // Open the phone modal

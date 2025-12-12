@@ -32,7 +32,8 @@ async function waitForNonZeroResults(page: Page, timeout = 20000) {
 }
 
 test.describe('Connect page data across tabs', () => {
-  test('All tabs show populated posts', async ({ page, browserName }) => {
+  test.skip('All tabs show populated posts', async ({ page, browserName }) => {
+    // NOTE: /connect is currently disabled in app routing.
     // Keep this smoke check on Chromium to avoid cross-engine flake in CI/dev
     if (browserName !== 'chromium') test.skip();
     await page.goto('/connect');

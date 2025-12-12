@@ -3,6 +3,7 @@ import { PostLandingPage } from './features/post/post.page';
 import { AuthGuard } from './core/guards/auth.guard';
 import { ProfileGuard } from './core/guards/profile.guard';
 import { TrustedActionGuard } from './core/guards/trusted-action.guard';
+import { DevOnlyGuard } from './core/guards/dev-only.guard';
 import { AUTH_FLAGS } from '../environments/auth.flags';
 import { environment } from '../environments/environment';
 
@@ -210,6 +211,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/admin-users.page').then(m => m.AdminUsersPage),
     title: 'Admin · Users - Setly',
     canActivate: [AuthGuard]
+  },
+  // Hidden dev-only utilities (never accessible in production)
+  {
+    path: 'dev-tools',
+    loadComponent: () => import('./features/dev-tools/dev-tools.page').then(m => m.DevToolsPage),
+    title: 'Dev Tools - Setly',
+    canActivate: [DevOnlyGuard]
   },
   // Legacy redirects
   {

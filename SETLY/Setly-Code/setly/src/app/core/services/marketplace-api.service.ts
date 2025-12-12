@@ -1,7 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Injectable, Injector, inject } from '@angular/core';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { DummyMarketplaceService } from './dummy-marketplace.service';
 
 export interface MarketplaceItem {
   itemId?: string;
@@ -48,12 +49,22 @@ export interface MarketplaceResponse {
 })
 export class MarketplaceApiService {
   private http = inject(HttpClient);
+  private injector = inject(Injector);
   private apiUrl = `${environment.apiUrl || '/api'}/marketplace`;
+
+  private isDummyMode(): boolean {
+    return !!(environment as any)?.featureFlags?.useDummyData;
+  }
 
   /**
    * Search marketplace items with filters
    */
   searchItems(filters?: MarketplaceFilters): Observable<MarketplaceResponse> {
+    if (this.isDummyMode()) {
+      const dummy = this.injector.get(DummyMarketplaceService);
+      return of(dummy.search(filters));
+    }
+
     let params = new HttpParams();
 
     if (filters) {
@@ -74,6 +85,12 @@ export class MarketplaceApiService {
    * Get item by ID
    */
   getItemById(itemId: string): Observable<MarketplaceItem> {
+    if (this.isDummyMode()) {
+      const dummy = this.injector.get(DummyMarketplaceService);
+      const found = dummy.getById(itemId);
+      if (found) return of(found);
+      return throwError(() => new Error('Item not found'));
+    }
     return this.http.get<MarketplaceItem>(`${this.apiUrl}/${itemId}`).pipe(
       catchError(this.handleError)
     );
@@ -83,6 +100,30 @@ export class MarketplaceApiService {
    * Create new marketplace listing
    */
   createItem(item: Partial<MarketplaceItem>): Observable<MarketplaceItem> {
+    if (this.isDummyMode()) {
+      const dummy = this.injector.get(DummyMarketplaceService);
+      const id = item.itemId || `item-${Date.now()}`;
+      const created: MarketplaceItem = {
+        itemId: id,
+        userId: item.userId || 'user-1',
+        category: item.category || 'Misc',
+        title: item.title || 'New Item',
+        description: item.description || '',
+        price: Number(item.price) || 10,
+        condition: (item.condition as any) || 'good',
+        images: Array.isArray(item.images) ? item.images : [],
+        location: item.location || 'Boston, MA',
+        tags: item.tags,
+        status: item.status || 'available',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userName: item.userName,
+        userEmail: item.userEmail,
+        userPhoto: item.userPhoto,
+        userVerified: item.userVerified,
+      };
+      return of(dummy.add(created));
+    }
     return this.http.post<MarketplaceItem>(this.apiUrl, item).pipe(
       catchError(this.handleError)
     );
@@ -92,6 +133,12 @@ export class MarketplaceApiService {
    * Update existing item
    */
   updateItem(itemId: string, updates: Partial<MarketplaceItem>): Observable<MarketplaceItem> {
+    if (this.isDummyMode()) {
+      const dummy = this.injector.get(DummyMarketplaceService);
+      const updated = dummy.update(itemId, updates);
+      if (updated) return of(updated);
+      return throwError(() => new Error('Item not found'));
+    }
     return this.http.put<MarketplaceItem>(`${this.apiUrl}/${itemId}`, updates).pipe(
       catchError(this.handleError)
     );
@@ -101,6 +148,11 @@ export class MarketplaceApiService {
    * Delete item
    */
   deleteItem(itemId: string): Observable<void> {
+    if (this.isDummyMode()) {
+      const dummy = this.injector.get(DummyMarketplaceService);
+      dummy.remove(itemId);
+      return of(void 0);
+    }
     return this.http.delete<void>(`${this.apiUrl}/${itemId}`).pipe(
       catchError(this.handleError)
     );
@@ -110,6 +162,11 @@ export class MarketplaceApiService {
    * Get items by user ID
    */
   getItemsByUser(userId: string): Observable<MarketplaceItem[]> {
+    if (this.isDummyMode()) {
+      const dummy = this.injector.get(DummyMarketplaceService);
+      const items = dummy.getAll().filter(i => i.userId === userId);
+      return of(items);
+    }
     const params = new HttpParams().set('userId', userId);
     return this.http.get<MarketplaceResponse>(this.apiUrl, { params }).pipe(
       catchError(this.handleError),

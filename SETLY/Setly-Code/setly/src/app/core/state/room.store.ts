@@ -1,6 +1,6 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { RoomCard } from '../models/room-card.model';
-import { ROOMS_MOCK } from '../../../assets/mock/rooms.mock';
+import { RoomsApiService } from '../services/rooms-api.service';
 
 export interface RoomFilters {
   query: string;
@@ -20,6 +20,7 @@ export interface RoomFilters {
 })
 export class RoomStore {
   private readonly STORAGE_KEY = 'rooms';
+  private roomsApi = inject(RoomsApiService);
 
   private _rooms = signal<RoomCard[]>([]);
   private _filters = signal<RoomFilters>({
@@ -93,18 +94,65 @@ export class RoomStore {
   }
 
   private loadRooms(): void {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
-    if (stored) {
-      try {
-        const rooms = JSON.parse(stored);
-        this._rooms.set(rooms);
-      } catch (error) {
-        console.error('Error loading rooms from localStorage:', error);
-        this._rooms.set(ROOMS_MOCK);
+    // Load rooms from backend API
+    this.roomsApi.searchRooms().subscribe({
+      next: (response) => {
+        const rooms = Array.isArray((response as any)?.rooms) ? (response as any).rooms : [];
+        const count = typeof (response as any)?.count === 'number' ? (response as any).count : rooms.length;
+        console.log(`✅ RoomStore loaded ${count} rooms from backend`);
+        const roomCards = rooms.map((r: any) => this.convertToRoomCard(r));
+        this._rooms.set(roomCards);
+        this.saveRooms(); // Cache in localStorage
+      },
+      error: (err) => {
+        console.error('❌ Failed to load rooms from backend:', err);
+        // Try localStorage fallback
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (stored) {
+          try {
+            const rooms = JSON.parse(stored);
+            this._rooms.set(rooms);
+            console.log('📦 Loaded rooms from localStorage cache');
+          } catch (error) {
+            console.error('Error parsing localStorage rooms:', error);
+            this._rooms.set([]); // Empty array, no mock fallback
+          }
+        } else {
+          this._rooms.set([]); // Empty array, no mock fallback
+        }
       }
-    } else {
-      this._rooms.set(ROOMS_MOCK);
-    }
+    });
+  }
+
+  /**
+   * Convert backend Room model to RoomCard model
+   */
+  private convertToRoomCard(room: any): RoomCard {
+    return {
+      id: room.roomId || room.id,
+      title: room.title,
+      address: room.address,
+      city: room.city,
+      universityName: room.universityName || room.university,
+      price: room.price,
+      isAvailable: room.isAvailable !== false, // Default to true
+      image: room.image || room.images?.[0] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80',
+      photos: room.photos || room.images || [],
+      hostName: room.hostName || room.userName || 'Host',
+      hostId: room.hostId || room.userId,
+      features: room.amenities || [],
+      amenities: room.amenities || [],
+      rating: room.rating || 4,
+      type: room.roomType || room.type || 'private',
+      roomType: room.roomType || room.type || 'private',
+      propertyType: room.propertyType || 'Apartment',
+      createdAt: room.createdAt,
+      availabilityStart: room.checkIn || room.availabilityStart,
+      availabilityEnd: room.checkOut || room.availabilityEnd,
+      distance: room.distance || 0,
+      likes: room.likes || 0,
+      saved: room.saved || false
+    };
   }
 
   private saveRooms(): void {

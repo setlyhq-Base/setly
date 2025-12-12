@@ -7,6 +7,11 @@ import { environment } from '../../../environments/environment';
 export class TrustedActionGuard implements CanActivate {
   constructor(private profile: ProfileStore, private router: Router) {}
   canActivate(): boolean | UrlTree {
+    // E2E escape hatch (set via Playwright init script)
+    try {
+      const w = window as any;
+      if (w && w.__e2eBypassTrustedActions) return true;
+    } catch {}
     if (environment.featureFlags?.bypassTrustedActions) {
       return true;
     }

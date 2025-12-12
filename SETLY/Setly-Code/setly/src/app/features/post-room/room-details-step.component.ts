@@ -37,7 +37,7 @@ export class RoomDetailsStepComponent {
   city = '';
   state = '';
   universityQuery = '';
-  roomType: 'private' | 'shared' | '' = '';
+  roomType: 'private' | 'shared' | 'entire' | '' = '';
   bath: 'private' | 'shared' | '' = '';
   furnished = false;
   rules = { vegetarian: false, smoking: false, petsOk: false };
